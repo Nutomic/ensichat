@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Global -->
+
     <string name="app_name">EnsiChat</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+
+    <!-- ContactsFragment -->
+
+    <string name="no_contacts_found">No contacts found :(</string>
 
 </resources>
