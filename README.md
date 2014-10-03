@@ -1,3 +1,7 @@
+Building
+========
+To build, run `./gradlew assembleDebug or `./gradlew assembleRelease`.
+
 License
 =======
 
