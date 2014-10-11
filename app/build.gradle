@@ -44,6 +44,7 @@ android {
         debug {
             runProguard true
             proguardFile file("proguard-rules.pro")
+            applicationIdSuffix ".debug"
         }
 
         release {
