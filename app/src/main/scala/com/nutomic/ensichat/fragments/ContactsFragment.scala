@@ -1,21 +1,16 @@
 package com.nutomic.ensichat.fragments
 
-import android.app.Fragment
-import android.content.{Context, Intent, ComponentName, ServiceConnection}
-import android.os.{IBinder, Bundle}
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.{ArrayAdapter, ListView}
-
+import android.app.ListFragment
+import android.content.{ComponentName, Context, Intent, ServiceConnection}
+import android.os.{Bundle, IBinder}
+import android.view.{LayoutInflater, View, ViewGroup}
+import android.widget.ArrayAdapter
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.ChatService.DeviceListener
-import com.nutomic.ensichat.bluetooth.{ChatServiceBinder, ChatService, Device}
+import com.nutomic.ensichat.bluetooth.{ChatService, ChatServiceBinder, Device}
 import com.nutomic.ensichat.util.DevicesAdapter
 
-class ContactsFragment extends Fragment with DeviceListener {
-
-  private var mListView: ListView = _
+class ContactsFragment extends ListFragment with DeviceListener {
 
   private var mChatService: ChatService = _
 
@@ -36,14 +31,14 @@ class ContactsFragment extends Fragment with DeviceListener {
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
         savedInstanceState: Bundle): View = {
     val view: View =  inflater.inflate(R.layout.fragment_contacts, container, false)
-    mListView = view.findViewById(android.R.id.list).asInstanceOf[ListView]
-    mAdapter = new DevicesAdapter(getActivity)
-    mListView.setAdapter(mAdapter)
     return view
   }
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
+
+    mAdapter = new DevicesAdapter(getActivity)
+    setListAdapter(mAdapter)
     getActivity.bindService(new Intent(getActivity, classOf[ChatService]),
       mChatServiceConnection, Context.BIND_AUTO_CREATE)
   }
