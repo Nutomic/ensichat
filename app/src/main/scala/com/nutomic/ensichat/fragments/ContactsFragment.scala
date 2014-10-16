@@ -44,7 +44,6 @@ class ContactsFragment extends Fragment with DeviceListener {
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
-    getActivity.startService(new Intent(getActivity, classOf[ChatService]))
     getActivity.bindService(new Intent(getActivity, classOf[ChatService]),
       mChatServiceConnection, Context.BIND_AUTO_CREATE)
   }

@@ -39,11 +39,6 @@ class ChatService extends Service {
     return mBinder
   }
 
-  override def onDestroy(): Unit = {
-    super.onDestroy()
-    unregisterReceiver(mReceiver)
-  }
-
   def doDiscovery() {
     // If we're already discovering, stop it.
     if (mBluetoothAdapter.isDiscovering()) {
