@@ -5,13 +5,14 @@ import java.util.UUID
 import android.app.Service
 import android.bluetooth.{BluetoothAdapter, BluetoothDevice, BluetoothSocket}
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
-import android.os.IBinder
+import android.os.{Handler, IBinder}
 import android.util.Log
 import android.widget.Toast
+import com.nutomic.ensichat.bluetooth.Device.ID
 import com.nutomic.ensichat.{Message, R}
-import android.os.Handler
 
 import scala.collection.immutable.{HashMap, Set}
+import scala.ref.WeakReference
 
 object ChatService {
 
@@ -32,8 +33,8 @@ class ChatService extends Service {
 
   private var bluetoothAdapter: BluetoothAdapter = _
 
-  private var deviceListener: Set[Map[Device.ID, Device] => Unit] =
-    Set[Map[Device.ID, Device] => Unit]()
+  private var deviceListener: Set[WeakReference[Map[Device.ID, Device] => Unit]] =
+    Set[WeakReference[Map[Device.ID, Device] => Unit]]()
 
   private var devices: HashMap[Device.ID, Device] = new HashMap[Device.ID, Device]()
 
@@ -64,13 +65,19 @@ class ChatService extends Service {
     ListenThread.start()
   }
 
+  override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
+    return Service.START_STICKY
+  }
+
   override def onBind(intent: Intent): IBinder = {
     return Binder
   }
 
   override def onDestroy(): Unit = {
+    super.onDestroy()
     ListenThread.cancel()
     isDestroyed = true
+    unregisterReceiver(mReceiver)
   }
 
   /**
@@ -101,7 +108,6 @@ class ChatService extends Service {
             new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
           devices = devices + (device.id -> device)
           new ConnectThread(device, onConnected).start()
-          deviceListener.foreach(d => d(devices))
         case _ =>
       }
     }
@@ -111,7 +117,7 @@ class ChatService extends Service {
    * Registers a listener that is called whenever a new device is connected.
    */
   def registerDeviceListener(listener: Map[Device.ID, Device] => Unit): Unit = {
-    deviceListener = deviceListener + listener
+    deviceListener = deviceListener + new WeakReference[(Map[ID, Device]) => Unit](listener)
     listener(devices)
   }
 
@@ -119,7 +125,9 @@ class ChatService extends Service {
    * Unregisters a device listener.
    */
   def unregisterDeviceListener(listener: Map[Device.ID, Device] => Unit): Unit = {
-    deviceListener = deviceListener - listener
+    deviceListener.foreach(l =>
+      if (l == listener)
+        deviceListener = deviceListener - l)
   }
 
   def onConnected(device: Device, socket: BluetoothSocket): Unit = {
@@ -127,7 +135,11 @@ class ChatService extends Service {
     devices = devices + (device.id -> updatedDevice)
     connections = connections + (device.id -> new TransferThread(updatedDevice, socket, onReceive))
     connections(device.id).start()
-    deviceListener.foreach(d => d(devices))
+    deviceListener.foreach(d =>
+      if (d != null)
+        d.apply()(devices)
+      else
+        deviceListener = deviceListener - d)
   }
 
   def send(device: Device.ID, message: Message): Unit = {
