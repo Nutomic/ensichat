@@ -1,67 +1,145 @@
 package com.nutomic.ensichat.bluetooth
 
+import java.util.UUID
+
 import android.app.Service
-import android.bluetooth.{BluetoothDevice, BluetoothAdapter}
-import android.content.{Context, BroadcastReceiver, IntentFilter, Intent}
+import android.bluetooth.{BluetoothAdapter, BluetoothDevice, BluetoothSocket}
+import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.IBinder
 import android.util.Log
-import com.nutomic.ensichat.bluetooth.ChatService.DeviceListener
+import android.widget.Toast
+import com.nutomic.ensichat.{Message, R}
+import android.os.Handler
+
+import scala.collection.immutable.{HashMap, Set}
 
 object ChatService {
-  trait DeviceListener {
-    def onDeviceConnected(device: Device): Unit
-  }
+
+  /**
+   * Bluetooth service UUID version 5, created with namespace URL and "ensichat.nutomic.com".
+   */
+  val appUuid: UUID = UUID.fromString("8ed52b7a-4501-5348-b054-3d94d004656e")
+
 }
 
 class ChatService extends Service {
 
-  private val TAG = "ChatService"
+  private val Tag = "ChatService"
 
-  private final val mBinder = new ChatServiceBinder(this)
+  private val SCAN_INTERVAL: Int = 5000
 
-  private var mBluetoothAdapter: BluetoothAdapter = _
+  private final val Binder = new ChatServiceBinder(this)
 
-  private var mDeviceListener: DeviceListener = _
+  private var bluetoothAdapter: BluetoothAdapter = _
 
+  private var deviceListener: Set[Map[Device.ID, Device] => Unit] =
+    Set[Map[Device.ID, Device] => Unit]()
+
+  private var devices: HashMap[Device.ID, Device] = new HashMap[Device.ID, Device]()
+
+  private var connections: HashMap[Device.ID, TransferThread] =
+    new HashMap[Device.ID, TransferThread]()
+
+  private var ListenThread: ListenThread = _
+
+  private var isDestroyed = false
+
+  private val MainHandler: Handler = new Handler()
+
+  /**
+   * Initializes BroadcastReceiver for discovery, starts discovery and listens for connections.
+   */
   override def onCreate(): Unit = {
     super.onCreate()
 
-    mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
     var filter: IntentFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND)
     registerReceiver(mReceiver, filter)
     filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
     registerReceiver(mReceiver, filter)
-    doDiscovery()
+    Log.i(Tag, "Discovery started")
+    discover()
+    ListenThread = new ListenThread(getString(R.string.app_name), bluetoothAdapter, onConnected)
+    ListenThread.start()
   }
 
   override def onBind(intent: Intent): IBinder = {
-    return mBinder
+    return Binder
   }
 
-  def doDiscovery() {
-    // If we're already discovering, stop it.
-    if (mBluetoothAdapter.isDiscovering()) {
-      mBluetoothAdapter.cancelDiscovery()
+  override def onDestroy(): Unit = {
+    ListenThread.cancel()
+    isDestroyed = true
+  }
+
+  /**
+   * Stops any current discovery, then starts a new one, recursively until service is stopped.
+   */
+  def discover(): Unit = {
+    if (isDestroyed)
+      return
+
+    if (!bluetoothAdapter.isDiscovering()) {
+      Log.v(Tag, "Running discovery")
+      bluetoothAdapter.startDiscovery()
     }
 
-    mBluetoothAdapter.startDiscovery()
-    Log.i(TAG, "Discovery started")
+    MainHandler.postDelayed(new Runnable {
+      override def run(): Unit = discover()
+    }, SCAN_INTERVAL)
   }
 
+  /**
+   * Receives newly discovered devices and connects to them.
+   */
   private final def mReceiver: BroadcastReceiver  = new BroadcastReceiver() {
     override def onReceive(context: Context, intent: Intent) {
       intent.getAction() match {
         case BluetoothDevice.ACTION_FOUND =>
-          val btDevice: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-          mDeviceListener.onDeviceConnected(new Device(btDevice))
+          val device: Device =
+            new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
+          devices = devices + (device.id -> device)
+          new ConnectThread(device, onConnected).start()
+          deviceListener.foreach(d => d(devices))
         case _ =>
       }
     }
   }
 
-  def registerDeviceListener(listener: DeviceListener): Unit = {
-    mDeviceListener = listener
+  /**
+   * Registers a listener that is called whenever a new device is connected.
+   */
+  def registerDeviceListener(listener: Map[Device.ID, Device] => Unit): Unit = {
+    deviceListener = deviceListener + listener
+    listener(devices)
+  }
+
+  /**
+   * Unregisters a device listener.
+   */
+  def unregisterDeviceListener(listener: Map[Device.ID, Device] => Unit): Unit = {
+    deviceListener = deviceListener - listener
+  }
+
+  def onConnected(device: Device, socket: BluetoothSocket): Unit = {
+    val updatedDevice: Device = new Device(device.bluetoothDevice, true)
+    devices = devices + (device.id -> updatedDevice)
+    connections = connections + (device.id -> new TransferThread(updatedDevice, socket, onReceive))
+    connections(device.id).start()
+    deviceListener.foreach(d => d(devices))
+  }
+
+  def send(device: Device.ID, message: Message): Unit = {
+    connections.apply(device).send(message)
+  }
+
+  def onReceive(device: Device.ID, message: Message): Unit = {
+    MainHandler.post(new Runnable {
+      override def run(): Unit =
+        Toast.makeText(ChatService.this, devices(device).name + " sent: " + message, Toast.LENGTH_SHORT)
+          .show()
+    })
   }
 
 }
