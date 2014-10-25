@@ -1,6 +1,6 @@
 Building
 ========
-To build, run `./gradlew assembleDebug or `./gradlew assembleRelease`.
+To build, run `./gradlew assembleDebug` or `./gradlew assembleRelease`.
 
 License
 =======
