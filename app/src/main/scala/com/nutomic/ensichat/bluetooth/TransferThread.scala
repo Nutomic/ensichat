@@ -62,7 +62,7 @@ class TransferThread(device: Device, socket: BluetoothSocket,
     }
   }
 
-  def cancel(): Unit = {
+  def close(): Unit = {
     try {
       socket.close()
     } catch {

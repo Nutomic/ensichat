@@ -32,7 +32,9 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
         socket = ServerSocket.accept()
       } catch {
         case e: IOException =>
-          Log.e(Tag, "Failed to accept new connection", e)
+          // This happens if Bluetooth is disabled manually.
+          Log.w(Tag, "Failed to accept new connection", e)
+          return
       }
 
       val device: Device = new Device(socket.getRemoteDevice, true)

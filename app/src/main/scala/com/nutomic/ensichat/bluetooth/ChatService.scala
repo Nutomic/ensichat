@@ -43,7 +43,7 @@ class ChatService extends Service {
 
   private var ListenThread: ListenThread = _
 
-  private var isDestroyed = false
+  private var cancelDiscovery = false
 
   private val MainHandler: Handler = new Handler()
 
@@ -55,14 +55,11 @@ class ChatService extends Service {
 
     bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
-    var filter: IntentFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND)
-    registerReceiver(mReceiver, filter)
-    filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-    registerReceiver(mReceiver, filter)
-    Log.i(Tag, "Discovery started")
-    discover()
-    ListenThread = new ListenThread(getString(R.string.app_name), bluetoothAdapter, onConnected)
-    ListenThread.start()
+    registerReceiver(DeviceDiscoveredReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND))
+    registerReceiver(BluetoothStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+    if (bluetoothAdapter.isEnabled) {
+      startBluetoothConnections()
+    }
   }
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
@@ -76,15 +73,16 @@ class ChatService extends Service {
   override def onDestroy(): Unit = {
     super.onDestroy()
     ListenThread.cancel()
-    isDestroyed = true
-    unregisterReceiver(mReceiver)
+    cancelDiscovery = true
+    unregisterReceiver(DeviceDiscoveredReceiver)
+    unregisterReceiver(BluetoothStateReceiver)
   }
 
   /**
    * Stops any current discovery, then starts a new one, recursively until service is stopped.
    */
   def discover(): Unit = {
-    if (isDestroyed)
+    if (cancelDiscovery)
       return
 
     if (!bluetoothAdapter.isDiscovering()) {
@@ -100,17 +98,45 @@ class ChatService extends Service {
   /**
    * Receives newly discovered devices and connects to them.
    */
-  private final def mReceiver: BroadcastReceiver  = new BroadcastReceiver() {
+  private val DeviceDiscoveredReceiver: BroadcastReceiver  = new BroadcastReceiver() {
     override def onReceive(context: Context, intent: Intent) {
-      intent.getAction() match {
-        case BluetoothDevice.ACTION_FOUND =>
-          val device: Device =
-            new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
-          devices = devices + (device.id -> device)
-          new ConnectThread(device, onConnected).start()
+      val device: Device =
+        new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
+      devices = devices + (device.id -> device)
+      new ConnectThread(device, onConnected).start()
+    }
+  }
+
+  /**
+   * Starts or stops listening and discovery based on bluetooth state.
+   */
+  private val BluetoothStateReceiver: BroadcastReceiver = new BroadcastReceiver {
+    override def onReceive(context: Context, intent: Intent): Unit = {
+      intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) match {
+        case BluetoothAdapter.STATE_ON =>
+          startBluetoothConnections()
+        case BluetoothAdapter.STATE_TURNING_OFF =>
+          connections.foreach(d => d._2.close())
+        case BluetoothAdapter.STATE_OFF =>
+          Log.d(Tag, "Bluetooth disabled, stopping listening and discovery")
+          if (ListenThread != null) {
+            ListenThread.cancel()
+          }
+          cancelDiscovery = true
         case _ =>
       }
     }
+  }
+
+  /**
+   * Starts to listen for incoming connections, and starts regular active discovery.
+   */
+  private def startBluetoothConnections(): Unit = {
+    Log.i(Tag, "Listening and discovery started")
+    cancelDiscovery = false
+    discover()
+    ListenThread = new ListenThread(getString(R.string.app_name), bluetoothAdapter, onConnected)
+    ListenThread.start()
   }
 
   /**
