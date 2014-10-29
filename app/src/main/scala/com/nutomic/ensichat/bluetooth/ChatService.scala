@@ -5,13 +5,14 @@ import java.util.UUID
 import android.app.Service
 import android.bluetooth.{BluetoothAdapter, BluetoothDevice, BluetoothSocket}
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
-import android.os.{Handler, IBinder}
+import android.os.Handler
 import android.util.Log
-import android.widget.Toast
-import com.nutomic.ensichat.bluetooth.Device.ID
-import com.nutomic.ensichat.{Message, R}
+import com.nutomic.ensichat.R
+import com.nutomic.ensichat.bluetooth.ChatService.{OnDeviceConnectedListener, OnMessageReceivedListener}
+import com.nutomic.ensichat.messages.{MessageStore, TextMessage}
 
-import scala.collection.immutable.{HashMap, Set}
+import scala.collection.immutable.{HashMap, HashSet, TreeSet}
+import scala.collection.{SortedSet, mutable}
 import scala.ref.WeakReference
 
 object ChatService {
@@ -21,31 +22,51 @@ object ChatService {
    */
   val appUuid: UUID = UUID.fromString("8ed52b7a-4501-5348-b054-3d94d004656e")
 
+  trait OnDeviceConnectedListener {
+    def onDeviceConnected(devices: Map[Device.ID, Device]): Unit
+  }
+
+  trait OnMessageReceivedListener {
+    def onMessageReceived(messages: SortedSet[TextMessage]): Unit
+  }
+
 }
 
+/**
+ * Handles all Bluetooth connectivity.
+ */
 class ChatService extends Service {
 
   private val Tag = "ChatService"
 
-  private val SCAN_INTERVAL: Int = 5000
+  private val ScanInterval = 5000
 
-  private final val Binder = new ChatServiceBinder(this)
+  private val Binder = new ChatServiceBinder(this)
 
   private var bluetoothAdapter: BluetoothAdapter = _
 
-  private var deviceListener: Set[WeakReference[Map[Device.ID, Device] => Unit]] =
-    Set[WeakReference[Map[Device.ID, Device] => Unit]]()
+  /**
+   * For this (and [[messageListeners]], functions would be useful instead of instances,
+   * but on a Nexus S (Android 4.1.2), these functions are garbage collected even when
+   * referenced.
+   */
+  private var deviceListeners = new HashSet[WeakReference[OnDeviceConnectedListener]]()
 
-  private var devices: HashMap[Device.ID, Device] = new HashMap[Device.ID, Device]()
+  private val messageListeners =
+    mutable.HashMap[Device.ID, mutable.Set[WeakReference[OnMessageReceivedListener]]]()
+      .withDefaultValue(mutable.Set[WeakReference[OnMessageReceivedListener]]())
 
-  private var connections: HashMap[Device.ID, TransferThread] =
-    new HashMap[Device.ID, TransferThread]()
+  private var devices = new HashMap[Device.ID, Device]()
+
+  private var connections = new HashMap[Device.ID, TransferThread]()
 
   private var ListenThread: ListenThread = _
 
   private var cancelDiscovery = false
 
-  private val MainHandler: Handler = new Handler()
+  private val MainHandler = new Handler()
+
+  private var MessageStore: MessageStore = _
 
   /**
    * Initializes BroadcastReceiver for discovery, starts discovery and listens for connections.
@@ -53,7 +74,9 @@ class ChatService extends Service {
   override def onCreate(): Unit = {
     super.onCreate()
 
-    bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    MessageStore = new MessageStore(this)
+
+    bluetoothAdapter = BluetoothAdapter.getDefaultAdapter
 
     registerReceiver(DeviceDiscoveredReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND))
     registerReceiver(BluetoothStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
@@ -62,14 +85,13 @@ class ChatService extends Service {
     }
   }
 
-  override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
-    return Service.START_STICKY
-  }
+  override def onStartCommand(intent: Intent, flags: Int, startId: Int) = Service.START_STICKY
 
-  override def onBind(intent: Intent): IBinder = {
-    return Binder
-  }
+  override def onBind(intent: Intent) =  Binder
 
+  /**
+   * Stops discovery, listening and unregisters receivers.
+   */
   override def onDestroy(): Unit = {
     super.onDestroy()
     ListenThread.cancel()
@@ -85,14 +107,14 @@ class ChatService extends Service {
     if (cancelDiscovery)
       return
 
-    if (!bluetoothAdapter.isDiscovering()) {
+    if (!bluetoothAdapter.isDiscovering) {
       Log.v(Tag, "Running discovery")
       bluetoothAdapter.startDiscovery()
     }
 
     MainHandler.postDelayed(new Runnable {
       override def run(): Unit = discover()
-    }, SCAN_INTERVAL)
+    }, ScanInterval)
   }
 
   /**
@@ -102,7 +124,7 @@ class ChatService extends Service {
     override def onReceive(context: Context, intent: Intent) {
       val device: Device =
         new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
-      devices = devices + (device.id -> device)
+      devices += (device.id -> device)
       new ConnectThread(device, onConnected).start()
     }
   }
@@ -118,7 +140,7 @@ class ChatService extends Service {
         case BluetoothAdapter.STATE_TURNING_OFF =>
           connections.foreach(d => d._2.close())
         case BluetoothAdapter.STATE_OFF =>
-          Log.d(Tag, "Bluetooth disabled, stopping listening and discovery")
+          Log.i(Tag, "Bluetooth disabled, stopping listening and discovery")
           if (ListenThread != null) {
             ListenThread.cancel()
           }
@@ -132,7 +154,6 @@ class ChatService extends Service {
    * Starts to listen for incoming connections, and starts regular active discovery.
    */
   private def startBluetoothConnections(): Unit = {
-    Log.i(Tag, "Listening and discovery started")
     cancelDiscovery = false
     discover()
     ListenThread = new ListenThread(getString(R.string.app_name), bluetoothAdapter, onConnected)
@@ -142,42 +163,64 @@ class ChatService extends Service {
   /**
    * Registers a listener that is called whenever a new device is connected.
    */
-  def registerDeviceListener(listener: Map[Device.ID, Device] => Unit): Unit = {
-    deviceListener = deviceListener + new WeakReference[(Map[ID, Device]) => Unit](listener)
-    listener(devices)
+  def registerDeviceListener(listener: OnDeviceConnectedListener): Unit = {
+    deviceListeners += new WeakReference[OnDeviceConnectedListener](listener)
+    listener.onDeviceConnected(devices)
   }
 
   /**
-   * Unregisters a device listener.
+   * Called when a Bluetooth device is connected.
+   *
+   * Adds the device to [[connections]], notifies all [[deviceListeners]].
    */
-  def unregisterDeviceListener(listener: Map[Device.ID, Device] => Unit): Unit = {
-    deviceListener.foreach(l =>
-      if (l == listener)
-        deviceListener = deviceListener - l)
-  }
-
   def onConnected(device: Device, socket: BluetoothSocket): Unit = {
     val updatedDevice: Device = new Device(device.bluetoothDevice, true)
-    devices = devices + (device.id -> updatedDevice)
-    connections = connections + (device.id -> new TransferThread(updatedDevice, socket, onReceive))
+    devices += (device.id -> updatedDevice)
+    connections += (device.id -> new TransferThread(updatedDevice, socket, handleNewMessage))
     connections(device.id).start()
-    deviceListener.foreach(d =>
-      if (d != null)
-        d.apply()(devices)
-      else
-        deviceListener = deviceListener - d)
-  }
-
-  def send(device: Device.ID, message: Message): Unit = {
-    connections.apply(device).send(message)
-  }
-
-  def onReceive(device: Device.ID, message: Message): Unit = {
-    MainHandler.post(new Runnable {
-      override def run(): Unit =
-        Toast.makeText(ChatService.this, devices(device).name + " sent: " + message, Toast.LENGTH_SHORT)
-          .show()
+    deviceListeners.foreach(l => l.get match {
+      case Some(_) => l.apply().onDeviceConnected(devices)
+      case None => deviceListeners -= l
     })
   }
+
+  /**
+   * Sends message to the device specified as receiver,
+   */
+  def send(message: TextMessage): Unit = {
+    connections.apply(message.receiver).send(message)
+    handleNewMessage(message)
+  }
+
+  /**
+   * Saves the message to database and sends it to registered listeners.
+   *
+   * If you want to send a new message, use [[send]].
+   */
+  def handleNewMessage(message: TextMessage): Unit = {
+    MessageStore.addMessage(message)
+    MainHandler.post(new Runnable {
+      override def run(): Unit = {
+        messageListeners(message.sender).foreach(l =>
+          if (l.get != null)
+            l.apply().onMessageReceived(new TreeSet[TextMessage]()(TextMessage.Ordering) + message)
+          else
+            messageListeners(message.sender) -= l)
+      }
+    })
+  }
+
+  /**
+   * Registers a listener that is called whenever a new message is sent or received.
+   */
+  def registerMessageListener(device: Device.ID, listener: OnMessageReceivedListener): Unit = {
+    messageListeners(device) += new WeakReference[OnMessageReceivedListener](listener)
+    listener.onMessageReceived(MessageStore.getMessages(device, 10))
+  }
+
+  /**
+   * Returns the unique bluetooth address of the local device.
+   */
+  def localDeviceId = new Device.ID(bluetoothAdapter.getAddress)
 
 }

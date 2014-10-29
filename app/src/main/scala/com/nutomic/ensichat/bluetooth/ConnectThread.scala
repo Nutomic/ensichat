@@ -17,6 +17,7 @@ class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Un
       device.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(ChatService.appUuid)
 
   override def run(): Unit = {
+    Log.i(Tag, "Connecting to " + device.toString)
     try {
       socket.connect()
     } catch {
@@ -25,7 +26,7 @@ class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Un
           socket.close()
         } catch {
           case e2: IOException =>
-            Log.e(Tag, "Failed to close socket", e2);
+            Log.e(Tag, "Failed to close socket", e2)
         }
         return;
     }

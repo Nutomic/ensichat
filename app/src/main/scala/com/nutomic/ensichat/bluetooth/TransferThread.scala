@@ -1,11 +1,11 @@
 package com.nutomic.ensichat.bluetooth
 
-import java.io.{OutputStream, InputStream}
+import java.io.{IOException, InputStream, OutputStream}
 
 import android.bluetooth.BluetoothSocket
 import android.util.Log
-import com.nutomic.ensichat.Message
-import java.io.IOException
+import com.nutomic.ensichat.messages.TextMessage
+
 /**
  * Transfers data between connnected devices.
  *
@@ -14,13 +14,13 @@ import java.io.IOException
  * @param onReceive Called when a message was received from the other device.
  */
 class TransferThread(device: Device, socket: BluetoothSocket,
-                     onReceive: (Device.ID, Message) => Unit) extends Thread {
+                     onReceive: (TextMessage) => Unit) extends Thread {
 
   val Tag: String = "TransferThread"
 
   val InStream: InputStream =
     try {
-      socket.getInputStream()
+      socket.getInputStream
     } catch {
       case e: IOException =>
       Log.e(Tag, "Failed to open stream", e)
@@ -29,7 +29,7 @@ class TransferThread(device: Device, socket: BluetoothSocket,
 
   val OutStream: OutputStream =
     try {
-      socket.getOutputStream()
+      socket.getOutputStream
     } catch {
       case e: IOException =>
       Log.e(Tag, "Failed to open stream", e)
@@ -37,28 +37,26 @@ class TransferThread(device: Device, socket: BluetoothSocket,
     }
 
   override def run(): Unit = {
-    var buffer: Array[Byte] = new Array(1024)
-
+    Log.i(Tag, "Starting data transfer with " + device.toString)
     // Keep listening to the InputStream while connected
     while (true) {
       try {
-        InStream.read(buffer)
-        val msg: Message = Message.fromByteArray(buffer)
-        onReceive(device.id, msg)
+        val msg = TextMessage.fromStream(InStream)
+        onReceive(msg)
       } catch {
         case e: IOException =>
-        Log.e(Tag, "Disconnected from device", e);
+        Log.e(Tag, "Disconnected from device", e)
         return
       }
     }
   }
 
-  def send(message: Message): Unit = {
+  def send(message: TextMessage): Unit = {
     try {
-      OutStream.write(message.toByteArray())
+      message.write(OutStream)
     } catch {
       case e: IOException =>
-        Log.e(Tag, "Failed to write message", e);
+        Log.e(Tag, "Failed to write message", e)
     }
   }
 

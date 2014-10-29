@@ -1,6 +1,7 @@
 package com.nutomic.ensichat.bluetooth
 
 import android.bluetooth.BluetoothDevice
+import org.msgpack.annotation.Message
 
 object Device {
 
@@ -9,12 +10,14 @@ object Device {
    *
    * @param Id A bluetooth device address.
    */
+  @Message
   class ID(private val Id: String) {
     override def hashCode = Id.hashCode
     override def equals(a: Any) = a match {
       case other: Device.ID => Id == other.Id
       case _ => false
     }
+    override def toString = Id
   }
 
 }
@@ -31,5 +34,7 @@ class Device(BluetoothDevice: BluetoothDevice, Connected: Boolean) {
   def connected = Connected
 
   def bluetoothDevice = BluetoothDevice
+
+  override def toString = "Device(" + name + ", " + bluetoothDevice.getAddress + ")"
 
 }

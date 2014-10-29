@@ -23,6 +23,7 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
     }
 
   override  def run(): Unit = {
+    Log.i(Tag, "Listening for connections")
     var socket: BluetoothSocket = null
 
     while (true) {

@@ -12,6 +12,7 @@ buildscript {
 
 dependencies {
     compile "org.scala-lang:scala-library:2.11.2"
+    compile "org.msgpack:msgpack-scala_2.11:0.6.11"
 }
 
 android {
@@ -42,14 +43,13 @@ android {
 
     buildTypes {
         debug {
-            runProguard true
-            proguardFile file("proguard-rules.pro")
             applicationIdSuffix ".debug"
         }
+    }
 
-        release {
-            runProguard true
-            proguardFile file("proguard-rules.pro")
-        }
+    // Avoid duplicate file errors during packaging.
+    packagingOptions {
+        exclude 'decoder.properties'
+        exclude 'rootdoc.txt'
     }
 }
