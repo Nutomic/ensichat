@@ -1,23 +1,23 @@
 apply plugin: 'com.android.application'
-apply plugin: 'android-scala'
+apply plugin: 'jp.leafytree.android-scala'
 
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath "jp.leafytree.gradle:gradle-android-scala-plugin:1.0"
+        classpath "jp.leafytree.gradle:gradle-android-scala-plugin:1.2.1"
     }
 }
 
 dependencies {
-    compile "org.scala-lang:scala-library:2.11.2"
+    compile "org.scala-lang:scala-library:2.10.4"
     compile "org.msgpack:msgpack-scala_2.11:0.6.11"
 }
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "19.1.0"
+    buildToolsVersion "21.1.0"
 
     defaultConfig {
         applicationId "com.nutomic.ensichat"
@@ -43,12 +43,12 @@ android {
 
     buildTypes {
         debug {
-            runProguard true
+            minifyEnabled true
             proguardFile file("proguard-rules.pro")
             applicationIdSuffix ".debug"
         }
         release {
-            runProguard true
+            minifyEnabled true
             proguardFile file("proguard-rules.pro")
         }
     }
@@ -57,5 +57,7 @@ android {
     packagingOptions {
         exclude 'decoder.properties'
         exclude 'rootdoc.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
     }
 }
