@@ -9,6 +9,7 @@ import android.test.AndroidTestCase
 import android.test.mock.MockContext
 import com.nutomic.ensichat.bluetooth.Device
 import junit.framework.Assert._
+import com.nutomic.ensichat.messages.MessageTest._
 
 class MessageStoreTest extends AndroidTestCase {
 
@@ -26,9 +27,9 @@ class MessageStoreTest extends AndroidTestCase {
 
   override def setUp(): Unit = {
     MessageStore = new MessageStore(new TestContext(getContext))
-    MessageStore.addMessage(TextMessageTest.m1)
-    MessageStore.addMessage(TextMessageTest.m2)
-    MessageStore.addMessage(TextMessageTest.m3)
+    MessageStore.addMessage(m1)
+    MessageStore.addMessage(m2)
+    MessageStore.addMessage(m3)
   }
 
   override def tearDown(): Unit = {
@@ -46,13 +47,13 @@ class MessageStoreTest extends AndroidTestCase {
 
   def testOrder(): Unit = {
     val msg = MessageStore.getMessages(new Device.ID("two"), 1)
-    assertTrue(msg.contains(TextMessageTest.m3))
+    assertTrue(msg.contains(m3))
   }
 
   def testSelect(): Unit = {
     val msg = MessageStore.getMessages(new Device.ID("two"), 2)
-    assertTrue(msg.contains(TextMessageTest.m1))
-    assertTrue(msg.contains(TextMessageTest.m3))
+    assertTrue(msg.contains(m1))
+    assertTrue(msg.contains(m3))
   }
 
 }

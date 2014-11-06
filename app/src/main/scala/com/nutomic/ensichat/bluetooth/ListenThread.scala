@@ -7,6 +7,8 @@ import android.util.Log
 
 /**
  * Listens for incoming connections from other devices.
+ *
+ * @param name Service name to broadcast.
  */
 class ListenThread(name: String, adapter: BluetoothAdapter,
                    onConnected: (Device, BluetoothSocket) => Unit) extends Thread {
@@ -23,7 +25,7 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
     }
 
   override  def run(): Unit = {
-    Log.i(Tag, "Listening for connections")
+    Log.i(Tag, "Listening for connections at " + adapter.getAddress)
     var socket: BluetoothSocket = null
 
     while (true) {
@@ -44,6 +46,7 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
   }
 
   def cancel(): Unit = {
+    Log.i(Tag, "Canceling listening")
     try {
       ServerSocket.close()
     } catch {

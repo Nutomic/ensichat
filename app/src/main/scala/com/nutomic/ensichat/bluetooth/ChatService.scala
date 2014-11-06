@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.bluetooth
 
-import java.util.UUID
+import java.util.{Date, UUID}
 
 import android.app.Service
 import android.bluetooth.{BluetoothAdapter, BluetoothDevice, BluetoothSocket}
@@ -9,7 +9,7 @@ import android.os.Handler
 import android.util.Log
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.ChatService.{OnDeviceConnectedListener, OnMessageReceivedListener}
-import com.nutomic.ensichat.messages.{MessageStore, TextMessage}
+import com.nutomic.ensichat.messages._
 
 import scala.collection.immutable.{HashMap, HashSet, TreeSet}
 import scala.collection.{SortedSet, mutable}
@@ -22,12 +22,14 @@ object ChatService {
    */
   val appUuid: UUID = UUID.fromString("8ed52b7a-4501-5348-b054-3d94d004656e")
 
+  val KEY_GENERATION_FINISHED = "com.nutomic.ensichat.messages.KEY_GENERATION_FINISHED"
+
   trait OnDeviceConnectedListener {
     def onDeviceConnected(devices: Map[Device.ID, Device]): Unit
   }
 
   trait OnMessageReceivedListener {
-    def onMessageReceived(messages: SortedSet[TextMessage]): Unit
+    def onMessageReceived(messages: SortedSet[Message]): Unit
   }
 
 }
@@ -68,6 +70,8 @@ class ChatService extends Service {
 
   private var MessageStore: MessageStore = _
 
+  private lazy val Encrypt = new Crypto(getFilesDir)
+
   /**
    * Initializes BroadcastReceiver for discovery, starts discovery and listens for connections.
    */
@@ -82,6 +86,14 @@ class ChatService extends Service {
     registerReceiver(BluetoothStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
     if (bluetoothAdapter.isEnabled) {
       startBluetoothConnections()
+    }
+
+    if (!Encrypt.localKeysExist) {
+      new Thread(new Runnable {
+        override def run(): Unit = {
+          Encrypt.generateLocalKeys()
+        }
+      }).start()
     }
   }
 
@@ -120,7 +132,7 @@ class ChatService extends Service {
   /**
    * Receives newly discovered devices and connects to them.
    */
-  private val DeviceDiscoveredReceiver: BroadcastReceiver  = new BroadcastReceiver() {
+  private val DeviceDiscoveredReceiver = new BroadcastReceiver() {
     override def onReceive(context: Context, intent: Intent) {
       val device: Device =
         new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
@@ -132,7 +144,7 @@ class ChatService extends Service {
   /**
    * Starts or stops listening and discovery based on bluetooth state.
    */
-  private val BluetoothStateReceiver: BroadcastReceiver = new BroadcastReceiver {
+  private val BluetoothStateReceiver = new BroadcastReceiver {
     override def onReceive(context: Context, intent: Intent): Unit = {
       intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) match {
         case BluetoothAdapter.STATE_ON =>
@@ -171,13 +183,16 @@ class ChatService extends Service {
   /**
    * Called when a Bluetooth device is connected.
    *
-   * Adds the device to [[connections]], notifies all [[deviceListeners]].
+   * Adds the device to [[connections]], notifies all [[deviceListeners]], sends DeviceInfoMessage.
    */
   def onConnected(device: Device, socket: BluetoothSocket): Unit = {
     val updatedDevice: Device = new Device(device.bluetoothDevice, true)
     devices += (device.id -> updatedDevice)
-    connections += (device.id -> new TransferThread(updatedDevice, socket, handleNewMessage))
+    connections += (device.id ->
+      new TransferThread(updatedDevice, socket, localDeviceId, Encrypt, handleNewMessage))
     connections(device.id).start()
+
+    send(new DeviceInfoMessage(localDeviceId, device.id, new Date(), Encrypt.getLocalPublicKey))
     deviceListeners.foreach(l => l.get match {
       case Some(_) => l.apply().onDeviceConnected(devices)
       case None => deviceListeners -= l
@@ -187,7 +202,7 @@ class ChatService extends Service {
   /**
    * Sends message to the device specified as receiver,
    */
-  def send(message: TextMessage): Unit = {
+  def send(message: Message): Unit = {
     connections.apply(message.receiver).send(message)
     handleNewMessage(message)
   }
@@ -197,13 +212,13 @@ class ChatService extends Service {
    *
    * If you want to send a new message, use [[send]].
    */
-  def handleNewMessage(message: TextMessage): Unit = {
+  private def handleNewMessage(message: Message): Unit = {
     MessageStore.addMessage(message)
     MainHandler.post(new Runnable {
       override def run(): Unit = {
         messageListeners(message.sender).foreach(l =>
           if (l.get != null)
-            l.apply().onMessageReceived(new TreeSet[TextMessage]()(TextMessage.Ordering) + message)
+            l.apply().onMessageReceived(new TreeSet[Message]()(Message.Ordering) + message)
           else
             messageListeners(message.sender) -= l)
       }

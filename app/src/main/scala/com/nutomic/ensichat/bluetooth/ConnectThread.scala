@@ -13,26 +13,27 @@ class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Un
 
   val Tag = "ConnectThread"
 
-  val socket: BluetoothSocket =
+  val Socket: BluetoothSocket =
       device.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(ChatService.appUuid)
 
   override def run(): Unit = {
     Log.i(Tag, "Connecting to " + device.toString)
     try {
-      socket.connect()
+      Socket.connect()
     } catch {
       case e: IOException =>
+        Log.w(Tag, "Failed to connect to " + device.toString, e)
         try {
-          socket.close()
+          Socket.close()
         } catch {
           case e2: IOException =>
             Log.e(Tag, "Failed to close socket", e2)
         }
-        return;
+        return
     }
 
     Log.i(Tag, "Successfully connected to device " + device.name)
-    onConnected(device, socket)
+    onConnected(device, Socket)
   }
 
 }

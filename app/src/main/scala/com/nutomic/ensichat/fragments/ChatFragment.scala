@@ -13,7 +13,7 @@ import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.bluetooth.{ChatService, ChatServiceBinder, Device}
-import com.nutomic.ensichat.messages.TextMessage
+import com.nutomic.ensichat.messages.{Message, TextMessage}
 import com.nutomic.ensichat.util.MessagesAdapter
 
 import scala.collection.SortedSet
@@ -108,7 +108,7 @@ class ChatFragment extends ListFragment with OnClickListener
         val text: String = messageText.getText.toString
         if (!text.isEmpty) {
           chatService.send(
-            new TextMessage(chatService.localDeviceId, device, text.toString, new Date()))
+            new TextMessage(chatService.localDeviceId, device, new Date(), text.toString))
           messageText.getText.clear()
         }
     }
@@ -117,8 +117,9 @@ class ChatFragment extends ListFragment with OnClickListener
   /**
    * Displays new messages in UI.
    */
-  override def onMessageReceived(messages: SortedSet[TextMessage]): Unit = {
-    messages.foreach(m => adapter.add(m))
+  override def onMessageReceived(messages: SortedSet[Message]): Unit = {
+    messages.filter(_.isInstanceOf[TextMessage])
+      .foreach(m => adapter.add(m.asInstanceOf[TextMessage]))
   }
 
   /**
