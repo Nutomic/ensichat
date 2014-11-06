@@ -10,12 +10,17 @@ object Device {
    * @param Id A bluetooth device address.
    */
   class ID(private val Id: String) {
+    require(Id.matches("([A-Z0-9][A-Z0-9]:){5}[A-Z0-9][A-Z0-9]"), "Invalid device ID format")
+
     override def hashCode = Id.hashCode
+
     override def equals(a: Any) = a match {
       case other: Device.ID => Id == other.Id
       case _ => false
     }
+
     override def toString = Id
+
   }
 
 }

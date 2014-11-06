@@ -12,13 +12,13 @@ import scala.collection.immutable.TreeSet
 
 object MessageTest {
 
-  val m1 = new TextMessage(new Device.ID("one"), new Device.ID("two"),
+  val m1 = new TextMessage(new Device.ID("AA:AA:AA:AA:AA:AA"), new Device.ID("BB:BB:BB:BB:BB:BB"),
     new GregorianCalendar(2014, 10, 29).getTime, "first")
 
-  val m2 = new TextMessage(new Device.ID("one"), new Device.ID("three"),
+  val m2 = new TextMessage(new Device.ID("AA:AA:AA:AA:AA:AA"), new Device.ID("CC:CC:CC:CC:CC:CC"),
     new GregorianCalendar(2014, 10, 30).getTime, "second")
 
-  val m3 = new TextMessage(new Device.ID("four"), new Device.ID("two"),
+  val m3 = new TextMessage(new Device.ID("DD:DD:DD:DD:DD:DD"), new Device.ID("BB:BB:BB:BB:BB:BB"),
     new GregorianCalendar(2014, 10, 31).getTime, "third")
 
 

@@ -7,6 +7,7 @@ import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.test.AndroidTestCase
 import android.test.mock.MockContext
+import android.util.Log
 import com.nutomic.ensichat.bluetooth.Device
 import com.nutomic.ensichat.messages.MessageTest._
 import junit.framework.Assert._
@@ -38,20 +39,20 @@ class MessageStoreTest extends AndroidTestCase {
   }
 
   def testCount(): Unit = {
-    val msg1 = MessageStore.getMessages(new Device.ID("one"), 1)
+    val msg1 = MessageStore.getMessages(m1.sender, 1)
     assertEquals(1, msg1.size)
 
-    val msg2 = MessageStore.getMessages(new Device.ID("one"), 3)
+    val msg2 = MessageStore.getMessages(m1.sender, 3)
     assertEquals(2, msg2.size)
   }
 
   def testOrder(): Unit = {
-    val msg = MessageStore.getMessages(new Device.ID("two"), 1)
+    val msg = MessageStore.getMessages(m1.receiver, 1)
     assertTrue(msg.contains(m3))
   }
 
   def testSelect(): Unit = {
-    val msg = MessageStore.getMessages(new Device.ID("two"), 2)
+    val msg = MessageStore.getMessages(m1.receiver, 2)
     assertTrue(msg.contains(m1))
     assertTrue(msg.contains(m3))
   }
