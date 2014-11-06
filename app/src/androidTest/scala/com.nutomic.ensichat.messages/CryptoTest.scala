@@ -1,8 +1,8 @@
 package com.nutomic.ensichat.messages
 
 import android.test.AndroidTestCase
-import junit.framework.Assert._
 import com.nutomic.ensichat.messages.MessageTest._
+import junit.framework.Assert._
 
 class CryptoTest extends AndroidTestCase {
 

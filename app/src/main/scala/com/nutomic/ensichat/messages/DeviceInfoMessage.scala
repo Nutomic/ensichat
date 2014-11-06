@@ -40,6 +40,4 @@ class DeviceInfoMessage(override val sender: Device.ID, override val receiver: D
   override def toString = "DeviceInfoMessage(" + sender.toString + ", " + receiver.toString +
     ", " + date.toString + ", " + publicKey.toString + ")"
 
-  override def getBytes = super.getBytes ++ publicKey.getEncoded
-
 }

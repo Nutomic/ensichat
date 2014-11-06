@@ -4,7 +4,6 @@ import java.io.{File, FileInputStream, FileOutputStream, IOException}
 import java.security._
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
 
-import android.content.Context
 import android.util.Log
 import com.nutomic.ensichat.bluetooth.Device
 import com.nutomic.ensichat.messages.Crypto._
@@ -80,6 +79,8 @@ class Crypto(filesDir: File) {
   /**
    * Checks if the message was properly signed.
    *
+   * This is done by signing the output of [[Message.write()]] called with an empty signature.
+   *
    * @param message The message to verify.
    * @param signature The signature that was sent
    * @return True if the signature is valid.
@@ -89,19 +90,21 @@ class Crypto(filesDir: File) {
       if (key != null) key
       else loadKey(message.sender.toString, classOf[PublicKey])
     val sig = Signature.getInstance(SignAlgorithm)
-    sig.initVerify(key)
-    sig.update(message.getBytes)
+    sig.initVerify(publicKey)
+    sig.update(message.write(Array[Byte]()))
     sig.verify(signature)
   }
 
   /**
    * Returns a cryptographic signature for the given message (using local private key).
+   *
+   * This is done by signing the output of [[Message.write()]] called with an empty signature.
    */
   def calculateSignature(message: Message): Array[Byte] = {
     val sig = Signature.getInstance(SignAlgorithm)
     val key = loadKey(PrivateKeyAlias, classOf[PrivateKey])
     sig.initSign(key)
-    sig.update(message.getBytes)
+    sig.update(message.write(Array[Byte]()))
     sig.sign
   }
 

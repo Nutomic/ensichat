@@ -29,8 +29,8 @@ class MessageTest extends AndroidTestCase {
   def testSerialize(): Unit = {
     val pis = new PipedInputStream()
     val pos = new PipedOutputStream(pis)
-    m1.write(pos, Array[Byte]())
-    val (msg, _) = Message.read(pis)
+    val bytes = m1.write(Array[Byte]())
+    val (msg, _) = Message.read(bytes)
     assertEquals(m1, msg)
   }
 

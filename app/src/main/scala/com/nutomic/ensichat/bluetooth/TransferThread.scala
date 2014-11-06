@@ -1,7 +1,6 @@
 package com.nutomic.ensichat.bluetooth
 
 import java.io._
-import java.util.Date
 
 import android.bluetooth.BluetoothSocket
 import android.util.Log
@@ -9,6 +8,8 @@ import com.nutomic.ensichat.messages.{Crypto, DeviceInfoMessage, Message, TextMe
 
 /**
  * Transfers data between connnected devices.
+ *
+ * Messages must not be longer than [[TransferThread#MaxMessageLength]] bytes.
  *
  * @param device The bluetooth device to interact with.
  * @param socket An open socket to the given device.
@@ -18,7 +19,9 @@ import com.nutomic.ensichat.messages.{Crypto, DeviceInfoMessage, Message, TextMe
 class TransferThread(device: Device, socket: BluetoothSocket, localDevice: Device.ID,
                      encrypt: Crypto, onReceive: (Message) => Unit) extends Thread {
 
-  val Tag: String = "TransferThread"
+  private val Tag: String = "TransferThread"
+
+  private val MaxMessageLength = 4096
 
   val InStream: InputStream =
     try {
@@ -44,7 +47,9 @@ class TransferThread(device: Device, socket: BluetoothSocket, localDevice: Devic
     // Keep listening to the InputStream while connected
     while (true) {
       try {
-        val (msg, signature) = Message.read(InStream)
+        val bytes = new Array[Byte](MaxMessageLength)
+        InStream.read(bytes)
+        val (msg, signature) = Message.read(bytes)
         var messageValid = true
 
         if (msg.sender != device.id) {
@@ -57,14 +62,14 @@ class TransferThread(device: Device, socket: BluetoothSocket, localDevice: Devic
           messageValid = false
         }
 
-        // Add public key for new, local device.
+        // Add public key for new, directly connected device.
         // Explicitly check that message was not forwarded or spoofed.
         if (msg.isInstanceOf[DeviceInfoMessage] && !encrypt.havePublicKey(msg.sender) &&
             msg.sender == device.id) {
           val dim = msg.asInstanceOf[DeviceInfoMessage]
           // Permanently store public key for new local devices (also check signature).
-          if (msg.sender == device.id && encrypt.isValidSignature(msg, signature, dim.publicKey)) {
-            encrypt.addPublicKey(device.id, msg.asInstanceOf[DeviceInfoMessage].publicKey)
+          if (encrypt.isValidSignature(msg, signature, dim.publicKey)) {
+            encrypt.addPublicKey(device.id, dim.publicKey)
             Log.i(Tag, "Added public key for new device " + device.name)
           }
         }
@@ -91,7 +96,8 @@ class TransferThread(device: Device, socket: BluetoothSocket, localDevice: Devic
   def send(message: Message): Unit = {
     try {
       val sig = encrypt.calculateSignature(message)
-      message.write(OutStream, sig)
+      val bytes = message.write(sig)
+      OutStream.write(bytes)
     } catch {
       case e: IOException =>
         Log.e(Tag, "Failed to write message", e)

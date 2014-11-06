@@ -1,7 +1,5 @@
 package com.nutomic.ensichat.messages
 
-import java.io.{InputStream, OutputStream}
-import java.nio.ByteBuffer
 import java.util.Date
 
 import com.nutomic.ensichat.bluetooth.Device
@@ -28,17 +26,19 @@ object Message {
   }
 
   /**
-   * Deserializes a stream that was written by [[Message.write]] into the correct subclass.
+   * Reads a byte array that was written by [[Message.write]] into the correct
+   * message implementation..
    *
    * @return Deserialized message and sits signature.
    */
-  def read(in: InputStream): (Message, Array[Byte]) = {
-    val up = new ScalaMessagePack().createUnpacker(in)
+  def read(bytes: Array[Byte]): (Message, Array[Byte]) = {
+    val up = new ScalaMessagePack().createBufferUnpacker(bytes)
+
     val messageType = up.readInt()
-    val sender = new Device.ID(up.readString())
-    val receiver = new Device.ID(up.readString())
-    val date = new Date(up.readLong())
-    val sig = up.readByteArray()
+    val sender      = new Device.ID(up.readString())
+    val receiver    = new Device.ID(up.readString())
+    val date        = new Date(up.readLong())
+    val sig         = up.readByteArray()
     (messageType match {
       case Type.Text       => TextMessage.read(sender, receiver, date, up)
       case Type.DeviceInfo => DeviceInfoMessage.read(sender, receiver, date, up)
@@ -70,16 +70,19 @@ abstract class Message(messageType: Int) {
   val date: Date
 
   /**
-   * Serializes this message and the given signature into stream.
+   * Writes this message and the given signature into byte array.
+   *
+   * Signature may not be null, but can be an empty array.
    */
-  def write(os: OutputStream, signature: Array[Byte]): Unit = {
-    val packer = new ScalaMessagePack().createPacker(os)
-      .write(messageType)
+  def write(signature: Array[Byte]): Array[Byte] = {
+    val packer = new ScalaMessagePack().createBufferPacker()
+    packer.write(messageType)
       .write(sender.toString)
       .write(receiver.toString)
       .write(date.getTime)
       .write(signature)
-     doWrite(packer)
+    doWrite(packer)
+    packer.toByteArray
   }
 
   /**
@@ -108,18 +111,5 @@ abstract class Message(messageType: Int) {
   override def hashCode: Int = sender.hashCode + receiver.hashCode + date.hashCode
 
   override def toString: String
-
-  /**
-   * Returns this object's data encoded as Array[Byte].
-   *
-   * Implementations must provide their own implementation to check the result of this
-   * function and their own data.
-   */
-  def getBytes: Array[Byte] = intToBytes(messageType) ++ sender.toString.getBytes ++
-    receiver.toString.getBytes ++ longToBytes(date.getTime)
-
-  private def intToBytes(i: Int) = ByteBuffer.allocate(java.lang.Integer.SIZE / 8).putInt(i).array()
-
-  private def longToBytes(l: Long) = ByteBuffer.allocate(java.lang.Long.SIZE / 8).putLong(l).array()
 
 }

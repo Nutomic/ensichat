@@ -29,6 +29,4 @@ class TextMessage(override val sender: Device.ID, override val receiver: Device.
   override def toString = "TextMessage(" + sender.toString + ", " + receiver.toString +
     ", " + date.toString + ", " + text + ")"
 
-  override def getBytes = super.getBytes ++ text.getBytes
-
 }
