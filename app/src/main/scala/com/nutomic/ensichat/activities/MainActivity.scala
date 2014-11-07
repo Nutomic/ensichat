@@ -59,11 +59,6 @@ class MainActivity extends Activity {
     currentChat.collect{case c => outState.putString("current_chat", c.toString)}
   }
 
-  override def onCreateOptionsMenu(menu: Menu): Boolean = {
-    getMenuInflater.inflate(R.menu.main, menu)
-    true
-  }
-
   /**
    * Exits with error if bluetooth was not enabled/not set discoverable,
    */
@@ -74,17 +69,6 @@ class MainActivity extends Activity {
           Toast.makeText(this, R.string.bluetooth_required, Toast.LENGTH_LONG).show()
           finish()
         }
-    }
-  }
-
-  override def onOptionsItemSelected(item: MenuItem): Boolean = {
-    item.getItemId match {
-      case R.id.exit =>
-        stopService(new Intent(this, classOf[ChatService]))
-        finish()
-        true
-      case _ =>
-        false
     }
   }
 

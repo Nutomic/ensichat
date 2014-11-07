@@ -3,7 +3,7 @@ package com.nutomic.ensichat.fragments
 import android.app.ListFragment
 import android.content.{ComponentName, Context, Intent, ServiceConnection}
 import android.os.{Bundle, IBinder}
-import android.view.{LayoutInflater, View, ViewGroup}
+import android.view._
 import android.widget.{ArrayAdapter, ListView}
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
@@ -44,11 +44,28 @@ class ContactsFragment extends ListFragment with ChatService.OnDeviceConnectedLi
     setListAdapter(adapter)
     getActivity.bindService(new Intent(getActivity, classOf[ChatService]),
       ChatServiceConnection, Context.BIND_AUTO_CREATE)
+    setHasOptionsMenu(true)
   }
 
   override def onDestroy(): Unit = {
     super.onDestroy()
     getActivity.unbindService(ChatServiceConnection)
+  }
+
+  override def onCreateOptionsMenu(menu: Menu, inflater: MenuInflater): Unit = {
+    super.onCreateOptionsMenu(menu, inflater)
+    inflater.inflate(R.menu.main, menu)
+  }
+
+  override def onOptionsItemSelected(item: MenuItem): Boolean = {
+    item.getItemId match {
+      case R.id.exit =>
+        getActivity.stopService(new Intent(getActivity, classOf[ChatService]))
+        getActivity.finish()
+        true
+      case _ =>
+        super.onOptionsItemSelected(item)
+    }
   }
 
   /**
