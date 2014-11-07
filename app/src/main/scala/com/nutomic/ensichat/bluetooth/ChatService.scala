@@ -8,7 +8,7 @@ import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.Handler
 import android.util.Log
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.bluetooth.ChatService.{OnDeviceConnectedListener, OnMessageReceivedListener}
+import com.nutomic.ensichat.bluetooth.ChatService.{OnConnectionChangedListener, OnMessageReceivedListener}
 import com.nutomic.ensichat.messages._
 
 import scala.collection.immutable.{HashMap, HashSet, TreeSet}
@@ -24,8 +24,8 @@ object ChatService {
 
   val KEY_GENERATION_FINISHED = "com.nutomic.ensichat.messages.KEY_GENERATION_FINISHED"
 
-  trait OnDeviceConnectedListener {
-    def onDeviceConnected(devices: Map[Device.ID, Device]): Unit
+  trait OnConnectionChangedListener {
+    def onConnectionChanged(devices: Map[Device.ID, Device]): Unit
   }
 
   trait OnMessageReceivedListener {
@@ -52,7 +52,7 @@ class ChatService extends Service {
    * but on a Nexus S (Android 4.1.2), these functions are garbage collected even when
    * referenced.
    */
-  private var deviceListeners = new HashSet[WeakReference[OnDeviceConnectedListener]]()
+  private var connectionListeners = new HashSet[WeakReference[OnConnectionChangedListener]]()
 
   private val messageListeners =
     mutable.HashMap[Device.ID, mutable.Set[WeakReference[OnMessageReceivedListener]]]()
@@ -137,7 +137,7 @@ class ChatService extends Service {
       val device: Device =
         new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
       devices += (device.id -> device)
-      new ConnectThread(device, onConnected).start()
+      new ConnectThread(device, onConnectionChanged).start()
     }
   }
 
@@ -168,34 +168,40 @@ class ChatService extends Service {
   private def startBluetoothConnections(): Unit = {
     cancelDiscovery = false
     discover()
-    ListenThread = new ListenThread(getString(R.string.app_name), bluetoothAdapter, onConnected)
+    ListenThread =
+      new ListenThread(getString(R.string.app_name), bluetoothAdapter, onConnectionChanged)
     ListenThread.start()
   }
 
   /**
    * Registers a listener that is called whenever a new device is connected.
    */
-  def registerDeviceListener(listener: OnDeviceConnectedListener): Unit = {
-    deviceListeners += new WeakReference[OnDeviceConnectedListener](listener)
-    listener.onDeviceConnected(devices)
+  def registerConnectionListener(listener: OnConnectionChangedListener): Unit = {
+    connectionListeners += new WeakReference[OnConnectionChangedListener](listener)
+    listener.onConnectionChanged(devices)
   }
 
   /**
    * Called when a Bluetooth device is connected.
    *
-   * Adds the device to [[connections]], notifies all [[deviceListeners]], sends DeviceInfoMessage.
+   * Adds the device to [[connections]], notifies all [[connectionListeners]], sends DeviceInfoMessage.
+   *
+   * @param device The updated device info for the remote device.
+   * @param socket A socket for data transfer if device.connected is true, otherwise null.
    */
-  def onConnected(device: Device, socket: BluetoothSocket): Unit = {
-    val updatedDevice: Device = new Device(device.bluetoothDevice, true)
-    devices += (device.id -> updatedDevice)
-    connections += (device.id ->
-      new TransferThread(updatedDevice, socket, localDeviceId, Encrypt, handleNewMessage))
-    connections(device.id).start()
+  def onConnectionChanged(device: Device, socket: BluetoothSocket): Unit = {
+    devices += (device.id -> device)
 
-    send(new DeviceInfoMessage(localDeviceId, device.id, new Date(), Encrypt.getLocalPublicKey))
-    deviceListeners.foreach(l => l.get match {
-      case Some(_) => l.apply().onDeviceConnected(devices)
-      case None => deviceListeners -= l
+    if (device.connected) {
+      connections += (device.id ->
+        new TransferThread(device, socket, this, Encrypt, handleNewMessage))
+      connections(device.id).start()
+      send(new DeviceInfoMessage(localDeviceId, device.id, new Date(), Encrypt.getLocalPublicKey))
+    }
+
+    connectionListeners.foreach(l => l.get match {
+      case Some(_) => l.apply().onConnectionChanged(devices)
+      case None => connectionListeners -= l
     })
   }
 

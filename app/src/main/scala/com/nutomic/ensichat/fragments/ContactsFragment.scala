@@ -13,7 +13,7 @@ import com.nutomic.ensichat.util.DevicesAdapter
 /**
  * Lists all nearby, connected devices.
  */
-class ContactsFragment extends ListFragment with ChatService.OnDeviceConnectedListener {
+class ContactsFragment extends ListFragment with ChatService.OnConnectionChangedListener {
 
   private var chatService: ChatService = _
 
@@ -21,7 +21,7 @@ class ContactsFragment extends ListFragment with ChatService.OnDeviceConnectedLi
     override def onServiceConnected(componentName: ComponentName, iBinder: IBinder): Unit = {
       val binder: ChatServiceBinder = iBinder.asInstanceOf[ChatServiceBinder]
       chatService = binder.getService
-      chatService.registerDeviceListener(ContactsFragment.this)
+      chatService.registerConnectionListener(ContactsFragment.this)
     }
 
     override def onServiceDisconnected(componentName: ComponentName): Unit = {
@@ -71,7 +71,7 @@ class ContactsFragment extends ListFragment with ChatService.OnDeviceConnectedLi
   /**
    * Displays newly connected devices in the list.
    */
-  override def onDeviceConnected(devices: Map[Device.ID, Device]): Unit = {
+  override def onConnectionChanged(devices: Map[Device.ID, Device]): Unit = {
     if (getActivity == null)
       return
 

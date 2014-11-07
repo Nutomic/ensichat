@@ -33,7 +33,7 @@ class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Un
     }
 
     Log.i(Tag, "Successfully connected to device " + device.name)
-    onConnected(device, Socket)
+    onConnected(new Device(device.bluetoothDevice, true), Socket)
   }
 
 }
