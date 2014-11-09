@@ -4,7 +4,6 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content._
 import android.os.Bundle
-import android.view.{Menu, MenuItem}
 import android.widget.Toast
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.{ChatService, Device}

@@ -33,7 +33,7 @@ class DeviceInfoMessage(override val sender: Device.ID, override val receiver: D
   override def doWrite(packer: Packer) = packer.write(publicKey.getEncoded)
 
   override def equals(a: Any) =
-    super.equals(a) && a.asInstanceOf[DeviceInfoMessage].publicKey == publicKey
+    super.equals(a) && a.asInstanceOf[DeviceInfoMessage].publicKey.toString == publicKey.toString
 
   override def hashCode = super.hashCode + publicKey.hashCode
 

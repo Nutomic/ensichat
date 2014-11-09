@@ -5,6 +5,7 @@ import java.io._
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.nutomic.ensichat.messages.{Crypto, DeviceInfoMessage, Message, TextMessage}
+import org.msgpack.ScalaMessagePack
 
 /**
  * Transfers data between connnected devices.
@@ -20,8 +21,6 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
                      crypto: Crypto, onReceive: (Message) => Unit) extends Thread {
 
   private val Tag: String = "TransferThread"
-
-  private val MaxMessageLength = 4096
 
   val InStream: InputStream =
     try {
@@ -46,9 +45,11 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
 
     while (socket.isConnected) {
       try {
-        val bytes = new Array[Byte](MaxMessageLength)
-        InStream.read(bytes)
-        val (message, signature) = Message.read(bytes)
+        val up = new ScalaMessagePack().createUnpacker(InStream)
+        val encrypted = up.readByteArray()
+        val key = up.readByteArray()
+        val plain = crypto.decrypt(encrypted, key)
+        val (message, signature) = Message.read(plain)
         var messageValid = true
 
         if (message.sender != device.id) {
@@ -97,11 +98,13 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
   def send(message: Message): Unit = {
     try {
       val sig = crypto.calculateSignature(message)
-      val bytes = message.write(sig)
-      OutStream.write(bytes)
+      val plain = message.write(sig)
+      val (encrypted, key) = crypto.encrypt(message.receiver, plain)
+      new ScalaMessagePack().createPacker(OutStream)
+        .write(encrypted)
+        .write(key)
     } catch {
-      case e: IOException =>
-        Log.e(Tag, "Failed to write message", e)
+      case e: IOException => Log.e(Tag, "Failed to write message", e)
     }
   }
 
@@ -109,8 +112,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
     try {
       socket.close()
     } catch {
-      case e: IOException =>
-        Log.e(Tag, "Failed to close socket", e);
+      case e: IOException => Log.e(Tag, "Failed to close socket", e);
     }
   }
 

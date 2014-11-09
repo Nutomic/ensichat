@@ -70,7 +70,7 @@ class ChatService extends Service {
 
   private var MessageStore: MessageStore = _
 
-  private lazy val Encrypt = new Crypto(getFilesDir)
+  private lazy val Crypto = new Crypto(getFilesDir)
 
   /**
    * Initializes BroadcastReceiver for discovery, starts discovery and listens for connections.
@@ -88,10 +88,10 @@ class ChatService extends Service {
       startBluetoothConnections()
     }
 
-    if (!Encrypt.localKeysExist) {
+    if (!Crypto.localKeysExist) {
       new Thread(new Runnable {
         override def run(): Unit = {
-          Encrypt.generateLocalKeys()
+          Crypto.generateLocalKeys()
         }
       }).start()
     }
@@ -194,9 +194,9 @@ class ChatService extends Service {
 
     if (device.connected) {
       connections += (device.id ->
-        new TransferThread(device, socket, this, Encrypt, handleNewMessage))
+        new TransferThread(device, socket, this, Crypto, handleNewMessage))
       connections(device.id).start()
-      send(new DeviceInfoMessage(localDeviceId, device.id, new Date(), Encrypt.getLocalPublicKey))
+      send(new DeviceInfoMessage(localDeviceId, device.id, new Date(), Crypto.getLocalPublicKey))
     }
 
     connectionListeners.foreach(l => l.get match {

@@ -1,8 +1,10 @@
 package com.nutomic.ensichat.messages
 
-import java.io.{File, FileInputStream, FileOutputStream, IOException}
+import java.io._
 import java.security._
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
+import javax.crypto.spec.SecretKeySpec
+import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 
 import android.util.Log
 import com.nutomic.ensichat.bluetooth.Device
@@ -21,9 +23,19 @@ object Crypto {
   val KeySize = 2048
 
   /**
-   * Name of algorithm used for message signing.
+   * Algorithm used for message signing.
    */
   val SignAlgorithm = "SHA256withRSA"
+
+  /**
+   * Algorithm used for symmetric crypto cipher.
+   */
+  val SymmetricCipherAlgorithm = "AES"
+
+  /**
+   * Algorithm used for symmetric message encryption.
+   */
+  val SymmetricKeyAlgorithm = "AES/CBC/PKCS5Padding"
 
 }
 
@@ -187,5 +199,83 @@ class Crypto(filesDir: File) {
    * Returns the folder where keys are stored.
    */
   private def keyFolder = new File(filesDir, "keys")
+
+  /**
+   * Encrypts data for the given receiver.
+   *
+   * @param receiver The device that should be able to decrypt this message.
+   * @param data The message to encrypt.
+   * @param key Optional RSA public key to use for encryption.
+   * @return Pair of AES encrypted data and RSA encrypted AES key.
+   */
+  def encrypt(receiver: Device.ID, data: Array[Byte], key: PublicKey = null):
+      (Array[Byte], Array[Byte]) = {
+    // Symmetric encryption of data
+    val secretKey = makeSecretKey()
+    val symmetricCipher = Cipher.getInstance(SymmetricCipherAlgorithm)
+    symmetricCipher.init(Cipher.ENCRYPT_MODE, secretKey)
+    val encryptedData = copyThroughCipher(symmetricCipher, data)
+
+    // Asymmetric encryption of secret key
+    val publicKey =
+      if (key != null) key
+      else loadKey(receiver.toString, classOf[PublicKey])
+    val asymmetricCipher = Cipher.getInstance(KeyAlgorithm)
+    asymmetricCipher.init(Cipher.WRAP_MODE, publicKey)
+
+    (encryptedData, asymmetricCipher.wrap(secretKey))
+  }
+
+  /**
+   * Decrypts the output of [[encrypt]].
+   *
+   * @param data The AES encrypted data to decrypt.
+   * @param key The RSA encrypted AES key used to encrypt data.
+   * @return The plain text data.
+   */
+  def decrypt(data: Array[Byte], key: Array[Byte]): Array[Byte] = {
+    // Asymmetric decryption of secret key
+    val asymmetricCipher = Cipher.getInstance(KeyAlgorithm)
+    asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))
+    val secretKey = asymmetricCipher.unwrap(key, SymmetricKeyAlgorithm, Cipher.SECRET_KEY)
+
+    // Symmetric decryption of data
+    val symmetricCipher = Cipher.getInstance(SymmetricCipherAlgorithm)
+    symmetricCipher.init(Cipher.DECRYPT_MODE, secretKey)
+    val dec = copyThroughCipher(symmetricCipher, data)
+    dec
+  }
+
+  /**
+   * Passes data through cipher stream to encrypt or decrypt it and returns int.
+   *
+   * Operation mode depends on the parameters to [[Cipher#init]].
+   *
+   * @param cipher An initialized cipher.
+   * @param data The data to encrypt or decrypt.
+   * @return The encrypted or decrypted data.
+   */
+  private def copyThroughCipher(cipher: Cipher, data: Array[Byte]): Array[Byte] = {
+    val bais = new ByteArrayInputStream(data)
+    val baos = new ByteArrayOutputStream()
+    val cos = new CipherOutputStream(baos, cipher)
+    var i = 0
+    val b = new Array[Byte](1024)
+    while({i = bais.read(b); i != -1}) {
+      cos.write(b, 0, i)
+    }
+    baos.write(cipher.doFinal())
+    baos.toByteArray
+  }
+
+  /**
+   * Creates a new, random AES key.
+   */
+  private def makeSecretKey(): SecretKey = {
+    val kgen = KeyGenerator.getInstance(SymmetricCipherAlgorithm)
+    kgen.init(256)
+    val key = kgen.generateKey()
+    new SecretKeySpec(key.getEncoded, SymmetricKeyAlgorithm)
+  }
 
 }

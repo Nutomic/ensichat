@@ -97,8 +97,7 @@ abstract class Message(messageType: Int) {
    * function and their own data.
    */
   override def equals(a: Any): Boolean = a match {
-      case o: TextMessage =>
-        sender == o.sender && receiver == o.receiver && date == o.date
+      case o: Message => sender == o.sender && receiver == o.receiver && date == o.date
       case _ => false
   }
 

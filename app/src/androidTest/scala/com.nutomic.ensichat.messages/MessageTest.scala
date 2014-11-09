@@ -21,7 +21,6 @@ object MessageTest {
   val m3 = new TextMessage(new Device.ID("DD:DD:DD:DD:DD:DD"), new Device.ID("BB:BB:BB:BB:BB:BB"),
     new GregorianCalendar(2014, 10, 31).getTime, "third")
 
-
 }
 
 class MessageTest extends AndroidTestCase {

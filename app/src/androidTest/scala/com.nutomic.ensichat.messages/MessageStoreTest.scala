@@ -7,8 +7,6 @@ import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.test.AndroidTestCase
 import android.test.mock.MockContext
-import android.util.Log
-import com.nutomic.ensichat.bluetooth.Device
 import com.nutomic.ensichat.messages.MessageTest._
 import junit.framework.Assert._
 
