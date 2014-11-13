@@ -5,8 +5,8 @@
 
     <string name="app_name">EnsiChat</string>
 
-    <!-- MainActivity -->
 
+    <!-- MainActivity -->
 
     <!-- Toast shown if user denies request to enable bluetooth -->
     <string name="bluetooth_required">Bluetooth is required for this app.</string>
@@ -14,10 +14,19 @@
     <!-- Menu item to close app and stop service -->
     <string name="exit">Exit</string>
 
-    <!-- ContactsFragment -->
 
+    <!-- ContactsFragment -->
 
     <!-- Empty text for contacts list -->
     <string name="no_contacts_found">No contacts found :(</string>
+
+
+    <!-- SettingsActivity -->
+
+    <!-- Activity title -->
+    <string name="settings">Settings</string>
+
+    <!-- Preference title -->
+    <string name="scan_interval_seconds">Scan Interval (seconds)</string>
 
 </resources>

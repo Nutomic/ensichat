@@ -6,7 +6,7 @@ import android.os.{Bundle, IBinder}
 import android.view._
 import android.widget.{ArrayAdapter, ListView}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.{EnsiChatActivity, MainActivity}
+import com.nutomic.ensichat.activities.{SettingsActivity, EnsiChatActivity, MainActivity}
 import com.nutomic.ensichat.bluetooth.{ChatService, ChatServiceBinder, Device}
 import com.nutomic.ensichat.util.{MessagesAdapter, DevicesAdapter}
 
@@ -44,6 +44,9 @@ class ContactsFragment extends ListFragment with ChatService.OnConnectionChanged
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
+      case R.id.settings =>
+        startActivity(new Intent(getActivity, classOf[SettingsActivity]))
+        true
       case R.id.exit =>
         getActivity.stopService(new Intent(getActivity, classOf[ChatService]))
         getActivity.finish()

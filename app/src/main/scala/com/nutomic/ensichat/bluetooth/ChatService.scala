@@ -6,6 +6,7 @@ import android.app.Service
 import android.bluetooth.{BluetoothAdapter, BluetoothDevice, BluetoothSocket}
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.Handler
+import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.ChatService.{OnConnectionChangedListener, OnMessageReceivedListener}
@@ -40,8 +41,6 @@ object ChatService {
 class ChatService extends Service {
 
   private val Tag = "ChatService"
-
-  private val ScanInterval = 5000
 
   private val Binder = new ChatServiceBinder(this)
 
@@ -124,9 +123,11 @@ class ChatService extends Service {
       bluetoothAdapter.startDiscovery()
     }
 
+    val scanInterval = PreferenceManager.getDefaultSharedPreferences(this)
+      .getString("scan_interval_seconds", "5").toInt * 1000
     MainHandler.postDelayed(new Runnable {
       override def run(): Unit = discover()
-    }, ScanInterval)
+    }, scanInterval)
   }
 
   /**
