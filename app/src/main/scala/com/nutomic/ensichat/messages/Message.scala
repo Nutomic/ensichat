@@ -52,7 +52,7 @@ object Message {
  *
  * @param messageType One of [[Message.Type]].
  */
-abstract class Message(messageType: Int) {
+abstract class Message(val messageType: Int) {
 
   /**
    * Device where the message was sent from.

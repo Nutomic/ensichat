@@ -22,6 +22,16 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
 
   private val Tag: String = "TransferThread"
 
+  /**
+   * First value in a message, indicates that content is not encrypted.
+   */
+  private val MessageUnencrypted = false
+
+  /**
+   * First value in a message, indicates that content is encrypted.
+   */
+  private val MessageEncrypted = true
+
   val InStream: InputStream =
     try {
       socket.getInputStream
@@ -46,9 +56,14 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
     while (socket.isConnected) {
       try {
         val up = new ScalaMessagePack().createUnpacker(InStream)
-        val encrypted = up.readByteArray()
-        val key = up.readByteArray()
-        val plain = crypto.decrypt(encrypted, key)
+        val plain = up.readBoolean() match {
+          case MessageEncrypted =>
+            val encrypted = up.readByteArray()
+            val key = up.readByteArray()
+            crypto.decrypt(encrypted, key)
+          case MessageUnencrypted =>
+            up.readByteArray()
+        }
         val (message, signature) = Message.read(plain)
         var messageValid = true
 
@@ -97,12 +112,19 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
 
   def send(message: Message): Unit = {
     try {
-      val sig = crypto.calculateSignature(message)
-      val plain = message.write(sig)
-      val (encrypted, key) = crypto.encrypt(message.receiver, plain)
-      new ScalaMessagePack().createPacker(OutStream)
-        .write(encrypted)
-        .write(key)
+      val plain = message.write(crypto.calculateSignature(message))
+      val packer = new ScalaMessagePack().createPacker(OutStream)
+
+      message.messageType match {
+        case Message.Type.Text =>
+          val (encrypted, key) = crypto.encrypt(message.receiver, plain)
+          packer.write(MessageEncrypted)
+            .write(encrypted)
+            .write(key)
+        case Message.Type.DeviceInfo =>
+          packer.write(MessageUnencrypted)
+            .write(plain)
+      }
     } catch {
       case e: IOException => Log.e(Tag, "Failed to write message", e)
     }
