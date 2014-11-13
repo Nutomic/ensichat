@@ -11,6 +11,7 @@ import android.view.{KeyEvent, LayoutInflater, View, ViewGroup}
 import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
+import com.nutomic.ensichat.activities.EnsiChatActivity
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.bluetooth.{ChatService, ChatServiceBinder, Device}
 import com.nutomic.ensichat.messages.{Message, TextMessage}
@@ -41,21 +42,21 @@ class ChatFragment extends ListFragment with OnClickListener
 
   private var adapter: ArrayAdapter[TextMessage] = _
 
-  private final val mChatServiceConnection: ServiceConnection = new ServiceConnection {
-    override def onServiceConnected(componentName: ComponentName, iBinder: IBinder): Unit = {
-      val binder: ChatServiceBinder = iBinder.asInstanceOf[ChatServiceBinder]
-      chatService = binder.getService
+  override def onActivityCreated(savedInstanceState: Bundle): Unit = {
+    super.onActivityCreated(savedInstanceState)
+
+    val activity = getActivity.asInstanceOf[EnsiChatActivity]
+    activity.runOnServiceConnected(() => {
+      chatService = activity.service
+
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, chatService.localDeviceId)
       chatService.registerMessageListener(device, ChatFragment.this)
+
       if (listView != null) {
         listView.setAdapter(adapter)
       }
-    }
-
-    override def onServiceDisconnected(componentName: ComponentName): Unit = {
-      chatService = null
-    }
+    })
   }
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
@@ -81,9 +82,6 @@ class ChatFragment extends ListFragment with OnClickListener
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
 
-    getActivity.bindService(new Intent(getActivity, classOf[ChatService]),
-      mChatServiceConnection, Context.BIND_AUTO_CREATE)
-
     if (savedInstanceState != null) {
       device = new Device.ID(savedInstanceState.getString("device"))
     }
@@ -92,11 +90,6 @@ class ChatFragment extends ListFragment with OnClickListener
   override def onSaveInstanceState(outState: Bundle): Unit = {
     super.onSaveInstanceState(outState)
     outState.putString("device", device.toString)
-  }
-
-  override def onDestroy(): Unit = {
-    super.onDestroy()
-    getActivity.unbindService(mChatServiceConnection)
   }
 
   /**

@@ -12,7 +12,7 @@ import com.nutomic.ensichat.fragments.{ChatFragment, ContactsFragment}
 /**
  * Main activity, entry point for app start.
  */
-class MainActivity extends Activity {
+class MainActivity extends EnsiChatActivity {
 
   private val RequestSetDiscoverable = 1
 
@@ -26,7 +26,6 @@ class MainActivity extends Activity {
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
-    startService(new Intent(this, classOf[ChatService]))
 
     val intent: Intent = new
         Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
