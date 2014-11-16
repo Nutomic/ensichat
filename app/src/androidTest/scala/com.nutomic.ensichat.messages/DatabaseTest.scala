@@ -8,9 +8,10 @@ import android.database.sqlite.SQLiteDatabase
 import android.test.AndroidTestCase
 import android.test.mock.MockContext
 import com.nutomic.ensichat.messages.MessageTest._
+import com.nutomic.ensichat.util.Database
 import junit.framework.Assert._
 
-class MessageStoreTest extends AndroidTestCase {
+class DatabaseTest extends AndroidTestCase {
 
   private class TestContext(context: Context) extends MockContext {
     override def openOrCreateDatabase(file: String, mode: Int, factory:
@@ -22,10 +23,10 @@ class MessageStoreTest extends AndroidTestCase {
 
   private var dbFile: String = _
 
-  private var MessageStore: MessageStore = _
+  private var MessageStore: Database = _
 
   override def setUp(): Unit = {
-    MessageStore = new MessageStore(new TestContext(getContext))
+    MessageStore = new Database(new TestContext(getContext))
     MessageStore.addMessage(m1)
     MessageStore.addMessage(m2)
     MessageStore.addMessage(m3)

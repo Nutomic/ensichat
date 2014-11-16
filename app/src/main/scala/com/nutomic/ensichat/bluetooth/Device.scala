@@ -28,16 +28,13 @@ object Device {
 /**
  * Holds information about a remote bluetooth device.
  */
-class Device(BluetoothDevice: BluetoothDevice, Connected: Boolean) {
+class Device(val Id: Device.ID, val Name: String, val Connected: Boolean,
+             btDevice: Option[BluetoothDevice] = None) {
 
-  def id = new Device.ID(bluetoothDevice.getAddress)
+  def this(btDevice: BluetoothDevice, connected: Boolean) {
+    this(new Device.ID(btDevice.getAddress), btDevice.getName, connected, Option(btDevice))
+  }
 
-  def name = BluetoothDevice.getName
-
-  def connected = Connected
-
-  def bluetoothDevice = BluetoothDevice
-
-  override def toString = "Device(" + name + ", " + bluetoothDevice.getAddress + ")"
+  def bluetoothDevice = btDevice.get
 
 }

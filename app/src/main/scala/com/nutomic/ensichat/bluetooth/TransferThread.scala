@@ -4,7 +4,7 @@ import java.io._
 
 import android.bluetooth.BluetoothSocket
 import android.util.Log
-import com.nutomic.ensichat.messages.{Crypto, DeviceInfoMessage, Message, TextMessage}
+import com.nutomic.ensichat.messages.{Crypto, DeviceInfoMessage, Message}
 import org.msgpack.ScalaMessagePack
 
 /**
@@ -21,16 +21,6 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
                      crypto: Crypto, onReceive: (Message) => Unit) extends Thread {
 
   private val Tag: String = "TransferThread"
-
-  /**
-   * First value in a message, indicates that content is not encrypted.
-   */
-  private val MessageUnencrypted = false
-
-  /**
-   * First value in a message, indicates that content is encrypted.
-   */
-  private val MessageEncrypted = true
 
   val InStream: InputStream =
     try {
@@ -56,53 +46,54 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
     while (socket.isConnected) {
       try {
         val up = new ScalaMessagePack().createUnpacker(InStream)
-        val plain = up.readBoolean() match {
-          case MessageEncrypted =>
+        val isEncrypted = up.readBoolean() 
+        val plain =
+          if (isEncrypted) {
             val encrypted = up.readByteArray()
             val key = up.readByteArray()
             crypto.decrypt(encrypted, key)
-          case MessageUnencrypted =>
+          } else {
             up.readByteArray()
-        }
+          }
         val (message, signature) = Message.read(plain)
         var messageValid = true
 
-        if (message.sender != device.id) {
-          Log.i(Tag, "Dropping message with invalid sender from " + device.id)
+        if (message.sender != device.Id) {
+          Log.i(Tag, "Dropping message with invalid sender from " + device.Id)
           messageValid = false
         }
 
         if (message.receiver != service.localDeviceId) {
-          Log.i(Tag, "Dropping message with different receiver from " + device.id)
+          Log.i(Tag, "Dropping message with different receiver from " + device.Id)
           messageValid = false
         }
 
         // Add public key for new, directly connected device.
         // Explicitly check that message was not forwarded or spoofed.
         if (message.isInstanceOf[DeviceInfoMessage] && !crypto.havePublicKey(message.sender) &&
-            message.sender == device.id) {
+            message.sender == device.Id) {
           val dim = message.asInstanceOf[DeviceInfoMessage]
           // Permanently store public key for new local devices (also check signature).
           if (crypto.isValidSignature(message, signature, dim.publicKey)) {
-            crypto.addPublicKey(device.id, dim.publicKey)
-            Log.i(Tag, "Added public key for new device " + device.name)
+            crypto.addPublicKey(device.Id, dim.publicKey)
+            Log.i(Tag, "Added public key for new device " + device.Name)
           }
         }
 
         if (!crypto.isValidSignature(message, signature)) {
-          Log.i(Tag, "Dropping message with invalid signature from " + device.id)
+          Log.i(Tag, "Dropping message with invalid signature from " + device.Id)
           messageValid = false
         }
 
         if (messageValid) {
           message match {
-            case m: TextMessage => onReceive(m)
             case m: DeviceInfoMessage => crypto.addPublicKey(message.sender, m.publicKey)
+            case _ => onReceive(message)
           }
         }
       } catch {
         case e: IOException =>
-          Log.w(Tag, "Connection to " + device.name + " closed with exception", e)
+          Log.w(Tag, "Connection to " + device.Name + " closed with exception", e)
           service.onConnectionChanged(new Device(device.bluetoothDevice, false), null)
           return
       }
@@ -118,11 +109,13 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
       message.messageType match {
         case Message.Type.Text =>
           val (encrypted, key) = crypto.encrypt(message.receiver, plain)
-          packer.write(MessageEncrypted)
+          // Message is encrypted.
+          packer.write(true)
             .write(encrypted)
             .write(key)
-        case Message.Type.DeviceInfo =>
-          packer.write(MessageUnencrypted)
+        case _ =>
+          // Message is not encrypted.
+          packer.write(false)
             .write(plain)
       }
     } catch {

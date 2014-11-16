@@ -1,5 +1,6 @@
 package com.nutomic.ensichat.bluetooth
 
+import java.security.InvalidParameterException
 import java.util.{Date, UUID}
 
 import android.app.Service
@@ -8,12 +9,13 @@ import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
-import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.ChatService.{OnConnectionChangedListener, OnMessageReceivedListener}
 import com.nutomic.ensichat.messages._
+import com.nutomic.ensichat.util.Database
+import com.nutomic.ensichat.{BuildConfig, R}
 
+import scala.collection.SortedSet
 import scala.collection.immutable.{HashMap, HashSet, TreeSet}
-import scala.collection.{SortedSet, mutable}
 import scala.ref.WeakReference
 
 object ChatService {
@@ -53,9 +55,7 @@ class ChatService extends Service {
    */
   private var connectionListeners = new HashSet[WeakReference[OnConnectionChangedListener]]()
 
-  private val messageListeners =
-    mutable.HashMap[Device.ID, mutable.Set[WeakReference[OnMessageReceivedListener]]]()
-      .withDefaultValue(mutable.Set[WeakReference[OnMessageReceivedListener]]())
+  private var messageListeners = Set[WeakReference[OnMessageReceivedListener]]()
 
   private var devices = new HashMap[Device.ID, Device]()
 
@@ -67,7 +67,7 @@ class ChatService extends Service {
 
   private val MainHandler = new Handler()
 
-  private var MessageStore: MessageStore = _
+  private lazy val Database = new Database(this)
 
   private lazy val Crypto = new Crypto(getFilesDir)
 
@@ -76,8 +76,6 @@ class ChatService extends Service {
    */
   override def onCreate(): Unit = {
     super.onCreate()
-
-    MessageStore = new MessageStore(this)
 
     bluetoothAdapter = BluetoothAdapter.getDefaultAdapter
 
@@ -137,7 +135,7 @@ class ChatService extends Service {
     override def onReceive(context: Context, intent: Intent) {
       val device: Device =
         new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
-      devices += (device.id -> device)
+      devices += (device.Id -> device)
       new ConnectThread(device, onConnectionChanged).start()
     }
   }
@@ -191,13 +189,14 @@ class ChatService extends Service {
    * @param socket A socket for data transfer if device.connected is true, otherwise null.
    */
   def onConnectionChanged(device: Device, socket: BluetoothSocket): Unit = {
-    devices += (device.id -> device)
+    devices += (device.Id -> device)
 
-    if (device.connected) {
-      connections += (device.id ->
+    if (device.Connected) {
+      connections += (device.Id ->
         new TransferThread(device, socket, this, Crypto, handleNewMessage))
-      connections(device.id).start()
-      send(new DeviceInfoMessage(localDeviceId, device.id, new Date(), Crypto.getLocalPublicKey))
+      connections(device.Id).start()
+      connections.apply(device.Id).send(
+        new DeviceInfoMessage(localDeviceId, device.Id, new Date(), Crypto.getLocalPublicKey))
     }
 
     connectionListeners.foreach(l => l.get match {
@@ -210,6 +209,9 @@ class ChatService extends Service {
    * Sends message to the device specified as receiver,
    */
   def send(message: Message): Unit = {
+    if (BuildConfig.DEBUG && message.sender != localDeviceId) {
+      throw new InvalidParameterException("Message must be sent from local device")
+    }
     connections.apply(message.receiver).send(message)
     handleNewMessage(message)
   }
@@ -218,16 +220,22 @@ class ChatService extends Service {
    * Saves the message to database and sends it to registered listeners.
    *
    * If you want to send a new message, use [[send]].
+   *
+   * Messages must always be sent between local device and a contact.
    */
   private def handleNewMessage(message: Message): Unit = {
-    MessageStore.addMessage(message)
+    if (BuildConfig.DEBUG && message.sender != localDeviceId && message.receiver != localDeviceId) {
+      throw new InvalidParameterException("Message must be sent or received by local device")
+    }
+
+    Database.addMessage(message)
     MainHandler.post(new Runnable {
       override def run(): Unit = {
-        messageListeners(message.sender).foreach(l =>
+        messageListeners.foreach(l =>
           if (l.get != null)
             l.apply().onMessageReceived(new TreeSet[Message]()(Message.Ordering) + message)
           else
-            messageListeners(message.sender) -= l)
+            messageListeners -= l)
       }
     })
   }
@@ -235,14 +243,17 @@ class ChatService extends Service {
   /**
    * Registers a listener that is called whenever a new message is sent or received.
    */
-  def registerMessageListener(device: Device.ID, listener: OnMessageReceivedListener): Unit = {
-    messageListeners(device) += new WeakReference[OnMessageReceivedListener](listener)
-    listener.onMessageReceived(MessageStore.getMessages(device, 10))
+  def registerMessageListener(listener: OnMessageReceivedListener): Unit = {
+    messageListeners += new WeakReference[OnMessageReceivedListener](listener)
   }
 
   /**
    * Returns the unique bluetooth address of the local device.
    */
   def localDeviceId = new Device.ID(bluetoothAdapter.getAddress)
+
+  def isConnected(device: Device.ID): Boolean = connections.keySet.contains(device)
+
+  def database = Database
 
 }

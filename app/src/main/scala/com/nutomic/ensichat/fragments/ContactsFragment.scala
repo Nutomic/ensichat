@@ -1,41 +1,42 @@
 package com.nutomic.ensichat.fragments
 
 import android.app.ListFragment
-import android.content.{ComponentName, Context, Intent, ServiceConnection}
-import android.os.{Bundle, IBinder}
+import android.content.Intent
+import android.os.Bundle
 import android.view._
-import android.widget.{ArrayAdapter, ListView}
+import android.widget.ListView
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.{SettingsActivity, EnsiChatActivity, MainActivity}
-import com.nutomic.ensichat.bluetooth.{ChatService, ChatServiceBinder, Device}
-import com.nutomic.ensichat.util.{MessagesAdapter, DevicesAdapter}
+import com.nutomic.ensichat.activities.{AddContactsActivity, EnsiChatActivity, MainActivity, SettingsActivity}
+import com.nutomic.ensichat.bluetooth.ChatService
+import com.nutomic.ensichat.util.DevicesAdapter
 
 /**
  * Lists all nearby, connected devices.
  */
-class ContactsFragment extends ListFragment with ChatService.OnConnectionChangedListener {
+class ContactsFragment extends ListFragment {
 
-  private lazy val adapter = new DevicesAdapter(getActivity)
+  private lazy val Adapter = new DevicesAdapter(getActivity)
 
-  override def onActivityCreated(savedInstanceState: Bundle): Unit = {
-    super.onActivityCreated(savedInstanceState)
-
-    val activity = getActivity.asInstanceOf[EnsiChatActivity]
-    activity.runOnServiceConnected(() => {
-      activity.service.registerConnectionListener(ContactsFragment.this)
-    })
-  }
-
-  override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
-        savedInstanceState: Bundle): View =
-    inflater.inflate(R.layout.fragment_contacts, container, false)
+  private lazy val Database = getActivity.asInstanceOf[EnsiChatActivity].service.database
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
 
-    setListAdapter(adapter)
+    setListAdapter(Adapter)
     setHasOptionsMenu(true)
+
+    getActivity.asInstanceOf[EnsiChatActivity].runOnServiceConnected(() => {
+      Database.getContacts.foreach(Adapter.add)
+      Database.runOnContactsUpdated(() => {
+        Adapter.clear()
+        Database.getContacts.foreach(Adapter.add)
+      })
+    })
   }
+
+  override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
+                            savedInstanceState: Bundle): View =
+    inflater.inflate(R.layout.fragment_contacts, container, false)
 
   override def onCreateOptionsMenu(menu: Menu, inflater: MenuInflater): Unit = {
     super.onCreateOptionsMenu(menu, inflater)
@@ -44,6 +45,9 @@ class ContactsFragment extends ListFragment with ChatService.OnConnectionChanged
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
+      case R.id.add_contact =>
+        startActivity(new Intent(getActivity, classOf[AddContactsActivity]))
+        true
       case R.id.settings =>
         startActivity(new Intent(getActivity, classOf[SettingsActivity]))
         true
@@ -57,25 +61,9 @@ class ContactsFragment extends ListFragment with ChatService.OnConnectionChanged
   }
 
   /**
-   * Displays newly connected devices in the list.
-   */
-  override def onConnectionChanged(devices: Map[Device.ID, Device]): Unit = {
-    if (getActivity == null)
-      return
-
-    val filtered = devices.filter{ case (_, d) => d.connected }
-    getActivity.runOnUiThread(new Runnable {
-      override def run(): Unit  = {
-        adapter.clear()
-        filtered.values.foreach(f => adapter.add(f))
-      }
-    })
-  }
-
-  /**
    * Opens a chat with the clicked device.
    */
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long): Unit =
-    getActivity.asInstanceOf[MainActivity].openChat(adapter.getItem(position).id)
+    getActivity.asInstanceOf[MainActivity].openChat(Adapter.getItem(position).Id)
 
 }

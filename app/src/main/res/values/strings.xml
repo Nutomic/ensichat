@@ -11,14 +11,41 @@
     <!-- Toast shown if user denies request to enable bluetooth -->
     <string name="bluetooth_required">Bluetooth is required for this app.</string>
 
-    <!-- Menu item to close app and stop service -->
-    <string name="exit">Exit</string>
-
 
     <!-- ContactsFragment -->
 
     <!-- Empty text for contacts list -->
-    <string name="no_contacts_found">No contacts found :(</string>
+    <string name="no_contacts_found">You haven\'t added any contacts yet</string>
+
+    <!-- Menu item to close app and stop service -->
+    <string name="exit">Exit</string>
+
+
+    <!-- ChatFragment -->
+
+    <!-- Toast shown when trying to send a message to an offline contact -->
+    <string name="contact_offline_toast">Contact is offline, message not sent</string>
+
+
+    <!-- AddContactsActivity -->
+
+    <!-- Activity title -->
+    <string name="add_contacts">Add Contacts</string>
+
+    <!-- Title of dialog shown when clicking a device -->
+    <string name="add_contact_dialog">Do you want to add %1$s as a new contact?</string>
+
+    <!-- Empty text for devices list -->
+    <string name="no_devices_nearby">No nearby devices found</string>
+
+    <!-- Toast shown when trying to add a contact again -->
+    <string name="contact_already_added">You already added this contact</string>
+
+    <!-- Toast shown when a new contact was added. Parameter is contact name -->
+    <string name="contact_added">%1$s was added as a contact</string>
+
+    <!-- Toast shown when a contact is not added because it was not accepted on the other device -->
+    <string name="contact_not_added">Contact not added (denied by other device)</string>
 
 
     <!-- SettingsActivity -->

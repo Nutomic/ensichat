@@ -3,6 +3,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/add_contact"
+        android:title="@string/add_contacts"
+        android:icon="@drawable/ic_action_add_person"
+        android:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/settings"
         android:icon="@drawable/ic_action_settings"
         android:title="@string/settings"
@@ -10,6 +16,6 @@
 
     <item
         android:id="@+id/exit"
-        android:title="Exit" />
+        android:title="@string/exit" />
 
 </menu>

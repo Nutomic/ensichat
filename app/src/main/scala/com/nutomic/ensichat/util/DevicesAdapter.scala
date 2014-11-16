@@ -11,11 +11,11 @@ import com.nutomic.ensichat.bluetooth.Device
 class DevicesAdapter(context: Context) extends
   ArrayAdapter[Device](context, android.R.layout.simple_list_item_1) {
 
-    override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
-      val view = super.getView(position, convertView, parent)
-      val title: TextView = view.findViewById(android.R.id.text1).asInstanceOf[TextView]
-      title.setText(getItem(position).name)
-      view
-    }
+  override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
+    val view = super.getView(position, convertView, parent)
+    val title: TextView = view.findViewById(android.R.id.text1).asInstanceOf[TextView]
+    title.setText(getItem(position).Name)
+    view
+  }
 
 }

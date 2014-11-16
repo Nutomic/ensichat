@@ -11,11 +11,13 @@ object Message {
   /**
    * Types of messages that can be transfered.
    *
-   * There must be one type for each implementation.
+   * There must be one type for each implementation and vice versa.
    */
   object Type {
     val Text = 1
     val DeviceInfo = 2
+    val RequestAddContact = 3
+    val ResultAddContact = 4
   }
 
   /**
@@ -40,8 +42,10 @@ object Message {
     val date        = new Date(up.readLong())
     val sig         = up.readByteArray()
     (messageType match {
-      case Type.Text       => TextMessage.read(sender, receiver, date, up)
-      case Type.DeviceInfo => DeviceInfoMessage.read(sender, receiver, date, up)
+      case Type.Text              => TextMessage.read(sender, receiver, date, up)
+      case Type.DeviceInfo        => DeviceInfoMessage.read(sender, receiver, date, up)
+      case Type.RequestAddContact => RequestAddContactMessage.read(sender, receiver, date, up)
+      case Type.ResultAddContact  => ResultAddContactMessage.read(sender, receiver, date, up)
     }, sig)
   }
 

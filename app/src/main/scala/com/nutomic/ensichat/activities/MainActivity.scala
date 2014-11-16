@@ -6,7 +6,7 @@ import android.content._
 import android.os.Bundle
 import android.widget.Toast
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.bluetooth.{ChatService, Device}
+import com.nutomic.ensichat.bluetooth.Device
 import com.nutomic.ensichat.fragments.{ChatFragment, ContactsFragment}
 
 /**
@@ -89,7 +89,7 @@ class MainActivity extends EnsiChatActivity {
     if (currentChat != None) {
       getFragmentManager
         .beginTransaction()
-        .remove(getFragmentManager().findFragmentById(android.R.id.content))
+        .remove(getFragmentManager.findFragmentById(android.R.id.content))
         .attach(ContactsFragment)
         .commit()
       currentChat = None

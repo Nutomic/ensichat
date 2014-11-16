@@ -3,8 +3,7 @@ package com.nutomic.ensichat.fragments
 import java.util.Date
 
 import android.app.ListFragment
-import android.content.{ComponentName, Context, Intent, ServiceConnection}
-import android.os.{Bundle, IBinder}
+import android.os.Bundle
 import android.view.View.OnClickListener
 import android.view.inputmethod.EditorInfo
 import android.view.{KeyEvent, LayoutInflater, View, ViewGroup}
@@ -13,7 +12,7 @@ import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.bluetooth.{ChatService, ChatServiceBinder, Device}
+import com.nutomic.ensichat.bluetooth.{ChatService, Device}
 import com.nutomic.ensichat.messages.{Message, TextMessage}
 import com.nutomic.ensichat.util.MessagesAdapter
 
@@ -51,7 +50,8 @@ class ChatFragment extends ListFragment with OnClickListener
 
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, chatService.localDeviceId)
-      chatService.registerMessageListener(device, ChatFragment.this)
+      chatService.registerMessageListener(ChatFragment.this)
+      onMessageReceived(chatService.database.getMessages(device, 10))
 
       if (listView != null) {
         listView.setAdapter(adapter)
@@ -100,6 +100,10 @@ class ChatFragment extends ListFragment with OnClickListener
       case R.id.send =>
         val text: String = messageText.getText.toString
         if (!text.isEmpty) {
+          if (!chatService.isConnected(device)) {
+            Toast.makeText(getActivity, R.string.contact_offline_toast, Toast.LENGTH_SHORT).show()
+            return
+          }
           chatService.send(
             new TextMessage(chatService.localDeviceId, device, new Date(), text.toString))
           messageText.getText.clear()
@@ -111,7 +115,8 @@ class ChatFragment extends ListFragment with OnClickListener
    * Displays new messages in UI.
    */
   override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.filter(_.isInstanceOf[TextMessage])
+    messages.filter(m => m.sender == device || m.receiver == device)
+      .filter(_.isInstanceOf[TextMessage])
       .foreach(m => adapter.add(m.asInstanceOf[TextMessage]))
   }
 

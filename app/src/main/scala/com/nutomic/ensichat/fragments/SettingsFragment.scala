@@ -2,7 +2,6 @@ package com.nutomic.ensichat.fragments
 
 import android.os.Bundle
 import android.preference.PreferenceFragment
-
 import com.nutomic.ensichat.R
 
 class SettingsFragment extends PreferenceFragment {
