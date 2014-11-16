@@ -12,7 +12,7 @@ class EnsiChatActivity extends Activity with ServiceConnection {
 
   var chatService: Option[ChatService] = None
 
-  var listeners: List[() => Unit] = List.empty
+  var listeners = Set[() => Unit]()
 
   /**
    * Starts service and connects to it.
@@ -40,7 +40,7 @@ class EnsiChatActivity extends Activity with ServiceConnection {
     val binder = iBinder.asInstanceOf[ChatServiceBinder]
     chatService = Option(binder.getService)
     listeners.foreach(_())
-    listeners = List.empty
+    listeners = Set.empty
   }
 
   override def onServiceDisconnected(componentName: ComponentName) =
@@ -52,7 +52,7 @@ class EnsiChatActivity extends Activity with ServiceConnection {
   def runOnServiceConnected(l: () => Unit): Unit =
     chatService match {
       case Some(s) => l()
-      case None => listeners :+= l
+      case None => listeners += l
     }
 
   /**

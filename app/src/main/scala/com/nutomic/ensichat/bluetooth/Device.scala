@@ -15,7 +15,7 @@ object Device {
     override def hashCode = Id.hashCode
 
     override def equals(a: Any) = a match {
-      case other: Device.ID => Id == other.Id
+      case o: Device.ID => Id == o.Id
       case _ => false
     }
 

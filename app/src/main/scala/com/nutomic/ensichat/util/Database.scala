@@ -5,7 +5,7 @@ import java.util.Date
 import android.content.{ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import com.nutomic.ensichat.bluetooth.Device
-import com.nutomic.ensichat.messages.{Message, TextMessage}
+import com.nutomic.ensichat.messages._
 
 import scala.collection.SortedSet
 import scala.collection.immutable.TreeSet
@@ -78,7 +78,8 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
       cv.put("date", msg.date.getTime.toString)
       cv.put("text", msg.text)
       getWritableDatabase.insert("messages", null, cv)
-    case _ => // Never stored.
+    case _: DeviceInfoMessage | _: RequestAddContactMessage | _: ResultAddContactMessage =>
+      // Never stored.
   }
 
   /**

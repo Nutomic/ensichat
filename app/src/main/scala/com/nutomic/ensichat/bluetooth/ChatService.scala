@@ -200,7 +200,7 @@ class ChatService extends Service {
     }
 
     connectionListeners.foreach(l => l.get match {
-      case Some(_) => l.apply().onConnectionChanged(devices)
+      case Some(x) => x.onConnectionChanged(devices)
       case None => connectionListeners -= l
     })
   }

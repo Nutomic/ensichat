@@ -95,20 +95,18 @@ class ChatFragment extends ListFragment with OnClickListener
   /**
    * Send message if send button was clicked.
    */
-  override def onClick(view: View): Unit = {
-    view.getId match {
-      case R.id.send =>
-        val text: String = messageText.getText.toString
-        if (!text.isEmpty) {
-          if (!chatService.isConnected(device)) {
-            Toast.makeText(getActivity, R.string.contact_offline_toast, Toast.LENGTH_SHORT).show()
-            return
-          }
-          chatService.send(
-            new TextMessage(chatService.localDeviceId, device, new Date(), text.toString))
-          messageText.getText.clear()
+  override def onClick(view: View): Unit = view.getId match {
+    case R.id.send =>
+      val text: String = messageText.getText.toString
+      if (!text.isEmpty) {
+        if (!chatService.isConnected(device)) {
+          Toast.makeText(getActivity, R.string.contact_offline_toast, Toast.LENGTH_SHORT).show()
+          return
         }
-    }
+        chatService.send(
+          new TextMessage(chatService.localDeviceId, device, new Date(), text.toString))
+        messageText.getText.clear()
+      }
   }
 
   /**

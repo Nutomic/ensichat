@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.nutomic.ensichat.messages.{Crypto, DeviceInfoMessage, Message}
 import org.msgpack.ScalaMessagePack
+import com.nutomic.ensichat.messages.Message._
 
 /**
  * Transfers data between connnected devices.
@@ -46,7 +47,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
     while (socket.isConnected) {
       try {
         val up = new ScalaMessagePack().createUnpacker(InStream)
-        val isEncrypted = up.readBoolean() 
+        val isEncrypted = up.readBoolean()
         val plain =
           if (isEncrypted) {
             val encrypted = up.readByteArray()
@@ -107,13 +108,13 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
       val packer = new ScalaMessagePack().createPacker(OutStream)
 
       message.messageType match {
-        case Message.Type.Text =>
+        case Type.Text =>
           val (encrypted, key) = crypto.encrypt(message.receiver, plain)
           // Message is encrypted.
           packer.write(true)
             .write(encrypted)
             .write(key)
-        case _ =>
+        case Type.DeviceInfo | Type.RequestAddContact | Type.ResultAddContact =>
           // Message is not encrypted.
           packer.write(false)
             .write(plain)

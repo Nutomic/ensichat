@@ -123,15 +123,15 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    * the user is in this activity.
    */
   override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.foreach(m => {
-      if (m.receiver == service.localDeviceId) {
-        m.messageType match {
-        case Message.Type.RequestAddContact =>
+    messages.foreach(msg => {
+      if (msg.receiver == service.localDeviceId) {
+        msg match {
+        case _: ResultAddContactMessage =>
           // Remote device wants to add us as a contact, show dialog.
-          val sender = getDevice(m.sender)
+          val sender = getDevice(msg.sender)
           addDeviceDialog(sender)
-        case Message.Type.ResultAddContact =>
-          if (m.asInstanceOf[ResultAddContactMessage].Accepted) {
+        case m: ResultAddContactMessage =>
+          if (m.Accepted) {
             // Remote device accepted us as a contact, update state.
             currentlyAdding += (m.sender ->
               new AddContactInfo(true, currentlyAdding(m.sender).remoteConfirmed))
