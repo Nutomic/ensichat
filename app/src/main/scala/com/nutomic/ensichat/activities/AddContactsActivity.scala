@@ -186,8 +186,8 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
       Database.addContact(device)
       Toast.makeText(this, getString(R.string.contact_added, device.Name), Toast.LENGTH_SHORT)
         .show()
+      currentlyAdding -= device.Id
     }
-    currentlyAdding -= device.Id
   }
 
 }
