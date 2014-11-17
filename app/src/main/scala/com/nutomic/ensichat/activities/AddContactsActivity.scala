@@ -59,6 +59,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
     val list = findViewById(android.R.id.list).asInstanceOf[ListView]
     list.setAdapter(Adapter)
     list.setOnItemClickListener(this)
+    list.setEmptyView(findViewById(android.R.id.empty))
 
     runOnServiceConnected(() => {
       service.registerConnectionListener(AddContactsActivity.this)
