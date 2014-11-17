@@ -51,7 +51,7 @@ class ChatFragment extends ListFragment with OnClickListener
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, chatService.localDeviceId)
       chatService.registerMessageListener(ChatFragment.this)
-      onMessageReceived(chatService.database.getMessages(device, 10))
+      onMessageReceived(chatService.database.getMessages(device, 15))
 
       if (listView != null) {
         listView.setAdapter(adapter)
@@ -97,7 +97,7 @@ class ChatFragment extends ListFragment with OnClickListener
    */
   override def onClick(view: View): Unit = view.getId match {
     case R.id.send =>
-      val text: String = messageText.getText.toString
+      val text: String = messageText.getText.toString.trim
       if (!text.isEmpty) {
         if (!chatService.isConnected(device)) {
           Toast.makeText(getActivity, R.string.contact_offline_toast, Toast.LENGTH_SHORT).show()

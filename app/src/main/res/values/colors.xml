@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <!-- Background color for ChatFragment -->
+    <color name="chat_background">#E6FFE6</color>
+
+    <!-- Color for message border and compose/message layout seperator in ChatFragment -->
+    <color name="chat_seperator">#AAAAAA</color>
+
+</resources>

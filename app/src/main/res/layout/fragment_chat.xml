@@ -1,58 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_weight="10"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:orientation="vertical"
+    <FrameLayout
         android:layout_height="0dp"
-        android:layout_weight="10">
+        android:layout_width="match_parent"
+        android:layout_weight="11"
+        android:layout_marginLeft="10dip"
+        android:layout_marginRight="10dip"
+        android:layout_marginBottom="2dip"
+        android:background="@color/chat_background">
 
-        <FrameLayout
-            android:layout_height="0dp"
+        <ListView
+            android:id="@android:id/list"
+            android:layout_height="match_parent"
             android:layout_width="match_parent"
-            android:layout_weight="11"
-            android:background="@android:color/background_light">
+            android:stackFromBottom="true"
+            android:transcriptMode="normal"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="5dp"/>
 
-            <ListView
-                android:id="@android:id/list"
-                android:drawSelectorOnTop="false"
-                android:layout_height="match_parent"
-                android:layout_width="match_parent"
-                android:footerDividersEnabled="true" />
+    </FrameLayout>
 
-        </FrameLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dip"
+        android:background="@color/chat_seperator"/>
 
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:background="@android:color/background_light"
+        android:id="@+id/linearLayout"
+        android:orientation="horizontal">
 
-        <FrameLayout
-            android:layout_height="0dp"
-            android:layout_width="match_parent"
-            android:layout_weight="1">
+        <EditText
+            android:id="@+id/message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:imeOptions="actionDone"
+            android:inputType="textMultiLine|textCapSentences|textAutoCorrect"/>
 
-            <LinearLayout
-                android:layout_height="match_parent"
-                android:layout_width="match_parent"
-                android:background="@android:color/darker_gray"
-                android:id="@+id/linearLayout">
-
-                <EditText
-                    android:id="@+id/message"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:imeOptions="actionDone" />
-
-                <Button
-                    android:id="@+id/send"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:background="@drawable/ic_action_send_now"
-                    android:onClick="sendMessage"/>
-
-            </LinearLayout>
-
-        </FrameLayout>
+        <Button
+            android:id="@+id/send"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:background="@drawable/ic_action_send_now"
+            android:onClick="sendMessage"/>
 
     </LinearLayout>
 

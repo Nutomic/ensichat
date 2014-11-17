@@ -1,8 +1,9 @@
 package com.nutomic.ensichat.util
 
 import android.content.Context
-import android.view.{View, ViewGroup}
-import android.widget.{ArrayAdapter, TextView}
+import android.view.{Gravity, View, ViewGroup}
+import android.widget.{ArrayAdapter, RelativeLayout, TextView}
+import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.Device
 import com.nutomic.ensichat.messages.TextMessage
 
@@ -10,15 +11,30 @@ import com.nutomic.ensichat.messages.TextMessage
  * Displays [[TextMessage]]s in ListView.
  */
 class MessagesAdapter(context: Context, localDevice: Device.ID) extends
-  ArrayAdapter[TextMessage](context, android.R.layout.simple_list_item_1) {
+  ArrayAdapter[TextMessage](context, R.layout.item_message, android.R.id.text1) {
+
+  /**
+   * Free space to the right/left to a message depending on who sent it, in dip.
+   */
+  private val MessageMargin = 50
 
   override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
-    val view: View = super.getView(position, convertView, parent)
-    val tv: TextView = view.findViewById(android.R.id.text1).asInstanceOf[TextView]
-    view.setBackgroundColor(context.getResources.getColor(
-      if (getItem(position).sender == localDevice) android.R.color.holo_blue_light
-      else android.R.color.holo_green_light))
+    val view = super.getView(position, convertView, parent).asInstanceOf[RelativeLayout]
+    val tv = view.findViewById(android.R.id.text1).asInstanceOf[TextView]
+
     tv.setText(getItem(position).text)
+
+    val lp = new RelativeLayout.LayoutParams(tv.getLayoutParams)
+    val margin = (MessageMargin * context.getResources.getDisplayMetrics.density).toInt
+    if (getItem(position).sender == localDevice) {
+      view.setGravity(Gravity.RIGHT)
+      lp.setMargins(margin, 0, 0, 0)
+    } else {
+      view.setGravity(Gravity.LEFT)
+      lp.setMargins(0, 0, margin, 0)
+    }
+    tv.setLayoutParams(lp)
+
     view
   }
 
