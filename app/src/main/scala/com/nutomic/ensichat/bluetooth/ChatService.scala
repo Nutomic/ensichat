@@ -1,6 +1,5 @@
 package com.nutomic.ensichat.bluetooth
 
-import java.security.InvalidParameterException
 import java.util.{Date, UUID}
 
 import android.app.Service
@@ -9,10 +8,10 @@ import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
+import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.ChatService.{OnConnectionChangedListener, OnMessageReceivedListener}
 import com.nutomic.ensichat.messages._
 import com.nutomic.ensichat.util.Database
-import com.nutomic.ensichat.{BuildConfig, R}
 
 import scala.collection.SortedSet
 import scala.collection.immutable.{HashMap, HashSet, TreeSet}
@@ -209,9 +208,7 @@ class ChatService extends Service {
    * Sends message to the device specified as receiver,
    */
   def send(message: Message): Unit = {
-    if (BuildConfig.DEBUG && message.sender != localDeviceId) {
-      throw new InvalidParameterException("Message must be sent from local device")
-    }
+    assert(message.sender != localDeviceId, "Message must be sent from local device")
     connections.apply(message.receiver).send(message)
     handleNewMessage(message)
   }
@@ -224,9 +221,8 @@ class ChatService extends Service {
    * Messages must always be sent between local device and a contact.
    */
   private def handleNewMessage(message: Message): Unit = {
-    if (BuildConfig.DEBUG && message.sender != localDeviceId && message.receiver != localDeviceId) {
-      throw new InvalidParameterException("Message must be sent or received by local device")
-    }
+    assert(message.sender != localDeviceId && message.receiver != localDeviceId,
+      "Message must be sent or received by local device")
 
     Database.addMessage(message)
     MainHandler.post(new Runnable {
