@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.content.DialogInterface.OnClickListener
 import android.content.{Context, DialogInterface}
 import android.os.Bundle
+import android.util.Log
 import android.view._
 import android.widget.AdapterView.OnItemClickListener
 import android.widget._
@@ -24,6 +25,8 @@ import scala.collection.SortedSet
  */
 class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnectionChangedListener
   with OnItemClickListener with OnMessageReceivedListener {
+
+  private val Tag = "AddContactsActivity"
 
   private lazy val Adapter = new DevicesAdapter(this)
 
@@ -138,29 +141,25 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    * the user is in this activity.
    */
   override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.foreach(msg => {
-      if (msg.receiver == service.localDeviceId) {
-        msg match {
-          case _: RequestAddContactMessage =>
-            // Remote device wants to add us as a contact, show dialog.
-            val sender = getDevice(msg.sender)
-            addDeviceDialog(sender)
-          case m: ResultAddContactMessage =>
-            if (m.Accepted) {
-              // Remote device accepted us as a contact, update state.
-              currentlyAdding += (m.sender ->
-                new AddContactInfo(true, currentlyAdding(m.sender).remoteConfirmed))
-              addContactIfBothConfirmed(getDevice(m.sender))
-            } else {
-              // Remote device denied us as a contact, show a toast
-              // and remove from [[currentlyAdding]].
-              Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
-              currentlyAdding -= m.sender
-            }
-          case _ =>
-        }
+    messages.filter(_.receiver == service.localDeviceId)
+      .foreach{
+        case m: RequestAddContactMessage =>
+          Log.i(Tag, "Remote device " + m.sender + " wants to add us as a contact, showing dialog")
+          val sender = getDevice(m.sender)
+          addDeviceDialog(sender)
+        case m: ResultAddContactMessage =>
+          if (m.Accepted) {
+            Log.i(Tag, "Remote device " + m.sender + " accepted us as a contact, updating state")
+            currentlyAdding += (m.sender ->
+              new AddContactInfo(true, currentlyAdding(m.sender).remoteConfirmed))
+            addContactIfBothConfirmed(getDevice(m.sender))
+          } else {
+            Log.i(Tag, "Remote device " + m.sender + " denied us as a contact, showing toast")
+            Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
+            currentlyAdding -= m.sender
+          }
+        case _ =>
       }
-    })
   }
 
   /**
@@ -183,6 +182,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
   private def addContactIfBothConfirmed(device: Device): Unit = {
     val info = currentlyAdding(device.Id)
     if (info.localConfirmed && info.remoteConfirmed) {
+      Log.i(Tag, "Adding new contact " + device.Name)
       Database.addContact(device)
       Toast.makeText(this, getString(R.string.contact_added, device.Name), Toast.LENGTH_SHORT)
         .show()

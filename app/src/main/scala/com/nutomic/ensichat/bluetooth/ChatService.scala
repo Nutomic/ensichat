@@ -208,7 +208,7 @@ class ChatService extends Service {
    * Sends message to the device specified as receiver,
    */
   def send(message: Message): Unit = {
-    assert(message.sender != localDeviceId, "Message must be sent from local device")
+    assert(message.sender == localDeviceId, "Message must be sent from local device")
     connections.apply(message.receiver).send(message)
     handleNewMessage(message)
   }
@@ -221,7 +221,7 @@ class ChatService extends Service {
    * Messages must always be sent between local device and a contact.
    */
   private def handleNewMessage(message: Message): Unit = {
-    assert(message.sender != localDeviceId && message.receiver != localDeviceId,
+    assert(message.sender == localDeviceId || message.receiver == localDeviceId,
       "Message must be sent or received by local device")
 
     Database.addMessage(message)
