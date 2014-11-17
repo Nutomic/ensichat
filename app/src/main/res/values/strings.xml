@@ -35,6 +35,15 @@
     <!-- Title of dialog shown when clicking a device -->
     <string name="add_contact_dialog">Do you want to add %1$s as a new contact?</string>
 
+    <!-- Text to describe the local device's identicon image -->
+    <string name="local_fingerprint_title">Your key fingerprint:</string>
+
+    <!-- Text to describe the remote device's identicon image. Argument is the contact name -->
+    <string name="remote_fingerprint_title">%1$s\'s key fingerprint:</string>
+
+    <!-- Information text shown in the "add contact" dialog -->
+    <string name="add_contact_dialog_hint">Before accepting, make sure the images match on both devices</string>
+
     <!-- Empty text for devices list -->
     <string name="no_devices_nearby">No nearby devices found</string>
 

@@ -3,17 +3,17 @@ package com.nutomic.ensichat.activities
 import java.util.Date
 
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
+import android.content.{Context, DialogInterface}
 import android.os.Bundle
 import android.view._
 import android.widget.AdapterView.OnItemClickListener
-import android.widget.{AdapterView, ListView, Toast}
+import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.bluetooth.{ChatService, Device}
-import com.nutomic.ensichat.messages.{Message, RequestAddContactMessage, ResultAddContactMessage}
-import com.nutomic.ensichat.util.DevicesAdapter
+import com.nutomic.ensichat.messages.{Crypto, Message, RequestAddContactMessage, ResultAddContactMessage}
+import com.nutomic.ensichat.util.{DevicesAdapter, IdenticonGenerator}
 
 import scala.collection.SortedSet
 
@@ -28,6 +28,8 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
   private lazy val Adapter = new DevicesAdapter(this)
 
   private lazy val Database = service.database
+
+  private lazy val Crypto = new Crypto(this.getFilesDir)
 
   /**
    * Map of devices that should be added.
@@ -109,8 +111,21 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
       }
     }
 
+    val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE).asInstanceOf[LayoutInflater]
+    val view = inflater.inflate(R.layout.dialog_add_contact, null)
+
+    val local = view.findViewById(R.id.local_identicon).asInstanceOf[ImageView]
+    local.setImageBitmap(
+      IdenticonGenerator.generate(Crypto.getLocalPublicKey, (150, 150), this))
+    val remoteTitle = view.findViewById(R.id.remote_identicon_title).asInstanceOf[TextView]
+    remoteTitle.setText(getString(R.string.remote_fingerprint_title, device.Name))
+    val remote = view.findViewById(R.id.remote_identicon).asInstanceOf[ImageView]
+    remote.setImageBitmap(
+      IdenticonGenerator.generate(Crypto.getPublicKey(device.Id), (150, 150), this))
+
     new AlertDialog.Builder(this)
       .setTitle(getString(R.string.add_contact_dialog, device.Name))
+      .setView(view)
       .setPositiveButton(android.R.string.yes, onClick)
       .setNegativeButton(android.R.string.no, onClick)
       .show()
@@ -126,23 +141,23 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
     messages.foreach(msg => {
       if (msg.receiver == service.localDeviceId) {
         msg match {
-        case _: ResultAddContactMessage =>
-          // Remote device wants to add us as a contact, show dialog.
-          val sender = getDevice(msg.sender)
-          addDeviceDialog(sender)
-        case m: ResultAddContactMessage =>
-          if (m.Accepted) {
-            // Remote device accepted us as a contact, update state.
-            currentlyAdding += (m.sender ->
-              new AddContactInfo(true, currentlyAdding(m.sender).remoteConfirmed))
-            addContactIfBothConfirmed(getDevice(m.sender))
-          } else {
-            // Remote device denied us as a contact, show a toast
-            // and remove from [[currentlyAdding]].
-            Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
-            currentlyAdding -= m.sender
-          }
-        case _ =>
+          case _: RequestAddContactMessage =>
+            // Remote device wants to add us as a contact, show dialog.
+            val sender = getDevice(msg.sender)
+            addDeviceDialog(sender)
+          case m: ResultAddContactMessage =>
+            if (m.Accepted) {
+              // Remote device accepted us as a contact, update state.
+              currentlyAdding += (m.sender ->
+                new AddContactInfo(true, currentlyAdding(m.sender).remoteConfirmed))
+              addContactIfBothConfirmed(getDevice(m.sender))
+            } else {
+              // Remote device denied us as a contact, show a toast
+              // and remove from [[currentlyAdding]].
+              Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
+              currentlyAdding -= m.sender
+            }
+          case _ =>
         }
       }
     })

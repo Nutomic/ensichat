@@ -73,6 +73,15 @@ class Crypto(filesDir: File) {
   def havePublicKey(device: Device.ID): Boolean = new File(keyFolder, device.toString).exists()
 
   /**
+   * Returns the public key for the given device.
+   *
+   * @throws RuntimeException If the key does not exist.
+   */
+  def getPublicKey(device: Device.ID): PublicKey = {
+    loadKey(device.toString, classOf[PublicKey])
+  }
+
+  /**
    * Adds a new public key for a remote device.
    *
    * If a key for the device already exists, nothing is done.

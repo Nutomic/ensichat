@@ -4,9 +4,9 @@ import java.io._
 
 import android.bluetooth.BluetoothSocket
 import android.util.Log
+import com.nutomic.ensichat.messages.Message._
 import com.nutomic.ensichat.messages.{Crypto, DeviceInfoMessage, Message}
 import org.msgpack.ScalaMessagePack
-import com.nutomic.ensichat.messages.Message._
 
 /**
  * Transfers data between connnected devices.
