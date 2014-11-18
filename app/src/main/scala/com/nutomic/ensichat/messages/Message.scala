@@ -1,5 +1,6 @@
 package com.nutomic.ensichat.messages
 
+import java.io.IOException
 import java.util.Date
 
 import com.nutomic.ensichat.bluetooth.Device
@@ -36,6 +37,8 @@ object Message {
   def read(bytes: Array[Byte]): (Message, Array[Byte]) = {
     val up = new ScalaMessagePack().createBufferUnpacker(bytes)
 
+    @throws[IOException]("If the message can't be parsed")
+    @throws[RuntimeException]("If the message has an unknown type")
     val messageType = up.readInt()
     val sender      = new Device.ID(up.readString())
     val receiver    = new Device.ID(up.readString())
@@ -46,6 +49,8 @@ object Message {
       case Type.DeviceInfo        => DeviceInfoMessage.read(sender, receiver, date, up)
       case Type.RequestAddContact => RequestAddContactMessage.read(sender, receiver, date, up)
       case Type.ResultAddContact  => ResultAddContactMessage.read(sender, receiver, date, up)
+      case t =>
+        throw new RuntimeException("Received message of unknown type " + t)
     }, sig)
   }
 
