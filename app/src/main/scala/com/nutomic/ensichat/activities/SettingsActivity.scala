@@ -2,6 +2,8 @@ package com.nutomic.ensichat.activities
 
 import android.app.Fragment
 import android.os.Bundle
+import android.support.v4.app.NavUtils
+import android.view.MenuItem
 import com.nutomic.ensichat.fragments.SettingsFragment
 
 /**
@@ -31,6 +33,14 @@ class SettingsActivity extends EnsiChatActivity {
     super.onSaveInstanceState(outState)
 
     getFragmentManager.putFragment(outState, "settings_fragment", fragment)
+  }
+
+  override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
+      case android.R.id.home =>
+        NavUtils.navigateUpFromSameTask(this)
+        true;
+      case _ =>
+        super.onOptionsItemSelected(item);
   }
 
 }

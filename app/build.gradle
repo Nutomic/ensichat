@@ -11,6 +11,7 @@ buildscript {
 }
 
 dependencies {
+    compile "com.android.support:support-v4:21.0.0"
     compile "org.scala-lang:scala-library:2.11.4"
     compile "org.msgpack:msgpack-scala_2.11:0.6.11"
 }

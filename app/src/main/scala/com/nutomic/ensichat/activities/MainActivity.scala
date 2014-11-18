@@ -4,6 +4,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content._
 import android.os.Bundle
+import android.view.MenuItem
 import android.widget.Toast
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.Device
@@ -80,6 +81,7 @@ class MainActivity extends EnsiChatActivity {
       .detach(ContactsFragment)
       .add(android.R.id.content, new ChatFragment(device))
       .commit()
+    getActionBar.setDisplayHomeAsUpEnabled(true)
   }
 
   /**
@@ -93,8 +95,17 @@ class MainActivity extends EnsiChatActivity {
         .attach(ContactsFragment)
         .commit()
       currentChat = None
+      getActionBar.setDisplayHomeAsUpEnabled(false)
     } else
       super.onBackPressed()
+  }
+
+  override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
+    case android.R.id.home =>
+      onBackPressed()
+      true;
+    case _ =>
+      super.onOptionsItemSelected(item);
   }
 
 }

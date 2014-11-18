@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.nutomic.ensichat" >
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.nutomic.ensichat"
+    tools:ignore="InvalidPackage" >
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -15,7 +17,8 @@
 
         <activity
             android:name=".activities.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -25,13 +28,19 @@
 
         <activity
             android:name=".activities.AddContactsActivity"
-            android:label="@string/add_contacts"
-            android:parentActivityName=".activities.MainActivity" />
+            android:label="@string/add_contacts" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.MainActivity" />
+        </activity>
 
         <activity
             android:name=".activities.SettingsActivity"
-            android:label="@string/settings"
-            android:parentActivityName=".activities.MainActivity" />
+            android:label="@string/settings" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.MainActivity" />
+        </activity>
 
         <service android:name=".bluetooth.ChatService" />
 

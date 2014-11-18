@@ -9,6 +9,7 @@ import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 import android.util.Log
 import com.nutomic.ensichat.bluetooth.Device
 import com.nutomic.ensichat.messages.Crypto._
+import com.nutomic.ensichat.util.PRNGFixes
 
 object Crypto {
 
@@ -53,6 +54,8 @@ class Crypto(filesDir: File) {
   private val PrivateKeyAlias = "local-private"
 
   private val PublicKeyAlias = "local-public"
+
+  PRNGFixes.apply()
 
   /**
    * Generates a new key pair using [[KeyAlgorithm]] with [[KeySize]] bits and stores the keys.

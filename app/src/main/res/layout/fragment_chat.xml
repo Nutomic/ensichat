@@ -50,8 +50,7 @@
             android:id="@+id/send"
             android:layout_width="45dp"
             android:layout_height="45dp"
-            android:background="@drawable/ic_action_send_now"
-            android:onClick="sendMessage"/>
+            android:background="@drawable/ic_action_send_now"/>
 
     </LinearLayout>
 

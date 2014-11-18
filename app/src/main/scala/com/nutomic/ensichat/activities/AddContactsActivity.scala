@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.content.DialogInterface.OnClickListener
 import android.content.{Context, DialogInterface}
 import android.os.Bundle
+import android.support.v4.app.NavUtils
 import android.util.Log
 import android.view._
 import android.widget.AdapterView.OnItemClickListener
@@ -54,6 +55,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    */
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
+    getActionBar.setDisplayHomeAsUpEnabled(true)
 
     setContentView(R.layout.activity_add_contacts)
     val list = findViewById(android.R.id.list).asInstanceOf[ListView]
@@ -189,6 +191,14 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
         .show()
       currentlyAdding -= device.Id
     }
+  }
+
+  override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
+    case android.R.id.home =>
+      NavUtils.navigateUpFromSameTask(this)
+      true;
+    case _ =>
+      super.onOptionsItemSelected(item);
   }
 
 }
