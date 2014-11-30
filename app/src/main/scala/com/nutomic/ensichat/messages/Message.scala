@@ -1,7 +1,7 @@
 package com.nutomic.ensichat.messages
 
 import java.io.IOException
-import java.util.Date
+import java.util.{Date, Objects}
 
 import com.nutomic.ensichat.bluetooth.Device
 import org.msgpack.ScalaMessagePack
@@ -116,7 +116,7 @@ abstract class Message(val messageType: Int) {
    * Implementations must provide their own implementation to check the result of this
    * function and their own data.
    */
-  override def hashCode: Int = sender.hashCode + receiver.hashCode + date.hashCode
+  override def hashCode: Int = Objects.hash(sender, receiver, date)
 
   override def toString: String
 

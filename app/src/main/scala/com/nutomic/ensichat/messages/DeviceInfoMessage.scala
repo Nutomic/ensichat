@@ -2,7 +2,7 @@ package com.nutomic.ensichat.messages
 
 import java.security.spec.X509EncodedKeySpec
 import java.security.{KeyFactory, PublicKey}
-import java.util.Date
+import java.util.{Date, Objects}
 
 import com.nutomic.ensichat.bluetooth.Device
 import com.nutomic.ensichat.messages.Message._
@@ -35,7 +35,7 @@ class DeviceInfoMessage(override val sender: Device.ID, override val receiver: D
   override def equals(a: Any) =
     super.equals(a) && a.asInstanceOf[DeviceInfoMessage].publicKey.toString == publicKey.toString
 
-  override def hashCode = super.hashCode + publicKey.hashCode
+  override def hashCode = Objects.hash(super.hashCode: java.lang.Integer, publicKey)
 
   override def toString = "DeviceInfoMessage(" + sender.toString + ", " + receiver.toString +
     ", " + date.toString + ", " + publicKey.toString + ")"

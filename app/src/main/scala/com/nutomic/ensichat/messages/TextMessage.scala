@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.messages
 
-import java.util.Date
+import java.util.{Date, Objects}
 
 import com.nutomic.ensichat.bluetooth.Device
 import com.nutomic.ensichat.messages.Message._
@@ -24,7 +24,7 @@ class TextMessage(override val sender: Device.ID, override val receiver: Device.
 
   override def equals(a: Any) = super.equals(a) && a.asInstanceOf[TextMessage].text == text
 
-  override def hashCode = super.hashCode + text.hashCode
+  override def hashCode = Objects.hash(super.hashCode: java.lang.Integer, text)
 
   override def toString = "TextMessage(" + sender.toString + ", " + receiver.toString +
     ", " + date.toString + ", " + text + ")"

@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.messages
 
-import java.util.Date
+import java.util.{Date, Objects}
 
 import com.nutomic.ensichat.activities.AddContactsActivity
 import com.nutomic.ensichat.bluetooth.Device
@@ -28,7 +28,8 @@ class ResultAddContactMessage(override val sender: Device.ID, override val recei
   override def equals(a: Any) =
     super.equals(a) && a.asInstanceOf[ResultAddContactMessage].Accepted == Accepted
 
-  override def hashCode = super.hashCode + Accepted.hashCode
+  override def hashCode =
+    Objects.hash(super.hashCode: java.lang.Integer, Accepted: java.lang.Boolean)
 
   override def toString = "ResultAddContactMessage(" + sender.toString + ", " + receiver.toString +
     ", " + date.toString + ", " + Accepted + ")"
