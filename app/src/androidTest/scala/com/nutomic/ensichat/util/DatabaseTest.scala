@@ -8,8 +8,8 @@ import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.test.AndroidTestCase
 import android.test.mock.MockContext
-import com.nutomic.ensichat.bluetooth.Device
-import com.nutomic.ensichat.messages.MessageTest._
+import com.nutomic.ensichat.aodvv2.AddressTest
+import com.nutomic.ensichat.messages.MessageTest
 import junit.framework.Assert._
 
 class DatabaseTest extends AndroidTestCase {
@@ -27,9 +27,9 @@ class DatabaseTest extends AndroidTestCase {
   private lazy val Database = new Database(new TestContext(getContext))
 
   override def setUp(): Unit = {
-    Database.addMessage(m1)
-    Database.addMessage(m2)
-    Database.addMessage(m3)
+    Database.addMessage(MessageTest.m1)
+    Database.addMessage(MessageTest.m2)
+    Database.addMessage(MessageTest.m3)
   }
 
   override def tearDown(): Unit = {
@@ -38,43 +38,38 @@ class DatabaseTest extends AndroidTestCase {
   }
 
   def testMessageCount(): Unit = {
-    val msg1 = Database.getMessages(m1.sender, 1)
+    val msg1 = Database.getMessages(MessageTest.m1.sender, 1)
     assertEquals(1, msg1.size)
 
-    val msg2 = Database.getMessages(m1.sender, 3)
+    val msg2 = Database.getMessages(MessageTest.m1.sender, 3)
     assertEquals(2, msg2.size)
   }
 
   def testMessageOrder(): Unit = {
-    val msg = Database.getMessages(m1.receiver, 1)
-    assertTrue(msg.contains(m3))
+    val msg = Database.getMessages(MessageTest.m1.receiver, 1)
+    assertTrue(msg.contains(MessageTest.m3))
   }
 
   def testMessageSelect(): Unit = {
-    val msg = Database.getMessages(m1.receiver, 2)
-    assertTrue(msg.contains(m1))
-    assertTrue(msg.contains(m3))
+    val msg = Database.getMessages(MessageTest.m1.receiver, 2)
+    assertTrue(msg.contains(MessageTest.m1))
+    assertTrue(msg.contains(MessageTest.m3))
   }
 
   def testAddContact(): Unit = {
-    val device = new Device(m1.sender, "device", false)
-    Database.addContact(device)
-    assertTrue(Database.isContact(device.Id))
+    Database.addContact(AddressTest.a1)
+    assertTrue(Database.isContact(AddressTest.a1))
     val contacts = Database.getContacts
     assertEquals(1, contacts.size)
-    contacts.foreach {d =>
-      assertEquals(device.Name, d.Name)
-      assertEquals(device.Id, d.Id)
-    }
+    contacts.foreach{assertEquals(AddressTest.a1, _)}
   }
 
   def testAddContactCallback(): Unit = {
-    val device = new Device(m1.sender, "device", false)
-    var latch = new CountDownLatch(1)
+    val latch = new CountDownLatch(1)
     Database.runOnContactsUpdated(() => {
       latch.countDown()
     })
-    Database.addContact(device)
+    Database.addContact(AddressTest.a1)
     latch.await()
   }
 

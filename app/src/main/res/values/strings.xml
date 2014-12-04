@@ -22,12 +22,6 @@
     <string name="exit">Exit</string>
 
 
-    <!-- ChatFragment -->
-
-    <!-- Toast shown when trying to send a message to an offline contact -->
-    <string name="contact_offline_toast">Contact is offline, message not sent</string>
-
-
     <!-- AddContactsActivity -->
 
     <!-- Activity title -->

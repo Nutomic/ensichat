@@ -4,13 +4,13 @@ import android.content.Context
 import android.view.{Gravity, View, ViewGroup}
 import android.widget.{ArrayAdapter, RelativeLayout, TextView}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.bluetooth.Device
+import com.nutomic.ensichat.aodvv2.Address
 import com.nutomic.ensichat.messages.TextMessage
 
 /**
  * Displays [[TextMessage]]s in ListView.
  */
-class MessagesAdapter(context: Context, localDevice: Device.ID) extends
+class MessagesAdapter(context: Context, remoteAddress: Address) extends
   ArrayAdapter[TextMessage](context, R.layout.item_message, android.R.id.text1) {
 
   /**
@@ -26,7 +26,7 @@ class MessagesAdapter(context: Context, localDevice: Device.ID) extends
 
     val lp = new RelativeLayout.LayoutParams(tv.getLayoutParams)
     val margin = (MessageMargin * context.getResources.getDisplayMetrics.density).toInt
-    if (getItem(position).sender == localDevice) {
+    if (getItem(position).sender != remoteAddress) {
       view.setGravity(Gravity.RIGHT)
       lp.setMargins(margin, 0, 0, 0)
     } else {

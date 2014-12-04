@@ -1,10 +1,9 @@
 package com.nutomic.ensichat.util
 
-import java.security.{MessageDigest, PublicKey}
-
 import android.content.Context
 import android.graphics.Bitmap.Config
 import android.graphics.{Bitmap, Canvas, Color}
+import com.nutomic.ensichat.aodvv2.Address
 
 /**
  * Calculates a unique identicon for the given hash.
@@ -25,10 +24,8 @@ object IdenticonGenerator {
    *
    * @param size The size of the bitmap returned.
    */
-  def generate(key: PublicKey, size: (Int, Int), context: Context): Bitmap = {
-    // Hash the key.
-    val digest = MessageDigest.getInstance("SHA-1")
-    val hash = digest.digest(key.getEncoded)
+  def generate(address: Address, size: (Int, Int), context: Context): Bitmap = {
+    val hash = address.Bytes
 
     // Create base image and colors.
     var identicon = Bitmap.createBitmap(Width, Height, Config.ARGB_8888)

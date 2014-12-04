@@ -2,7 +2,7 @@ package com.nutomic.ensichat.bluetooth
 
 import android.bluetooth.BluetoothDevice
 
-object Device {
+private[bluetooth] object Device {
 
   /**
    * Holds bluetooth device IDs, which are just wrapped addresses (used for type safety).
@@ -28,7 +28,7 @@ object Device {
 /**
  * Holds information about a remote bluetooth device.
  */
-class Device(val Id: Device.ID, val Name: String, val Connected: Boolean,
+private[bluetooth] class Device(val Id: Device.ID, val Name: String, val Connected: Boolean,
              btDevice: Option[BluetoothDevice] = None) {
 
   def this(btDevice: BluetoothDevice, connected: Boolean) {
@@ -36,5 +36,8 @@ class Device(val Id: Device.ID, val Name: String, val Connected: Boolean,
   }
 
   def bluetoothDevice = btDevice.get
+
+  override def toString = "Device(Id=" + Id + ", Name=" + Name + ", Connected=" + Connected +
+    ", btDevice=" + btDevice + ")"
 
 }

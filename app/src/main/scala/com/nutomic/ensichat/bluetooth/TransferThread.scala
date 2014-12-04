@@ -1,12 +1,12 @@
 package com.nutomic.ensichat.bluetooth
 
 import java.io._
+import java.util.Date
 
 import android.bluetooth.BluetoothSocket
 import android.util.Log
-import com.nutomic.ensichat.messages.Message._
-import com.nutomic.ensichat.messages.{Crypto, DeviceInfoMessage, Message}
-import org.msgpack.ScalaMessagePack
+import com.nutomic.ensichat.aodvv2._
+import com.nutomic.ensichat.messages.Crypto
 
 /**
  * Transfers data between connnected devices.
@@ -15,11 +15,11 @@ import org.msgpack.ScalaMessagePack
  *
  * @param device The bluetooth device to interact with.
  * @param socket An open socket to the given device.
- * @param crypto Object used to handle signing and encryption of messages.
  * @param onReceive Called when a message was received from the other device.
  */
 class TransferThread(device: Device, socket: BluetoothSocket, service: ChatService,
-                     crypto: Crypto, onReceive: (Message) => Unit) extends Thread {
+                     crypto: Crypto, onReceive: (MessageHeader, MessageBody, Device.ID) => Unit)
+  extends Thread {
 
   private val Tag: String = "TransferThread"
 
@@ -44,81 +44,40 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
   override def run(): Unit = {
     Log.i(Tag, "Starting data transfer with " + device.toString)
 
+    send(new MessageHeader(ConnectionInfo.Type, ConnectionInfo.HopLimit, new Date(), Address.Null,
+      Address.Null, 0, 0), new ConnectionInfo(crypto.getLocalPublicKey))
+
     while (socket.isConnected) {
       try {
-        val up = new ScalaMessagePack().createUnpacker(InStream)
-        val isEncrypted = up.readBoolean()
-        val plain =
-          if (isEncrypted) {
-            val encrypted = up.readByteArray()
-            val key = up.readByteArray()
-            crypto.decrypt(encrypted, key)
-          } else {
-            up.readByteArray()
+        val headerBytes = new Array[Byte](MessageHeader.Length)
+        InStream.read(headerBytes, 0, MessageHeader.Length)
+        val header = MessageHeader.read(headerBytes)
+        val bodyLength = (header.Length - MessageHeader.Length).toInt
+
+        val bodyBytes = new Array[Byte](bodyLength)
+        InStream.read(bodyBytes, 0, bodyLength)
+
+        val body =
+          header.MessageType match {
+            case ConnectionInfo.Type => ConnectionInfo.read(bodyBytes)
+            case Data.Type           => Data.read(bodyBytes)
           }
-        val (message, signature) = Message.read(plain)
-        var messageValid = true
 
-        if (message.sender != device.Id) {
-          Log.i(Tag, "Dropping message with invalid sender from " + device.Id)
-          messageValid = false
-        }
-
-        if (message.receiver != service.localDeviceId) {
-          Log.i(Tag, "Dropping message with different receiver from " + device.Id)
-          messageValid = false
-        }
-
-        // Add public key for new, directly connected device.
-        // Explicitly check that message was not forwarded or spoofed.
-        if (message.isInstanceOf[DeviceInfoMessage] && !crypto.havePublicKey(message.sender) &&
-            message.sender == device.Id) {
-          val dim = message.asInstanceOf[DeviceInfoMessage]
-          // Permanently store public key for new local devices (also check signature).
-          if (crypto.isValidSignature(message, signature, dim.publicKey)) {
-            crypto.addPublicKey(device.Id, dim.publicKey)
-            Log.i(Tag, "Added public key for new device " + device.Name)
-          }
-        }
-
-        if (!crypto.isValidSignature(message, signature)) {
-          Log.i(Tag, "Dropping message with invalid signature from " + device.Id)
-          messageValid = false
-        }
-
-        if (messageValid) {
-          message match {
-            case m: DeviceInfoMessage => crypto.addPublicKey(message.sender, m.publicKey)
-            case _ => onReceive(message)
-          }
-        }
+        onReceive(header, body, device.Id)
       } catch {
-        case e: IOException =>
-          Log.i(Tag, "Failed to read incoming message", e)
         case e: RuntimeException =>
           Log.i(Tag, "Received invalid message", e)
+        case e: IOException =>
+          Log.w(Tag, "Failed to read incoming message", e)
+          return
       }
     }
     service.onConnectionChanged(new Device(device.bluetoothDevice, false), null)
   }
 
-  def send(message: Message): Unit = {
+  def send(header: MessageHeader, body: MessageBody): Unit = {
     try {
-      val plain = message.write(crypto.calculateSignature(message))
-      val packer = new ScalaMessagePack().createPacker(OutStream)
-
-      message.messageType match {
-        case Type.Text =>
-          val (encrypted, key) = crypto.encrypt(message.receiver, plain)
-          // Message is encrypted.
-          packer.write(true)
-            .write(encrypted)
-            .write(key)
-        case Type.DeviceInfo | Type.RequestAddContact | Type.ResultAddContact =>
-          // Message is not encrypted.
-          packer.write(false)
-            .write(plain)
-      }
+      OutStream.write(header.write(body))
     } catch {
       case e: IOException => Log.e(Tag, "Failed to write message", e)
     }

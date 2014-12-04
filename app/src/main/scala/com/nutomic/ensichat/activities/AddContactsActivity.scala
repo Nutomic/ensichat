@@ -12,8 +12,9 @@ import android.view._
 import android.widget.AdapterView.OnItemClickListener
 import android.widget._
 import com.nutomic.ensichat.R
+import com.nutomic.ensichat.aodvv2.Address
+import com.nutomic.ensichat.bluetooth.ChatService
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.bluetooth.{ChatService, Device}
 import com.nutomic.ensichat.messages.{Crypto, Message, RequestAddContactMessage, ResultAddContactMessage}
 import com.nutomic.ensichat.util.{DevicesAdapter, IdenticonGenerator}
 
@@ -24,7 +25,7 @@ import scala.collection.SortedSet
  *
  * Adding a contact requires confirmation on both sides.
  */
-class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnectionChangedListener
+class AddContactsActivity extends EnsiChatActivity with ChatService.OnNearbyContactsChangedListener
   with OnItemClickListener with OnMessageReceivedListener {
 
   private val Tag = "AddContactsActivity"
@@ -33,12 +34,12 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
 
   private lazy val Database = service.database
 
-  private lazy val Crypto = new Crypto(this.getFilesDir)
+  private lazy val Crypto = new Crypto(this)
 
   /**
    * Map of devices that should be added.
    */
-  private var currentlyAdding = Map[Device.ID, AddContactInfo]()
+  private var currentlyAdding = Map[Address, AddContactInfo]()
     .withDefaultValue(new AddContactInfo(false, false))
 
   /**
@@ -72,12 +73,11 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
   /**
    * Displays newly connected devices in the list.
    */
-  override def onConnectionChanged(devices: Map[Device.ID, Device]): Unit = {
-    val filtered = devices.filter{ case (_, d) => d.Connected }
+  override def onNearbyContactsChanged(devices: Set[Address]): Unit = {
     runOnUiThread(new Runnable {
       override def run(): Unit  = {
         Adapter.clear()
-        filtered.values.foreach(f => Adapter.add(f))
+        devices.foreach(Adapter.add)
       }
     })
   }
@@ -86,34 +86,34 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    * Initiates adding the device as contact if it hasn't been added yet.
    */
   override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = {
-    val device = Adapter.getItem(position)
-    if (Database.isContact(device.Id)) {
+    val address = Adapter.getItem(position)
+    if (Database.isContact(address)) {
       Toast.makeText(this, R.string.contact_already_added, Toast.LENGTH_SHORT).show()
       return
     }
 
-    service.send(new RequestAddContactMessage(service.localDeviceId, device.Id, new Date()))
-    addDeviceDialog(device)
+    service.send(new RequestAddContactMessage(Crypto.getLocalAddress, address, new Date()))
+    addDeviceDialog(address)
   }
 
   /**
    * Shows a dialog to accept/deny adding a device as a new contact.
    */
-  private def addDeviceDialog(device: Device): Unit = {
-    val id = device.Id
+  private def addDeviceDialog(address: Address): Unit = {
     // Listener for dialog button clicks.
     val onClick = new OnClickListener {
       override def onClick(dialogInterface: DialogInterface, i: Int): Unit = i match {
         case DialogInterface.BUTTON_POSITIVE =>
           // Local user accepted contact, update state and send info to other device.
-          currentlyAdding += (id -> new AddContactInfo(currentlyAdding(id).localConfirmed, true))
-          addContactIfBothConfirmed(device)
+          currentlyAdding +=
+            (address -> new AddContactInfo(currentlyAdding(address).localConfirmed, true))
+          addContactIfBothConfirmed(address)
           service.send(
-            new ResultAddContactMessage(service.localDeviceId, device.Id, new Date(), true))
+            new ResultAddContactMessage(Crypto.getLocalAddress, address, new Date(), true))
         case DialogInterface.BUTTON_NEGATIVE =>
           // Local user denied adding contact, send info to other device.
           service.send(
-            new ResultAddContactMessage(service.localDeviceId, device.Id, new Date(), false))
+            new ResultAddContactMessage(Crypto.getLocalAddress, address, new Date(), false))
       }
     }
 
@@ -122,15 +122,14 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
 
     val local = view.findViewById(R.id.local_identicon).asInstanceOf[ImageView]
     local.setImageBitmap(
-      IdenticonGenerator.generate(Crypto.getLocalPublicKey, (150, 150), this))
+      IdenticonGenerator.generate(Crypto.getLocalAddress, (150, 150), this))
     val remoteTitle = view.findViewById(R.id.remote_identicon_title).asInstanceOf[TextView]
-    remoteTitle.setText(getString(R.string.remote_fingerprint_title, device.Name))
+    remoteTitle.setText(getString(R.string.remote_fingerprint_title, address))
     val remote = view.findViewById(R.id.remote_identicon).asInstanceOf[ImageView]
-    remote.setImageBitmap(
-      IdenticonGenerator.generate(Crypto.getPublicKey(device.Id), (150, 150), this))
+    remote.setImageBitmap(IdenticonGenerator.generate(address, (150, 150), this))
 
     new AlertDialog.Builder(this)
-      .setTitle(getString(R.string.add_contact_dialog, device.Name))
+      .setTitle(getString(R.string.add_contact_dialog, address))
       .setView(view)
       .setPositiveButton(android.R.string.yes, onClick)
       .setNegativeButton(android.R.string.no, onClick)
@@ -144,18 +143,17 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    * the user is in this activity.
    */
   override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.filter(_.receiver == service.localDeviceId)
+    messages.filter(_.receiver == Crypto.getLocalAddress)
       .foreach{
         case m: RequestAddContactMessage =>
           Log.i(Tag, "Remote device " + m.sender + " wants to add us as a contact, showing dialog")
-          val sender = getDevice(m.sender)
-          addDeviceDialog(sender)
+          addDeviceDialog(m.sender)
         case m: ResultAddContactMessage =>
           if (m.Accepted) {
             Log.i(Tag, "Remote device " + m.sender + " accepted us as a contact, updating state")
             currentlyAdding += (m.sender ->
               new AddContactInfo(true, currentlyAdding(m.sender).remoteConfirmed))
-            addContactIfBothConfirmed(getDevice(m.sender))
+            addContactIfBothConfirmed(m.sender)
           } else {
             Log.i(Tag, "Remote device " + m.sender + " denied us as a contact, showing toast")
             Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
@@ -166,30 +164,17 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
   }
 
   /**
-   * Returns the [[Device]] for a given [[Device.ID]] that is stored in the [[Adapter]].
-   */
-  private def getDevice(id: Device.ID): Device = {
-    // ArrayAdapter does not return the underlying array so we have to access it manually.
-    for (i <- 0 until Adapter.getCount) {
-      if (Adapter.getItem(i).Id == id) {
-        return Adapter.getItem(i)
-      }
-    }
-    throw new RuntimeException("Device to add was not found")
-  }
-
-  /**
    * Add the given device to contacts if [[AddContactInfo.localConfirmed]] and
    * [[AddContactInfo.remoteConfirmed]] are true for it in [[currentlyAdding]].
    */
-  private def addContactIfBothConfirmed(device: Device): Unit = {
-    val info = currentlyAdding(device.Id)
+  private def addContactIfBothConfirmed(address: Address): Unit = {
+    val info = currentlyAdding(address)
     if (info.localConfirmed && info.remoteConfirmed) {
-      Log.i(Tag, "Adding new contact " + device.Name)
-      Database.addContact(device)
-      Toast.makeText(this, getString(R.string.contact_added, device.Name), Toast.LENGTH_SHORT)
+      Log.i(Tag, "Adding new contact " + address.toString)
+      Database.addContact(address)
+      Toast.makeText(this, getString(R.string.contact_added, address.toString), Toast.LENGTH_SHORT)
         .show()
-      currentlyAdding -= device.Id
+      currentlyAdding -= address
     }
   }
 

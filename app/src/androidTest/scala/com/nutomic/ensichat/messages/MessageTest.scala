@@ -4,7 +4,7 @@ import java.io.{PipedInputStream, PipedOutputStream}
 import java.util.GregorianCalendar
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.bluetooth.Device
+import com.nutomic.ensichat.aodvv2.AddressTest
 import com.nutomic.ensichat.messages.MessageTest._
 import junit.framework.Assert._
 
@@ -12,13 +12,13 @@ import scala.collection.immutable.TreeSet
 
 object MessageTest {
 
-  val m1 = new TextMessage(new Device.ID("AA:AA:AA:AA:AA:AA"), new Device.ID("BB:BB:BB:BB:BB:BB"),
+  val m1 = new TextMessage(AddressTest.a1, AddressTest.a2,
     new GregorianCalendar(2014, 10, 29).getTime, "first")
 
-  val m2 = new TextMessage(new Device.ID("AA:AA:AA:AA:AA:AA"), new Device.ID("CC:CC:CC:CC:CC:CC"),
+  val m2 = new TextMessage(AddressTest.a1, AddressTest.a3,
     new GregorianCalendar(2014, 10, 30).getTime, "second")
 
-  val m3 = new TextMessage(new Device.ID("DD:DD:DD:DD:DD:DD"), new Device.ID("BB:BB:BB:BB:BB:BB"),
+  val m3 = new TextMessage(AddressTest.a4, AddressTest.a2,
     new GregorianCalendar(2014, 10, 31).getTime, "third")
 
 }
@@ -26,23 +26,25 @@ object MessageTest {
 class MessageTest extends AndroidTestCase {
 
   def testSerialize(): Unit = {
-    val pis = new PipedInputStream()
-    val pos = new PipedOutputStream(pis)
-    val bytes = m1.write(Array[Byte]())
-    val (msg, _) = Message.read(bytes)
-    assertEquals(m1, msg)
+    Set(m1, m2, m3).foreach { m =>
+      val pis = new PipedInputStream()
+      val pos = new PipedOutputStream(pis)
+      val bytes = m.write(Array[Byte]())
+      val (msg, _) = Message.read(bytes)
+      assertEquals(m, msg)
+    }
   }
 
   def testOrder(): Unit = {
     var messages = new TreeSet[Message]()(Message.Ordering)
-    messages += m1
-    messages += m2
-    assertEquals(m1, messages.firstKey)
+    messages += MessageTest.m1
+    messages += MessageTest.m2
+    assertEquals(MessageTest.m1, messages.firstKey)
 
     messages = new TreeSet[Message]()(Message.Ordering)
-    messages += m2
-    messages += m3
-    assertEquals(m2, messages.firstKey)
+    messages += MessageTest.m2
+    messages += MessageTest.m3
+    assertEquals(MessageTest.m2, messages.firstKey)
   }
 
 }

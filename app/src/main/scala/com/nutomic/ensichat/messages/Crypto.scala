@@ -6,8 +6,10 @@ import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
 import javax.crypto.spec.SecretKeySpec
 import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 
+import android.content.Context
+import android.preference.PreferenceManager
 import android.util.Log
-import com.nutomic.ensichat.bluetooth.Device
+import com.nutomic.ensichat.aodvv2.Address
 import com.nutomic.ensichat.messages.Crypto._
 import com.nutomic.ensichat.util.PRNGFixes
 
@@ -38,16 +40,28 @@ object Crypto {
    */
   val SymmetricKeyAlgorithm = "AES/CBC/PKCS5Padding"
 
+  /**
+   * Algorithm used to hash PublicKey and get the address.
+   */
+  val KeyHashAlgorithm = "SHA-256"
+
+  private val LocalAddressKey = "local_address"
+
+  /**
+   * Returns the address of the local node.
+   */
+  def getLocalAddress(context: Context) = new Address(
+      PreferenceManager.getDefaultSharedPreferences(context).getString(LocalAddressKey, null))
+
 }
 
 /**
  * Handles all cryptography related operations.
  *
- * @param filesDir The return value of [[android.content.Context#getFilesDir]].
  * @note We can't use [[KeyStore]], because it requires certificates, and does not work for
  *       private keys
  */
-class Crypto(filesDir: File) {
+class Crypto(Context: Context) {
 
   private val Tag = "Crypto"
 
@@ -61,27 +75,40 @@ class Crypto(filesDir: File) {
    * Generates a new key pair using [[KeyAlgorithm]] with [[KeySize]] bits and stores the keys.
    */
   def generateLocalKeys(): Unit = {
-    Log.i(Tag, "Generating cryptographic keys with algorithm: " + KeyAlgorithm)
-    val keyGen = KeyPairGenerator.getInstance(KeyAlgorithm)
-    keyGen.initialize(KeySize)
-    val keyPair = keyGen.genKeyPair()
+    var address: Address = null
+    var keyPair: KeyPair = null
+    do {
+      val keyGen = KeyPairGenerator.getInstance(KeyAlgorithm)
+      keyGen.initialize(KeySize)
+      keyPair = keyGen.genKeyPair()
+
+      address = calculateAddress(keyPair.getPublic)
+
+      // The hash must have at least one bit set to not collide with the broadcast address.
+    } while(address == Address.Broadcast || address == Address.Null)
+
+    PreferenceManager.getDefaultSharedPreferences(Context)
+      .edit()
+      .putString(Crypto.LocalAddressKey, address.toString)
+      .commit()
 
     saveKey(PrivateKeyAlias, keyPair.getPrivate)
     saveKey(PublicKeyAlias, keyPair.getPublic)
+    Log.i(Tag, "Generating cryptographic keys, address is " + address)
   }
 
   /**
    * Returns true if we have a public key stored for the given device.
    */
-  def havePublicKey(device: Device.ID): Boolean = new File(keyFolder, device.toString).exists()
+  def havePublicKey(address: Address): Boolean = new File(keyFolder, address.toString).exists()
 
   /**
    * Returns the public key for the given device.
    *
    * @throws RuntimeException If the key does not exist.
    */
-  def getPublicKey(device: Device.ID): PublicKey = {
-    loadKey(device.toString, classOf[PublicKey])
+  def getPublicKey(address: Address): PublicKey = {
+    loadKey(address.toString, classOf[PublicKey])
   }
 
   /**
@@ -89,14 +116,14 @@ class Crypto(filesDir: File) {
    *
    * If a key for the device already exists, nothing is done.
    *
-   * @param device The device to wchi the key belongs.
+   * @param address The device to which the key belongs.
    * @param key The new key to add.
    */
-  def addPublicKey(device: Device.ID, key: PublicKey): Unit = {
-    if (!havePublicKey(device)) {
-      saveKey(device.toString, key)
+  def addPublicKey(address: Address, key: PublicKey): Unit = {
+    if (!havePublicKey(address)) {
+      saveKey(address.toString, key)
     } else {
-      Log.i(Tag, "Already have key for " + device.toString + ", not overwriting")
+      Log.i(Tag, "Already have key for " + address.toString + ", not overwriting")
     }
   }
 
@@ -210,7 +237,7 @@ class Crypto(filesDir: File) {
   /**
    * Returns the folder where keys are stored.
    */
-  private def keyFolder = new File(filesDir, "keys")
+  private def keyFolder = new File(Context.getFilesDir, "keys")
 
   /**
    * Encrypts data for the given receiver.
@@ -220,7 +247,7 @@ class Crypto(filesDir: File) {
    * @param key Optional RSA public key to use for encryption.
    * @return Pair of AES encrypted data and RSA encrypted AES key.
    */
-  def encrypt(receiver: Device.ID, data: Array[Byte], key: PublicKey = null):
+  def encrypt(receiver: Address, data: Array[Byte], key: PublicKey = null):
       (Array[Byte], Array[Byte]) = {
     // Symmetric encryption of data
     val secretKey = makeSecretKey()
@@ -289,5 +316,16 @@ class Crypto(filesDir: File) {
     val key = kgen.generateKey()
     new SecretKeySpec(key.getEncoded, SymmetricKeyAlgorithm)
   }
+
+  /**
+   * Hashes the given public key and returns the hash as address.
+   */
+  def calculateAddress(key: PublicKey): Address = {
+    val md = MessageDigest.getInstance(KeyHashAlgorithm)
+    val hash = md.digest(key.getEncoded)
+    new Address(hash)
+  }
+
+  def getLocalAddress = Crypto.getLocalAddress(Context)
 
 }

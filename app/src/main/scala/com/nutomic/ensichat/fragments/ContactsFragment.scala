@@ -64,6 +64,6 @@ class ContactsFragment extends ListFragment {
    * Opens a chat with the clicked device.
    */
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long): Unit =
-    getActivity.asInstanceOf[MainActivity].openChat(Adapter.getItem(position).Id)
+    getActivity.asInstanceOf[MainActivity].openChat(Adapter.getItem(position))
 
 }

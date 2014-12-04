@@ -20,9 +20,10 @@ dependencies {
     compile("org.msgpack:msgpack-scala_2.11:0.6.11") {
         transitive = false;
     }
-    compile('org.msgpack:msgpack:0.6.11'){
+    compile('org.msgpack:msgpack:0.6.11') {
         transitive = false;
     }
+    compile 'com.google.guava:guava:18.0'
 }
 
 
@@ -50,13 +51,14 @@ android {
 
     buildTypes {
         thin {
-            minifyEnabled false
             applicationIdSuffix ".debug"
+            minifyEnabled false
             signingConfig signingConfigs.debug
         }
         debug {
-            minifyEnabled false
             applicationIdSuffix ".debug"
+            minifyEnabled true
+            proguardFile file("proguard-rules.pro")
         }
         release {
             minifyEnabled true

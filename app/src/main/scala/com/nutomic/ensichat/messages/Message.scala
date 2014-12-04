@@ -3,7 +3,7 @@ package com.nutomic.ensichat.messages
 import java.io.IOException
 import java.util.{Date, Objects}
 
-import com.nutomic.ensichat.bluetooth.Device
+import com.nutomic.ensichat.aodvv2.Address
 import org.msgpack.ScalaMessagePack
 import org.msgpack.packer.Packer
 
@@ -16,9 +16,8 @@ object Message {
    */
   object Type {
     val Text = 1
-    val DeviceInfo = 2
-    val RequestAddContact = 3
-    val ResultAddContact = 4
+    val RequestAddContact = 2
+    val ResultAddContact = 3
   }
 
   /**
@@ -40,13 +39,12 @@ object Message {
     @throws[IOException]("If the message can't be parsed")
     @throws[RuntimeException]("If the message has an unknown type")
     val messageType = up.readInt()
-    val sender      = new Device.ID(up.readString())
-    val receiver    = new Device.ID(up.readString())
+    val sender      = new Address(up.readByteArray())
+    val receiver    = new Address(up.readByteArray())
     val date        = new Date(up.readLong())
     val sig         = up.readByteArray()
     (messageType match {
       case Type.Text              => TextMessage.read(sender, receiver, date, up)
-      case Type.DeviceInfo        => DeviceInfoMessage.read(sender, receiver, date, up)
       case Type.RequestAddContact => RequestAddContactMessage.read(sender, receiver, date, up)
       case Type.ResultAddContact  => ResultAddContactMessage.read(sender, receiver, date, up)
       case t =>
@@ -61,17 +59,18 @@ object Message {
  *
  * @param messageType One of [[Message.Type]].
  */
+@Deprecated
 abstract class Message(val messageType: Int) {
 
   /**
    * Device where the message was sent from.
    */
-  val sender: Device.ID
+  val sender: Address
 
   /**
    * Device the message is addressed to.
    */
-  val receiver: Device.ID
+  val receiver: Address
 
   /**
    * Timestamp of message creation.
@@ -86,8 +85,8 @@ abstract class Message(val messageType: Int) {
   def write(signature: Array[Byte]): Array[Byte] = {
     val packer = new ScalaMessagePack().createBufferPacker()
     packer.write(messageType)
-      .write(sender.toString)
-      .write(receiver.toString)
+      .write(sender.Bytes)
+      .write(receiver.Bytes)
       .write(date.getTime)
       .write(signature)
     doWrite(packer)

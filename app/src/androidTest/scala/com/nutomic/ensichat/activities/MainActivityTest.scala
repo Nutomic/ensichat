@@ -22,7 +22,7 @@ class MainActivityTest extends ActivityUnitTestCase[MainActivity](classOf[MainAc
 
     override def bindService(service: Intent, conn: ServiceConnection, flags: Int): Boolean = false
 
-    override def unbindService(conn: ServiceConnection): Unit = null
+    override def unbindService(conn: ServiceConnection): Unit = {}
   }
 
   override def setUp(): Unit = {

@@ -11,9 +11,10 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
+import com.nutomic.ensichat.aodvv2.Address
+import com.nutomic.ensichat.bluetooth.ChatService
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.bluetooth.{ChatService, Device}
-import com.nutomic.ensichat.messages.{Message, TextMessage}
+import com.nutomic.ensichat.messages.{Crypto, Message, TextMessage}
 import com.nutomic.ensichat.util.MessagesAdapter
 
 import scala.collection.SortedSet
@@ -24,12 +25,15 @@ import scala.collection.SortedSet
 class ChatFragment extends ListFragment with OnClickListener
     with OnMessageReceivedListener {
 
-  def this(device: Device.ID) {
+  /**
+   * Fragments need to have a default constructor, so this is optional.
+   */
+  def this(address: Address) {
     this
-    this.device = device
+    this.address = address
   }
 
-  private var device: Device.ID = _
+  private var address: Address = _
 
   private var chatService: ChatService = _
 
@@ -49,9 +53,9 @@ class ChatFragment extends ListFragment with OnClickListener
       chatService = activity.service
 
       // Read local device ID from service,
-      adapter = new MessagesAdapter(getActivity, chatService.localDeviceId)
+      adapter = new MessagesAdapter(getActivity, address)
       chatService.registerMessageListener(ChatFragment.this)
-      onMessageReceived(chatService.database.getMessages(device, 15))
+      onMessageReceived(chatService.database.getMessages(address, 15))
 
       if (listView != null) {
         listView.setAdapter(adapter)
@@ -83,13 +87,13 @@ class ChatFragment extends ListFragment with OnClickListener
     super.onCreate(savedInstanceState)
 
     if (savedInstanceState != null) {
-      device = new Device.ID(savedInstanceState.getString("device"))
+      address = new Address(savedInstanceState.getByteArray("device"))
     }
   }
 
   override def onSaveInstanceState(outState: Bundle): Unit = {
     super.onSaveInstanceState(outState)
-    outState.putString("device", device.toString)
+    outState.putByteArray("device", address.Bytes)
   }
 
   /**
@@ -97,14 +101,12 @@ class ChatFragment extends ListFragment with OnClickListener
    */
   override def onClick(view: View): Unit = view.getId match {
     case R.id.send =>
-      val text: String = messageText.getText.toString.trim
+      val text = messageText.getText.toString.trim
       if (!text.isEmpty) {
-        if (!chatService.isConnected(device)) {
-          Toast.makeText(getActivity, R.string.contact_offline_toast, Toast.LENGTH_SHORT).show()
-          return
-        }
-        chatService.send(
-          new TextMessage(chatService.localDeviceId, device, new Date(), text.toString))
+        val message =
+          new TextMessage(Crypto.getLocalAddress(getActivity), address, new Date(), text.toString)
+        chatService.send(message)
+        adapter.add(message)
         messageText.getText.clear()
       }
   }
@@ -113,7 +115,7 @@ class ChatFragment extends ListFragment with OnClickListener
    * Displays new messages in UI.
    */
   override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.filter(m => m.sender == device || m.receiver == device)
+    messages.filter(m => m.sender == address || m.receiver == address)
       .filter(_.isInstanceOf[TextMessage])
       .foreach(m => adapter.add(m.asInstanceOf[TextMessage]))
   }
@@ -121,6 +123,6 @@ class ChatFragment extends ListFragment with OnClickListener
   /**
    * Returns the device that this fragment shows chats for.
    */
-  def getDevice = this.device
+  def getDevice = address
 
 }

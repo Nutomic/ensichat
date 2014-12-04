@@ -4,7 +4,7 @@ import java.util.Date
 
 import android.content.{ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
-import com.nutomic.ensichat.bluetooth.Device
+import com.nutomic.ensichat.aodvv2.Address
 import com.nutomic.ensichat.messages._
 
 import scala.collection.SortedSet
@@ -18,15 +18,14 @@ object Database {
 
   private val CreateMessagesTable = "CREATE TABLE messages(" +
     "_id integer primary key autoincrement," +
-    "sender string not null," +
-    "receiver string not null," +
-    "text blob not null," +
+    "sender text not null," +
+    "receiver text not null," +
+    "text text not null," +
     "date integer not null);" // Unix timestamp of message.
 
   private val CreateContactsTable = "CREATE TABLE contacts(" +
     "_id integer primary key autoincrement," +
-    "device_id string not null," +
-    "name string not null)"
+    "address text not null)"
 
 }
 
@@ -48,16 +47,16 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
   /**
    * Returns the count last messages for device.
    */
-  def getMessages(device: Device.ID, count: Int): SortedSet[Message] = {
+  def getMessages(address: Address, count: Int): SortedSet[Message] = {
     val c = getReadableDatabase.query(true,
       "messages", Array("sender", "receiver", "text", "date"),
-      "sender = ? OR receiver = ?", Array(device.toString, device.toString),
+      "sender = ? OR receiver = ?", Array(address.toString, address.toString),
       null, null, "date DESC", count.toString)
     var messages = new TreeSet[Message]()(Message.Ordering)
     while (c.moveToNext()) {
       val m = new TextMessage(
-        new Device.ID(c.getString(c.getColumnIndex("sender"))),
-        new Device.ID(c.getString(c.getColumnIndex("receiver"))),
+        new Address(c.getString(c.getColumnIndex("sender"))),
+        new Address(c.getString(c.getColumnIndex("receiver"))),
         new Date(c.getLong(c.getColumnIndex("date"))),
         new String(c.getString(c.getColumnIndex ("text"))))
       messages += m
@@ -78,20 +77,19 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
       cv.put("date", msg.date.getTime.toString)
       cv.put("text", msg.text)
       getWritableDatabase.insert("messages", null, cv)
-    case _: DeviceInfoMessage | _: RequestAddContactMessage | _: ResultAddContactMessage =>
+    case _: RequestAddContactMessage | _: ResultAddContactMessage =>
       // Never stored.
   }
 
   /**
    * Returns a list of all contacts of this device.
    */
-  def getContacts: Set[Device] = {
-    val c = getReadableDatabase.query(true, "contacts", Array("device_id", "name"), "", Array(),
-      null, null, "name DESC", null)
-    var contacts = Set[Device]()
+  def getContacts: Set[Address] = {
+    val c = getReadableDatabase.query(true, "contacts", Array("address"), "", Array(),
+      null, null, null, null)
+    var contacts = Set[Address]()
     while (c.moveToNext()) {
-      contacts += new Device(new Device.ID(c.getString(c.getColumnIndex("device_id"))),
-                              c.getString(c.getColumnIndex("name")), false)
+      contacts += new Address(c.getString(c.getColumnIndex("address")))
     }
     c.close()
     contacts
@@ -100,19 +98,18 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
   /**
    * Returns true if a contact with the given device ID exists.
    */
-  def isContact(device: Device.ID): Boolean = {
-    val c = getReadableDatabase.query(true, "contacts", Array("_id"), "device_id = ?",
-      Array(device.toString), null, null, null, null)
+  def isContact(address: Address): Boolean = {
+    val c = getReadableDatabase.query(true, "contacts", Array("_id"), "address = ?",
+      Array(address.toString), null, null, null, null)
     c.getCount != 0
   }
 
   /**
    * Inserts the given device into contacts.
    */
-  def addContact(device: Device): Unit = {
+  def addContact(address: Address): Unit = {
     val cv = new ContentValues()
-    cv.put("device_id", device.Id.toString)
-    cv.put("name", device.Name)
+    cv.put("address", address.toString)
     getWritableDatabase.insert("contacts", null, cv)
     contactsUpdatedListeners.foreach(_())
   }

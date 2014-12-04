@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.widget.Toast
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.bluetooth.Device
+import com.nutomic.ensichat.aodvv2.Address
 import com.nutomic.ensichat.fragments.{ChatFragment, ContactsFragment}
 
 /**
@@ -19,7 +19,7 @@ class MainActivity extends EnsiChatActivity {
 
   private var ContactsFragment: ContactsFragment = _
 
-  private var currentChat: Option[Device.ID] = None
+  private var currentChat: Option[Address] = None
 
   /**
    * Initializes layout, starts service and requests Bluetooth to be discoverable.
@@ -38,7 +38,7 @@ class MainActivity extends EnsiChatActivity {
       ContactsFragment = fm.getFragment(savedInstanceState, classOf[ContactsFragment].getName)
         .asInstanceOf[ContactsFragment]
       if (savedInstanceState.containsKey("current_chat")) {
-        currentChat = Option(new Device.ID(savedInstanceState.getString("current_chat")))
+        currentChat = Option(new Address(savedInstanceState.getByteArray("current_chat")))
         openChat(currentChat.get)
       }
     } else {
@@ -55,7 +55,7 @@ class MainActivity extends EnsiChatActivity {
   override def onSaveInstanceState(outState: Bundle): Unit = {
     super.onSaveInstanceState(outState)
     getFragmentManager.putFragment(outState, classOf[ContactsFragment].getName, ContactsFragment)
-    currentChat.collect{case c => outState.putString("current_chat", c.toString)}
+    currentChat.collect{case c => outState.putByteArray("current_chat", c.Bytes)}
   }
 
   /**
@@ -74,12 +74,12 @@ class MainActivity extends EnsiChatActivity {
   /**
    * Opens a chat fragment for the given device, creating the fragment if needed.
    */
-  def openChat(device: Device.ID): Unit = {
-    currentChat = Some(device)
+  def openChat(address: Address): Unit = {
+    currentChat = Some(address)
     getFragmentManager
       .beginTransaction()
       .detach(ContactsFragment)
-      .add(android.R.id.content, new ChatFragment(device))
+      .add(android.R.id.content, new ChatFragment(address))
       .commit()
     getActionBar.setDisplayHomeAsUpEnabled(true)
   }

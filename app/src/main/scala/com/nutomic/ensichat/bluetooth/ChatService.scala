@@ -8,10 +8,13 @@ import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
+import com.google.common.collect.HashBiMap
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.bluetooth.ChatService.{OnConnectionChangedListener, OnMessageReceivedListener}
+import com.nutomic.ensichat.aodvv2._
+import com.nutomic.ensichat.bluetooth.ChatService.{OnMessageReceivedListener, OnNearbyContactsChangedListener}
 import com.nutomic.ensichat.messages._
 import com.nutomic.ensichat.util.Database
+import org.msgpack.ScalaMessagePack
 
 import scala.collection.SortedSet
 import scala.collection.immutable.{HashMap, HashSet, TreeSet}
@@ -26,8 +29,12 @@ object ChatService {
 
   val KEY_GENERATION_FINISHED = "com.nutomic.ensichat.messages.KEY_GENERATION_FINISHED"
 
-  trait OnConnectionChangedListener {
-    def onConnectionChanged(devices: Map[Device.ID, Device]): Unit
+  /**
+   * Used with [[ChatService.registerConnectionListener]], called when a bluetooth device
+   * connects or disconnects
+   */
+  trait OnNearbyContactsChangedListener {
+    def onNearbyContactsChanged(devices: Set[Address]): Unit
   }
 
   trait OnMessageReceivedListener {
@@ -52,7 +59,7 @@ class ChatService extends Service {
    * but on a Nexus S (Android 4.1.2), these functions are garbage collected even when
    * referenced.
    */
-  private var connectionListeners = new HashSet[WeakReference[OnConnectionChangedListener]]()
+  private var connectionListeners = new HashSet[WeakReference[OnNearbyContactsChangedListener]]()
 
   private var messageListeners = Set[WeakReference[OnMessageReceivedListener]]()
 
@@ -68,7 +75,9 @@ class ChatService extends Service {
 
   private lazy val Database = new Database(this)
 
-  private lazy val Crypto = new Crypto(getFilesDir)
+  private lazy val Crypto = new Crypto(this)
+
+  private val AddressDeviceMap = HashBiMap.create[Address, Device.ID]()
 
   /**
    * Initializes BroadcastReceiver for discovery, starts discovery and listens for connections.
@@ -90,7 +99,8 @@ class ChatService extends Service {
           Crypto.generateLocalKeys()
         }
       }).start()
-    }
+    } else
+      Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress)
   }
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int) = Service.START_STICKY
@@ -174,9 +184,9 @@ class ChatService extends Service {
   /**
    * Registers a listener that is called whenever a new device is connected.
    */
-  def registerConnectionListener(listener: OnConnectionChangedListener): Unit = {
-    connectionListeners += new WeakReference[OnConnectionChangedListener](listener)
-    listener.onConnectionChanged(devices)
+  def registerConnectionListener(listener: OnNearbyContactsChangedListener): Unit = {
+    connectionListeners += new WeakReference[OnNearbyContactsChangedListener](listener)
+    nearbyContactsChanged(listener)
   }
 
   /**
@@ -192,25 +202,46 @@ class ChatService extends Service {
 
     if (device.Connected) {
       connections += (device.Id ->
-        new TransferThread(device, socket, this, Crypto, handleNewMessage))
+        new TransferThread(device, socket, this, Crypto, onReceiveMessage))
       connections(device.Id).start()
-      connections.apply(device.Id).send(
-        new DeviceInfoMessage(localDeviceId, device.Id, new Date(), Crypto.getLocalPublicKey))
+    } else {
+      Log.i(Tag, device + " has disconnected")
+      AddressDeviceMap.inverse().remove(device.Id)
     }
+  }
 
-    connectionListeners.foreach(l => l.get match {
-      case Some(x) => x.onConnectionChanged(devices)
-      case None => connectionListeners -= l
-    })
+  /**
+   * Calls listener with [[devices]] (converting [[Device.ID]]s to [[Address]]es.
+   */
+  def nearbyContactsChanged(listener: OnNearbyContactsChangedListener) = {
+    listener.onNearbyContactsChanged(
+      devices.keySet.map(d => AddressDeviceMap.inverse().get(d)).filter(_ != null))
   }
 
   /**
    * Sends message to the device specified as receiver,
    */
   def send(message: Message): Unit = {
-    assert(message.sender == localDeviceId, "Message must be sent from local device")
-    connections.apply(message.receiver).send(message)
-    handleNewMessage(message)
+    assert(message.sender == Crypto.getLocalAddress, "Message must be sent from local device")
+
+    if (!AddressDeviceMap.containsKey(message.receiver)) {
+      Log.w(Tag, "Receiver " + message.receiver + " is not connected, ignoring message")
+      return
+    }
+
+    val header = new MessageHeader(Data.Type, MessageHeader.DefaultHopLimit,
+      new Date(), Crypto.getLocalAddress, message.receiver, 0, 0)
+
+    val plain = message.write(Crypto.calculateSignature(message))
+    val (encrypted, key) = Crypto.encrypt(message.receiver, plain)
+    val packer = new ScalaMessagePack().createBufferPacker()
+    packer
+      .write(encrypted)
+      .write(key)
+    val body = new Data(packer.toByteArray)
+
+    connections.apply(AddressDeviceMap.get(message.receiver)).send(header, body)
+    Database.addMessage(message)
   }
 
   /**
@@ -219,21 +250,64 @@ class ChatService extends Service {
    * If you want to send a new message, use [[send]].
    *
    * Messages must always be sent between local device and a contact.
+   *
+   * NOTE: Messages sent from the local node using [[send]] are also passed through this method.
    */
-  private def handleNewMessage(message: Message): Unit = {
-    assert(message.sender == localDeviceId || message.receiver == localDeviceId,
-      "Message must be sent or received by local device")
+  private def onReceiveMessage(header: MessageHeader, body: MessageBody, device: Device.ID): Unit = {
+    assert(header.Origin != Crypto.getLocalAddress)
 
-    Database.addMessage(message)
-    MainHandler.post(new Runnable {
-      override def run(): Unit = {
-        messageListeners.foreach(l =>
-          if (l.get != null)
-            l.apply().onMessageReceived(new TreeSet[Message]()(Message.Ordering) + message)
-          else
-            messageListeners -= l)
-      }
+    body match {
+      case info: ConnectionInfo =>
+        if (header.Origin == Crypto.getLocalAddress)
+          return
+        onNeighborConnected(info, device)
+      case data: Data =>
+        val up = new ScalaMessagePack().createBufferUnpacker(data.data)
+        val encrypted = up.readByteArray()
+        val key = up.readByteArray()
+        val (message, signature) = Message.read(Crypto.decrypt(encrypted, key))
+
+        if (!Crypto.isValidSignature(message, signature)) {
+          Log.i(Tag, "Dropping message with invalid signature from " + header.Origin)
+          return
+        }
+
+        Database.addMessage(message)
+        MainHandler.post(new Runnable {
+          override def run(): Unit = {
+            messageListeners.foreach(l =>
+              if (l.get != null)
+                l.apply().onMessageReceived(new TreeSet[Message]()(Message.Ordering) + message)
+              else
+                messageListeners -= l)
+          }
+        })
+    }
+  }
+
+  /**
+   * Called when a [[ConnectionInfo]] message from a new neighbor is received.
+   */
+  private def onNeighborConnected(info: ConnectionInfo, device: Device.ID): Unit = {
+    val sender = Crypto.calculateAddress(info.key)
+    if (sender == Address.Broadcast || sender == Address.Null) {
+      connections(device).close()
+      return
+    }
+
+    if (!Crypto.havePublicKey(sender)) {
+      Crypto.addPublicKey(sender, info.key)
+      Log.i(Tag, "Added public key for new device " + sender.toString)
+    }
+
+    AddressDeviceMap.put(sender, device)
+    Log.i(Tag, "Node " + sender + " connected as " + device)
+
+    connectionListeners.foreach(l => l.get match {
+      case Some(c) => nearbyContactsChanged(c)
+      case None => connectionListeners -= l
     })
+
   }
 
   /**
@@ -246,9 +320,7 @@ class ChatService extends Service {
   /**
    * Returns the unique bluetooth address of the local device.
    */
-  def localDeviceId = new Device.ID(bluetoothAdapter.getAddress)
-
-  def isConnected(device: Device.ID): Boolean = connections.keySet.contains(device)
+  private def localDeviceId = new Device.ID(bluetoothAdapter.getAddress)
 
   def database = Database
 

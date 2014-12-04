@@ -2,14 +2,14 @@ package com.nutomic.ensichat.messages
 
 import java.util.{Date, Objects}
 
-import com.nutomic.ensichat.bluetooth.Device
+import com.nutomic.ensichat.aodvv2.Address
 import com.nutomic.ensichat.messages.Message._
 import org.msgpack.packer.Packer
 import org.msgpack.unpacker.Unpacker
 
 object TextMessage {
 
-  def read(sender: Device.ID, receiver: Device.ID, date: Date, up: Unpacker): TextMessage =
+  def read(sender: Address, receiver: Address, date: Date, up: Unpacker): TextMessage =
     new TextMessage(sender, receiver, date, up.readString())
 
 }
@@ -17,7 +17,7 @@ object TextMessage {
 /**
  * Message that contains text.
  */
-class TextMessage(override val sender: Device.ID, override val receiver: Device.ID,
+class TextMessage(override val sender: Address, override val receiver: Address,
                   override val date: Date, val text: String) extends Message(Type.Text) {
 
   override def doWrite(packer: Packer) = packer.write(text)
