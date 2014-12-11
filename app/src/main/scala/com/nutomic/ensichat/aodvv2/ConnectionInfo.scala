@@ -34,11 +34,22 @@ object ConnectionInfo {
  */
 class ConnectionInfo(val key: PublicKey) extends MessageBody {
 
+  override def Type = ConnectionInfo.Type
+
   override def write: Array[Byte] = {
-    val b = ByteBuffer.allocate(4 + key.getEncoded.length)
+    val b = ByteBuffer.allocate(length)
     BufferUtils.putUnsignedInt(b, key.getEncoded.length)
     b.put(key.getEncoded)
     b.array()
   }
+
+  override def equals(a: Any): Boolean = a match {
+    case o: ConnectionInfo => key == o.key
+    case _ => false
+  }
+
+  override def toString = "ConnectionInfo(key=" + key + ")"
+
+  override def length = 4 + key.getEncoded.length
 
 }

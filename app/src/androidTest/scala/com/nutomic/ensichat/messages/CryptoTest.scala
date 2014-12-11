@@ -1,7 +1,7 @@
 package com.nutomic.ensichat.messages
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.messages.MessageTest._
+import com.nutomic.ensichat.aodvv2.MessageTest._
 import junit.framework.Assert._
 
 class CryptoTest extends AndroidTestCase {
@@ -16,15 +16,21 @@ class CryptoTest extends AndroidTestCase {
   }
 
   def testSignVerify(): Unit = {
-    val sig = Crypto.calculateSignature(m1)
-    assertTrue(Crypto.isValidSignature(m1, sig, Crypto.getLocalPublicKey))
+    messages.foreach { m =>
+      val signed = Crypto.sign(m)
+      assertTrue(Crypto.verify(signed, Crypto.getLocalPublicKey))
+      assertEquals(m.Header, signed.Header)
+      assertEquals(m.Body, signed.Body)
+    }
   }
 
   def testEncryptDecrypt(): Unit = {
-    val (encrypted, key) =
-      Crypto.encrypt(null, MessageTest.m1.write(Array[Byte]()), Crypto.getLocalPublicKey)
-    val decrypted = Crypto.decrypt(encrypted, key)
-    assertEquals(MessageTest.m1, Message.read(decrypted)._1)
+    messages.foreach{ m =>
+      val encrypted = Crypto.encrypt(Crypto.sign(m), Crypto.getLocalPublicKey)
+      val decrypted = Crypto.decrypt(encrypted)
+      assertEquals(m.Body, decrypted.Body)
+      assertEquals(m.Header, encrypted.Header)
+    }
   }
 
 }

@@ -1,7 +1,5 @@
 package com.nutomic.ensichat.activities
 
-import java.util.Date
-
 import android.app.AlertDialog
 import android.content.DialogInterface.OnClickListener
 import android.content.{Context, DialogInterface}
@@ -12,10 +10,10 @@ import android.view._
 import android.widget.AdapterView.OnItemClickListener
 import android.widget._
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.aodvv2.Address
+import com.nutomic.ensichat.aodvv2.{Address, Message, RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.bluetooth.ChatService
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.messages.{Crypto, Message, RequestAddContactMessage, ResultAddContactMessage}
+import com.nutomic.ensichat.messages.Crypto
 import com.nutomic.ensichat.util.{DevicesAdapter, IdenticonGenerator}
 
 import scala.collection.SortedSet
@@ -92,7 +90,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnNearbyCont
       return
     }
 
-    service.send(new RequestAddContactMessage(Crypto.getLocalAddress, address, new Date()))
+    service.sendTo(address, new RequestAddContact())
     addDeviceDialog(address)
   }
 
@@ -108,12 +106,10 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnNearbyCont
           currentlyAdding +=
             (address -> new AddContactInfo(currentlyAdding(address).localConfirmed, true))
           addContactIfBothConfirmed(address)
-          service.send(
-            new ResultAddContactMessage(Crypto.getLocalAddress, address, new Date(), true))
+          service.sendTo(address, new ResultAddContact(true))
         case DialogInterface.BUTTON_NEGATIVE =>
           // Local user denied adding contact, send info to other device.
-          service.send(
-            new ResultAddContactMessage(Crypto.getLocalAddress, address, new Date(), false))
+          service.sendTo(address, new ResultAddContact(false))
       }
     }
 
@@ -137,27 +133,28 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnNearbyCont
   }
 
   /**
-   * Handles incoming [[RequestAddContactMessage]] and [[ResultAddContactMessage]] messages.
+   * Handles incoming [[RequestAddContact]] and [[ResultAddContact]] messages.
    *
    * These are only handled here and require user action, so contacts can only be added if
    * the user is in this activity.
    */
   override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.filter(_.receiver == Crypto.getLocalAddress)
+    messages.filter(_.Header.Target == Crypto.getLocalAddress)
       .foreach{
-        case m: RequestAddContactMessage =>
-          Log.i(Tag, "Remote device " + m.sender + " wants to add us as a contact, showing dialog")
-          addDeviceDialog(m.sender)
-        case m: ResultAddContactMessage =>
-          if (m.Accepted) {
-            Log.i(Tag, "Remote device " + m.sender + " accepted us as a contact, updating state")
-            currentlyAdding += (m.sender ->
-              new AddContactInfo(true, currentlyAdding(m.sender).remoteConfirmed))
-            addContactIfBothConfirmed(m.sender)
+        case m if m.Body.isInstanceOf[RequestAddContact] =>
+          Log.i(Tag, "Remote device " + m.Header.Origin + " wants to add us as a contact, showing dialog")
+          addDeviceDialog(m.Header.Origin)
+        case m if m.Body.isInstanceOf[ResultAddContact] =>
+          val origin = m.Header.Origin
+          if (m.Body.asInstanceOf[ResultAddContact].Accepted) {
+            Log.i(Tag, "Remote device " + origin + " accepted us as a contact, updating state")
+            currentlyAdding += (origin ->
+              new AddContactInfo(true, currentlyAdding(origin).remoteConfirmed))
+            addContactIfBothConfirmed(origin)
           } else {
-            Log.i(Tag, "Remote device " + m.sender + " denied us as a contact, showing toast")
+            Log.i(Tag, "Remote device " + origin + " denied us as a contact, showing toast")
             Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
-            currentlyAdding -= m.sender
+            currentlyAdding -= origin
           }
         case _ =>
       }

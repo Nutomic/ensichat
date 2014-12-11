@@ -18,11 +18,12 @@
 -dontpreverify
 -dontwarn scala.**
 -keep class !scala*.** { *; }
--ignorewarnings
 # Avoid crash when invoking String.toInt (see https://issues.scala-lang.org/browse/SI-5397).
 -keep class scala.collection.SeqLike {
     public protected *;
 }
 
-# Suppress warnings caused by msgpack (code works fine anyway).
--dontwarn
+# Disable warnings for Guava annotations.
+-dontwarn javax.annotation.**
+-dontwarn javax.inject.**
+-dontwarn sun.misc.Unsafe

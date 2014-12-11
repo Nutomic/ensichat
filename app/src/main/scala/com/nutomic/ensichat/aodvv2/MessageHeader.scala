@@ -7,11 +7,11 @@ import com.nutomic.ensichat.util.BufferUtils
 
 object MessageHeader {
 
-  val Length = 16 + 2 * Address.Length
+  val Length = 20 + 2 * Address.Length
 
   val DefaultHopLimit = 20
 
-  val Version = 3
+  val Version = 0
 
   class ParseMessageException(detailMessage: String) extends RuntimeException(detailMessage) {
   }
@@ -38,7 +38,7 @@ object MessageHeader {
     val seqNum = BufferUtils.getUnsignedShort(b)
     val metric = BufferUtils.getUnsignedByte(b)
 
-    new MessageHeader(messageType, hopLimit, time, origin, target, seqNum, metric, length, hopCount)
+    new MessageHeader(messageType, hopLimit, origin, target, seqNum, metric, time, length, hopCount)
   }
 
 }
@@ -48,27 +48,26 @@ object MessageHeader {
  */
 class MessageHeader(val MessageType: Int,
                     val HopLimit: Int,
-                    val Time: Date,
                     val Origin: Address,
                     val Target: Address,
                     val SequenceNumber: Int,
                     val Metric: Int,
+                    val Time: Date = new Date(),
                     val Length: Long = -1,
                     val HopCount: Int = 0) {
 
   /**
    * Writes the header to byte array.
    */
-  def write(body: MessageBody): Array[Byte] = {
+  def write(contentLength: Int): Array[Byte] = {
     val b = ByteBuffer.allocate(MessageHeader.Length)
-    val bodyBytes = body.write
 
     val versionAndType = (MessageHeader.Version << 12) | MessageType
     BufferUtils.putUnsignedShort(b, versionAndType)
     BufferUtils.putUnsignedByte(b, HopLimit)
     BufferUtils.putUnsignedByte(b, HopCount)
 
-    BufferUtils.putUnsignedInt(b, MessageHeader.Length + bodyBytes.length)
+    BufferUtils.putUnsignedInt(b, MessageHeader.Length + contentLength)
     b.putInt((Time.getTime / 1000).toInt)
     b.put(Origin.Bytes)
     b.put(Target.Bytes)
@@ -77,7 +76,7 @@ class MessageHeader(val MessageType: Int,
     BufferUtils.putUnsignedByte(b, Metric)
     BufferUtils.putUnsignedByte(b, 0)
 
-    b.array() ++ bodyBytes
+    b.array()
   }
 
   override def equals(a: Any): Boolean = a match {
@@ -89,9 +88,8 @@ class MessageHeader(val MessageType: Int,
         Target == o.Target &&
         SequenceNumber == o.SequenceNumber &&
         Metric == o.Metric &&
-        // Don't compare length as it may be unknown (when header was just created without a body).
-        //Length == o.Length &&
         HopCount == o.HopCount
+        // Don't compare length as it may be unknown (when header was just created without a body).
     case _ => false
   }
 

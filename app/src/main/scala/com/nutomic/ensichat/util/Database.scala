@@ -4,8 +4,7 @@ import java.util.Date
 
 import android.content.{ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
-import com.nutomic.ensichat.aodvv2.Address
-import com.nutomic.ensichat.messages._
+import com.nutomic.ensichat.aodvv2._
 
 import scala.collection.SortedSet
 import scala.collection.immutable.TreeSet
@@ -18,8 +17,8 @@ object Database {
 
   private val CreateMessagesTable = "CREATE TABLE messages(" +
     "_id integer primary key autoincrement," +
-    "sender text not null," +
-    "receiver text not null," +
+    "origin text not null," +
+    "target text not null," +
     "text text not null," +
     "date integer not null);" // Unix timestamp of message.
 
@@ -35,8 +34,6 @@ object Database {
 class Database(context: Context) extends SQLiteOpenHelper(context, Database.DatabaseName,
                                                           null, Database.DatabaseVersion) {
 
-  private val Tag = "MessageStore"
-
   private var contactsUpdatedListeners = Set[() => Unit]()
 
   override def onCreate(db: SQLiteDatabase): Unit = {
@@ -49,17 +46,21 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
    */
   def getMessages(address: Address, count: Int): SortedSet[Message] = {
     val c = getReadableDatabase.query(true,
-      "messages", Array("sender", "receiver", "text", "date"),
-      "sender = ? OR receiver = ?", Array(address.toString, address.toString),
+      "messages", Array("origin", "target", "text", "date"),
+      "origin = ? OR target = ?", Array(address.toString, address.toString),
       null, null, "date DESC", count.toString)
     var messages = new TreeSet[Message]()(Message.Ordering)
     while (c.moveToNext()) {
-      val m = new TextMessage(
-        new Address(c.getString(c.getColumnIndex("sender"))),
-        new Address(c.getString(c.getColumnIndex("receiver"))),
-        new Date(c.getLong(c.getColumnIndex("date"))),
-        new String(c.getString(c.getColumnIndex ("text"))))
-      messages += m
+      val header = new MessageHeader(
+        Text.Type,
+        -1,
+        new Address(c.getString(c.getColumnIndex("origin"))),
+        new Address(c.getString(c.getColumnIndex("target"))),
+        -1,
+        -1,
+        new Date(c.getLong(c.getColumnIndex("date"))))
+      val body = new Text(new String(c.getString(c.getColumnIndex ("text"))))
+      messages += new Message(header, body)
     }
     c.close()
     messages
@@ -68,16 +69,16 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
   /**
    * Inserts the given new message into the database.
    */
-  def addMessage(message: Message): Unit = message match {
-    case msg: TextMessage =>
+  def addMessage(message: Message): Unit = message.Body match {
+    case msg: Text =>
       val cv =  new ContentValues()
-      cv.put("sender", msg.sender.toString)
-      cv.put("receiver", msg.receiver.toString)
+      cv.put("origin", message.Header.Origin.toString)
+      cv.put("target", message.Header.Target.toString)
       // toString used as workaround for compile error with Long.
-      cv.put("date", msg.date.getTime.toString)
+      cv.put("date", message.Header.Time.getTime.toString)
       cv.put("text", msg.text)
       getWritableDatabase.insert("messages", null, cv)
-    case _: RequestAddContactMessage | _: ResultAddContactMessage =>
+    case _: ConnectionInfo | _: RequestAddContact | _: ResultAddContact =>
       // Never stored.
   }
 

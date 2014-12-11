@@ -5,7 +5,7 @@
     <EditTextPreference
         android:title="@string/scan_interval_seconds"
         android:key="scan_interval_seconds"
-        android:defaultValue="5"
+        android:defaultValue="15"
         android:inputType="number"
         android:numeric="integer" />
 

@@ -1,7 +1,5 @@
 package com.nutomic.ensichat.fragments
 
-import java.util.Date
-
 import android.app.ListFragment
 import android.os.Bundle
 import android.view.View.OnClickListener
@@ -11,10 +9,9 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
-import com.nutomic.ensichat.aodvv2.Address
+import com.nutomic.ensichat.aodvv2.{Address, Message, Text}
 import com.nutomic.ensichat.bluetooth.ChatService
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.messages.{Crypto, Message, TextMessage}
 import com.nutomic.ensichat.util.MessagesAdapter
 
 import scala.collection.SortedSet
@@ -43,7 +40,7 @@ class ChatFragment extends ListFragment with OnClickListener
 
   private var listView: ListView = _
 
-  private var adapter: ArrayAdapter[TextMessage] = _
+  private var adapter: ArrayAdapter[Message] = _
 
   override def onActivityCreated(savedInstanceState: Bundle): Unit = {
     super.onActivityCreated(savedInstanceState)
@@ -103,10 +100,8 @@ class ChatFragment extends ListFragment with OnClickListener
     case R.id.send =>
       val text = messageText.getText.toString.trim
       if (!text.isEmpty) {
-        val message =
-          new TextMessage(Crypto.getLocalAddress(getActivity), address, new Date(), text.toString)
-        chatService.send(message)
-        adapter.add(message)
+        val message = new Text(text.toString)
+        chatService.sendTo(address, message)
         messageText.getText.clear()
       }
   }
@@ -115,9 +110,8 @@ class ChatFragment extends ListFragment with OnClickListener
    * Displays new messages in UI.
    */
   override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.filter(m => m.sender == address || m.receiver == address)
-      .filter(_.isInstanceOf[TextMessage])
-      .foreach(m => adapter.add(m.asInstanceOf[TextMessage]))
+    messages.filter(m => Set(m.Header.Origin, m.Header.Target).contains(address))
+      .foreach(adapter.add)
   }
 
   /**

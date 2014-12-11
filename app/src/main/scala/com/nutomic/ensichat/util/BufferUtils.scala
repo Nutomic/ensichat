@@ -2,6 +2,9 @@ package com.nutomic.ensichat.util
 
 import java.nio.ByteBuffer
 
+/**
+ * Provides various helper methods for [[ByteBuffer]].
+ */
 object BufferUtils {
 
   def getUnsignedByte(bb: ByteBuffer): Short       = (bb.get & 0xff).toShort
@@ -25,6 +28,6 @@ object BufferUtils {
     b
   }
 
-  def toString(bb: ByteBuffer)= bb.array().slice(0, 4).map("%02X" format _).mkString
+  def toString(array: Array[Byte]) = array.map("%02X".format(_)).mkString
 
 }

@@ -4,14 +4,13 @@ import android.content.Context
 import android.view.{Gravity, View, ViewGroup}
 import android.widget.{ArrayAdapter, RelativeLayout, TextView}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.aodvv2.Address
-import com.nutomic.ensichat.messages.TextMessage
+import com.nutomic.ensichat.aodvv2.{Address, Message, Text}
 
 /**
- * Displays [[TextMessage]]s in ListView.
+ * Displays [[Message]]s in ListView.
  */
 class MessagesAdapter(context: Context, remoteAddress: Address) extends
-  ArrayAdapter[TextMessage](context, R.layout.item_message, android.R.id.text1) {
+  ArrayAdapter[Message](context, R.layout.item_message, android.R.id.text1) {
 
   /**
    * Free space to the right/left to a message depending on who sent it, in dip.
@@ -22,11 +21,11 @@ class MessagesAdapter(context: Context, remoteAddress: Address) extends
     val view = super.getView(position, convertView, parent).asInstanceOf[RelativeLayout]
     val tv = view.findViewById(android.R.id.text1).asInstanceOf[TextView]
 
-    tv.setText(getItem(position).text)
+    tv.setText(getItem(position).Body.asInstanceOf[Text].text)
 
     val lp = new RelativeLayout.LayoutParams(tv.getLayoutParams)
     val margin = (MessageMargin * context.getResources.getDisplayMetrics.density).toInt
-    if (getItem(position).sender != remoteAddress) {
+    if (getItem(position).Header.Origin != remoteAddress) {
       view.setGravity(Gravity.RIGHT)
       lp.setMargins(margin, 0, 0, 0)
     } else {

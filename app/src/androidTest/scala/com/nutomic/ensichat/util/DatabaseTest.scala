@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.test.AndroidTestCase
 import android.test.mock.MockContext
 import com.nutomic.ensichat.aodvv2.AddressTest
-import com.nutomic.ensichat.messages.MessageTest
+import com.nutomic.ensichat.aodvv2.MessageTest._
 import junit.framework.Assert._
 
 class DatabaseTest extends AndroidTestCase {
@@ -27,9 +27,9 @@ class DatabaseTest extends AndroidTestCase {
   private lazy val Database = new Database(new TestContext(getContext))
 
   override def setUp(): Unit = {
-    Database.addMessage(MessageTest.m1)
-    Database.addMessage(MessageTest.m2)
-    Database.addMessage(MessageTest.m3)
+    Database.addMessage(m1)
+    Database.addMessage(m2)
+    Database.addMessage(m3)
   }
 
   override def tearDown(): Unit = {
@@ -38,22 +38,22 @@ class DatabaseTest extends AndroidTestCase {
   }
 
   def testMessageCount(): Unit = {
-    val msg1 = Database.getMessages(MessageTest.m1.sender, 1)
+    val msg1 = Database.getMessages(m1.Header.Origin, 1)
     assertEquals(1, msg1.size)
 
-    val msg2 = Database.getMessages(MessageTest.m1.sender, 3)
+    val msg2 = Database.getMessages(m1.Header.Origin, 3)
     assertEquals(2, msg2.size)
   }
 
   def testMessageOrder(): Unit = {
-    val msg = Database.getMessages(MessageTest.m1.receiver, 1)
-    assertTrue(msg.contains(MessageTest.m3))
+    val msg = Database.getMessages(m1.Header.Target, 1)
+    assertTrue(msg.contains(m3))
   }
 
   def testMessageSelect(): Unit = {
-    val msg = Database.getMessages(MessageTest.m1.receiver, 2)
-    assertTrue(msg.contains(MessageTest.m1))
-    assertTrue(msg.contains(MessageTest.m3))
+    val msg = Database.getMessages(m1.Header.Target, 2)
+    assertTrue(msg.contains(m1))
+    assertTrue(msg.contains(m3))
   }
 
   def testAddContact(): Unit = {

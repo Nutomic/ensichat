@@ -22,7 +22,7 @@ class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Un
       Socket.connect()
     } catch {
       case e: IOException =>
-        Log.w(Tag, "Failed to connect to " + device.toString, e)
+        Log.v(Tag, "Failed to connect to " + device.toString, e)
         try {
           Socket.close()
         } catch {

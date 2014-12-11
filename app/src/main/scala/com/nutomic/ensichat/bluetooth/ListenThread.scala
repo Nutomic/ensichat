@@ -41,6 +41,7 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
       }
 
       val device: Device = new Device(socket.getRemoteDevice, true)
+      Log.i(Tag, "Incoming connection from " + device.toString)
       onConnected(device, socket)
     }
   }
