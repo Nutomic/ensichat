@@ -8,8 +8,9 @@ import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.test.AndroidTestCase
 import android.test.mock.MockContext
-import com.nutomic.ensichat.aodvv2.AddressTest
-import com.nutomic.ensichat.aodvv2.MessageTest._
+import com.nutomic.ensichat.protocol.AddressTest
+import com.nutomic.ensichat.protocol.messages.MessageTest
+import com.nutomic.ensichat.protocol.messages.MessageTest._
 import junit.framework.Assert._
 
 class DatabaseTest extends AndroidTestCase {

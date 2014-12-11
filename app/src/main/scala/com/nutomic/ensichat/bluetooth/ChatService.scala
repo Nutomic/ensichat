@@ -10,9 +10,9 @@ import android.preference.PreferenceManager
 import android.util.Log
 import com.google.common.collect.HashBiMap
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.aodvv2._
 import com.nutomic.ensichat.bluetooth.ChatService.{OnMessageReceivedListener, OnNearbyContactsChangedListener}
-import com.nutomic.ensichat.messages._
+import com.nutomic.ensichat.protocol._
+import com.nutomic.ensichat.protocol.messages.{ConnectionInfo, Message, MessageBody, MessageHeader}
 import com.nutomic.ensichat.util.Database
 
 import scala.collection.SortedSet

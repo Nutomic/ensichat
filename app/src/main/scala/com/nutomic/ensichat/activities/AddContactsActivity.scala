@@ -10,10 +10,10 @@ import android.view._
 import android.widget.AdapterView.OnItemClickListener
 import android.widget._
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.aodvv2.{Address, Message, RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.bluetooth.ChatService
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.messages.Crypto
+import com.nutomic.ensichat.protocol.messages.{Message, RequestAddContact, ResultAddContact}
+import com.nutomic.ensichat.protocol.{Address, Crypto}
 import com.nutomic.ensichat.util.{DevicesAdapter, IdenticonGenerator}
 
 import scala.collection.SortedSet

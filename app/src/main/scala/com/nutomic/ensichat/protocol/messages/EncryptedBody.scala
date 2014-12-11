@@ -1,4 +1,4 @@
-package com.nutomic.ensichat.aodvv2
+package com.nutomic.ensichat.protocol.messages
 
 /**
  * Represents the data in an encrypted message body.

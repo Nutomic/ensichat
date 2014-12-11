@@ -1,8 +1,8 @@
-package com.nutomic.ensichat.aodvv2
+package com.nutomic.ensichat.protocol.messages
 
 import android.content.Context
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.messages.Crypto
+import com.nutomic.ensichat.protocol.Crypto
 import junit.framework.Assert
 
 object ConnectionInfoTest {

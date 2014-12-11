@@ -1,12 +1,12 @@
-package com.nutomic.ensichat.aodvv2
+package com.nutomic.ensichat.protocol.messages
 
 import java.io.ByteArrayInputStream
 import java.util.GregorianCalendar
+import com.nutomic.ensichat.protocol.messages.MessageHeaderTest._
+import com.nutomic.ensichat.protocol.messages.MessageTest._
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.aodvv2.MessageHeaderTest._
-import com.nutomic.ensichat.aodvv2.MessageTest._
-import com.nutomic.ensichat.messages.Crypto
+import com.nutomic.ensichat.protocol.{AddressTest, Crypto, messages}
 import junit.framework.Assert._
 
 import scala.collection.immutable.TreeSet
@@ -60,7 +60,7 @@ class MessageTest extends AndroidTestCase {
   }
 
   def testSerializeEncrypted(): Unit = {
-    messages.foreach{ m =>
+    MessageTest.messages.foreach{ m =>
       val signed = Crypto.sign(m)
       val encrypted = Crypto.encrypt(signed, Crypto.getLocalPublicKey)
       val bytes = encrypted.write

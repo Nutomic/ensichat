@@ -1,7 +1,7 @@
-package com.nutomic.ensichat.aodvv2
+package com.nutomic.ensichat.protocol
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.aodvv2.AddressTest._
+import com.nutomic.ensichat.protocol.AddressTest._
 import junit.framework.Assert._
 
 object AddressTest {

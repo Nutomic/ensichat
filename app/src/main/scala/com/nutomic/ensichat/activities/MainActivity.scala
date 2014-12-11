@@ -7,8 +7,8 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.widget.Toast
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.aodvv2.Address
 import com.nutomic.ensichat.fragments.{ChatFragment, ContactsFragment}
+import com.nutomic.ensichat.protocol.Address
 
 /**
  * Main activity, entry point for app start.

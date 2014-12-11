@@ -1,4 +1,4 @@
-package com.nutomic.ensichat.messages
+package com.nutomic.ensichat.protocol
 
 import java.io._
 import java.security._
@@ -9,8 +9,8 @@ import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 import android.content.Context
 import android.preference.PreferenceManager
 import android.util.Log
-import com.nutomic.ensichat.aodvv2._
-import com.nutomic.ensichat.messages.Crypto._
+import com.nutomic.ensichat.protocol.Crypto._
+import com.nutomic.ensichat.protocol.messages._
 import com.nutomic.ensichat.util.PRNGFixes
 
 object Crypto {

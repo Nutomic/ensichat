@@ -4,7 +4,8 @@ import android.content.Context
 import android.view.{Gravity, View, ViewGroup}
 import android.widget.{ArrayAdapter, RelativeLayout, TextView}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.aodvv2.{Address, Message, Text}
+import com.nutomic.ensichat.protocol.Address
+import com.nutomic.ensichat.protocol.messages.{Message, Text}
 
 /**
  * Displays [[Message]]s in ListView.

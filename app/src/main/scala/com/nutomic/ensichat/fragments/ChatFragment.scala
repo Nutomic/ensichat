@@ -9,9 +9,10 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
-import com.nutomic.ensichat.aodvv2.{Address, Message, Text}
 import com.nutomic.ensichat.bluetooth.ChatService
 import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
+import com.nutomic.ensichat.protocol.Address
+import com.nutomic.ensichat.protocol.messages.{Message, Text}
 import com.nutomic.ensichat.util.MessagesAdapter
 
 import scala.collection.SortedSet

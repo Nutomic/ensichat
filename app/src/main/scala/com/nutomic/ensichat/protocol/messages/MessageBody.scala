@@ -1,6 +1,4 @@
-package com.nutomic.ensichat.aodvv2
-
-import android.util.Log
+package com.nutomic.ensichat.protocol.messages
 
 /**
  * Holds the actual message content.

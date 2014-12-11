@@ -4,7 +4,8 @@ import java.util.Date
 
 import android.content.{ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
-import com.nutomic.ensichat.aodvv2._
+import com.nutomic.ensichat.protocol._
+import com.nutomic.ensichat.protocol.messages._
 
 import scala.collection.SortedSet
 import scala.collection.immutable.TreeSet

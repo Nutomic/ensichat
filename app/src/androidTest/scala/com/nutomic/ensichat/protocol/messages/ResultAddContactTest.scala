@@ -1,4 +1,4 @@
-package com.nutomic.ensichat.aodvv2
+package com.nutomic.ensichat.protocol.messages
 
 import android.test.AndroidTestCase
 import junit.framework.Assert._

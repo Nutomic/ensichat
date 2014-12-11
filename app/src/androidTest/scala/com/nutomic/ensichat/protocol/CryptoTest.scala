@@ -1,7 +1,7 @@
-package com.nutomic.ensichat.messages
+package com.nutomic.ensichat.protocol
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.aodvv2.MessageTest._
+import com.nutomic.ensichat.protocol.messages.MessageTest
 import junit.framework.Assert._
 
 class CryptoTest extends AndroidTestCase {
@@ -16,7 +16,7 @@ class CryptoTest extends AndroidTestCase {
   }
 
   def testSignVerify(): Unit = {
-    messages.foreach { m =>
+    MessageTest.messages.foreach { m =>
       val signed = Crypto.sign(m)
       assertTrue(Crypto.verify(signed, Crypto.getLocalPublicKey))
       assertEquals(m.Header, signed.Header)
@@ -25,7 +25,7 @@ class CryptoTest extends AndroidTestCase {
   }
 
   def testEncryptDecrypt(): Unit = {
-    messages.foreach{ m =>
+    MessageTest.messages.foreach{ m =>
       val encrypted = Crypto.encrypt(Crypto.sign(m), Crypto.getLocalPublicKey)
       val decrypted = Crypto.decrypt(encrypted)
       assertEquals(m.Body, decrypted.Body)

@@ -3,8 +3,8 @@ package com.nutomic.ensichat.util
 import android.content.Context
 import android.view.{View, ViewGroup}
 import android.widget.{ArrayAdapter, TextView}
-import com.nutomic.ensichat.aodvv2.Address
 import com.nutomic.ensichat.bluetooth.Device
+import com.nutomic.ensichat.protocol.Address
 
 /**
  * Displays [[Device]]s in ListView.
