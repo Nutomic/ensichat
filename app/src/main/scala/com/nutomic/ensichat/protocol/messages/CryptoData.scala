@@ -36,7 +36,7 @@ object CryptoData {
 /**
  * Holds the signature and (optional) key that are stored in a message.
  */
-class CryptoData(val Signature: Option[Array[Byte]], val Key: Option[Array[Byte]]) {
+case class CryptoData(Signature: Option[Array[Byte]], Key: Option[Array[Byte]]) {
 
   override def equals(a: Any): Boolean = a match {
     case o: CryptoData =>
@@ -60,8 +60,5 @@ class CryptoData(val Signature: Option[Array[Byte]], val Key: Option[Array[Byte]
   def length = 8 + Signature.get.length + keyLength
 
   private def keyLength = if (Key.isDefined) Key.get.length else 0
-
-  override def toString = "CryptoData(Signature.length=" + Signature.foreach(_.length) +
-    ", Key.length=" + Key.foreach(_.length) + ")"
 
 }

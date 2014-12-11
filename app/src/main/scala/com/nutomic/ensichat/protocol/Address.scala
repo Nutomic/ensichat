@@ -23,7 +23,7 @@ object Address {
  *
  * @param Bytes SHA-256 hash of the node's public key.
  */
-class Address(val Bytes: Array[Byte]) {
+case class Address(Bytes: Array[Byte]) {
 
   require(Bytes.length == Address.Length, "Invalid address length (was " + Bytes.length + ")")
 

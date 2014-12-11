@@ -26,7 +26,7 @@ object Text {
 /**
  * Holds a plain text message.
  */
-class Text(val text: String) extends MessageBody {
+case class Text(text: String) extends MessageBody {
 
   override def Type = Text.Type
 
@@ -37,13 +37,6 @@ class Text(val text: String) extends MessageBody {
     b.put(bytes)
     b.array()
   }
-
-  override def equals(a: Any): Boolean = a match {
-    case o: Text => text == o.text
-    case _ => false
-  }
-
-  override def toString = "Text(" + text + ")"
 
   override def length = write.length
 

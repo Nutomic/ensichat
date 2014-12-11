@@ -13,9 +13,9 @@ import com.nutomic.ensichat.protocol.Address
  */
 object IdenticonGenerator {
 
-  val Height: Int = 5
+  private val Height: Int = 5
 
-  val Width: Int = 5
+  private val Width: Int = 5
 
   /**
    * Generates an identicon for the key.

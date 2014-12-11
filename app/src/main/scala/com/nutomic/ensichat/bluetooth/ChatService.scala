@@ -26,8 +26,6 @@ object ChatService {
    */
   val appUuid: UUID = UUID.fromString("8ed52b7a-4501-5348-b054-3d94d004656e")
 
-  val KEY_GENERATION_FINISHED = "com.nutomic.ensichat.messages.KEY_GENERATION_FINISHED"
-
   /**
    * Used with [[ChatService.registerConnectionListener]], called when a bluetooth device
    * connects or disconnects

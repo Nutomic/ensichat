@@ -33,18 +33,11 @@ object Message {
 
 }
 
-class Message(val Header: MessageHeader, val Crypto: CryptoData, val Body: MessageBody) {
+case class Message(Header: MessageHeader, Crypto: CryptoData, Body: MessageBody) {
 
   def this(header: MessageHeader, body: MessageBody) =
     this(header, new CryptoData(None, None), body)
 
   def write = Header.write(Body.length + Crypto.length) ++ Crypto.write ++ Body.write
-
-  override def toString = "Message(Header=" + Header + ", Body=" + Body + ", Crypto=" + Crypto + ")"
-
-  override def equals(a: Any): Boolean = a match {
-    case o: Message => Header == o.Header && Body == o.Body && Crypto == o.Crypto
-    case _ => false
-  }
 
 }

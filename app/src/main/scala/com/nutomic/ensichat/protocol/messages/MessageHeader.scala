@@ -46,15 +46,15 @@ object MessageHeader {
 /**
  * First part of any message, used for routing.
  */
-class MessageHeader(val MessageType: Int,
-                    val HopLimit: Int,
-                    val Origin: Address,
-                    val Target: Address,
-                    val SequenceNumber: Int,
-                    val Metric: Int,
-                    val Time: Date = new Date(),
-                    val Length: Long = -1,
-                    val HopCount: Int = 0) {
+case class MessageHeader(MessageType: Int,
+                    HopLimit: Int,
+                    Origin: Address,
+                    Target: Address,
+                    SequenceNumber: Int,
+                    Metric: Int,
+                    Time: Date = new Date(),
+                    Length: Long = -1,
+                    HopCount: Int = 0) {
 
   /**
    * Writes the header to byte array.
@@ -92,10 +92,5 @@ class MessageHeader(val MessageType: Int,
         // Don't compare length as it may be unknown (when header was just created without a body).
     case _ => false
   }
-
-  override def toString = "MessageHeader(Version=" + MessageHeader.Version +
-    ", Type=" + MessageType + ", HopLimit=" + HopLimit + ", HopCount=" + HopCount +
-    ", Time=" + Time + ", Origin=" + Origin + ", Target=" + Target + ", SeqNum=" +
-    ", Metric=" + Metric + ", Length=" + Length + ", HopCount=" + HopCount + ")"
 
 }

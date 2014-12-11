@@ -11,9 +11,9 @@ import android.util.Log
 class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Unit)
     extends Thread {
 
-  val Tag = "ConnectThread"
+  private val Tag = "ConnectThread"
 
-  val Socket: BluetoothSocket =
+  private val Socket: BluetoothSocket =
       device.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(ChatService.appUuid)
 
   override def run(): Unit = {

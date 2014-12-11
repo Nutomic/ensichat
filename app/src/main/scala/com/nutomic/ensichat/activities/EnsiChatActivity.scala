@@ -10,9 +10,9 @@ import com.nutomic.ensichat.bluetooth.{ChatService, ChatServiceBinder}
  */
 class EnsiChatActivity extends Activity with ServiceConnection {
 
-  var chatService: Option[ChatService] = None
+  private var chatService: Option[ChatService] = None
 
-  var listeners = Set[() => Unit]()
+  private var listeners = Set[() => Unit]()
 
   /**
    * Starts service and connects to it.

@@ -18,7 +18,7 @@ object RequestAddContact {
 /**
  * Sent when the user initiates adding another device as a contact.
  */
-class RequestAddContact extends MessageBody {
+case class RequestAddContact() extends MessageBody {
 
   override def Type = RequestAddContact.Type
 
@@ -26,8 +26,6 @@ class RequestAddContact extends MessageBody {
     val b = ByteBuffer.allocate(length)
     b.array()
   }
-
-  override def toString = "RequestAddContact()"
 
   override def length = 4
 

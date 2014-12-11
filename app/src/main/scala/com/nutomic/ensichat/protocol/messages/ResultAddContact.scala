@@ -23,7 +23,7 @@ object ResultAddContact {
 /**
  * Contains the result of a [[RequestAddContact]] message.
  */
-class ResultAddContact(val Accepted: Boolean) extends MessageBody {
+case class ResultAddContact(Accepted: Boolean) extends MessageBody {
 
   override def Type = ResultAddContact.Type
 
@@ -33,8 +33,6 @@ class ResultAddContact(val Accepted: Boolean) extends MessageBody {
     (0 to 1).foreach(_ => BufferUtils.putUnsignedByte(b, 0))
     b.array()
   }
-
-  override def toString = "ResultAddContact(Accepted=" + Accepted + ")"
 
   override def length = 4
 
