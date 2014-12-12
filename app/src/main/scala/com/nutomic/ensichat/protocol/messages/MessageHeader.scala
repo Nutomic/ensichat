@@ -7,7 +7,7 @@ import com.nutomic.ensichat.protocol.{Address, BufferUtils}
 
 object MessageHeader {
 
-  val Length = 20 + 2 * Address.Length
+  val Length = 12 + 2 * Address.Length
 
   val DefaultHopLimit = 20
 
@@ -31,14 +31,10 @@ object MessageHeader {
     val hopCount = BufferUtils.getUnsignedByte(b)
 
     val length = BufferUtils.getUnsignedInt(b)
-    val time = new Date(b.getInt().toLong * 1000)
     val origin = new Address(BufferUtils.getByteArray(b, Address.Length))
     val target = new Address(BufferUtils.getByteArray(b, Address.Length))
 
-    val seqNum = BufferUtils.getUnsignedShort(b)
-    val metric = BufferUtils.getUnsignedByte(b)
-
-    new MessageHeader(messageType, hopLimit, origin, target, seqNum, metric, time, length, hopCount)
+    new MessageHeader(messageType, hopLimit, origin, target, length, hopCount)
   }
 
 }
@@ -50,9 +46,6 @@ case class MessageHeader(MessageType: Int,
                     HopLimit: Int,
                     Origin: Address,
                     Target: Address,
-                    SequenceNumber: Int,
-                    Metric: Int,
-                    Time: Date = new Date(),
                     Length: Long = -1,
                     HopCount: Int = 0) {
 
@@ -68,13 +61,10 @@ case class MessageHeader(MessageType: Int,
     BufferUtils.putUnsignedByte(b, HopCount)
 
     BufferUtils.putUnsignedInt(b, MessageHeader.Length + contentLength)
-    b.putInt((Time.getTime / 1000).toInt)
     b.put(Origin.Bytes)
     b.put(Target.Bytes)
 
-    BufferUtils.putUnsignedShort(b, SequenceNumber)
-    BufferUtils.putUnsignedByte(b, Metric)
-    BufferUtils.putUnsignedByte(b, 0)
+    BufferUtils.putUnsignedInt(b, 0)
 
     b.array()
   }
@@ -83,11 +73,8 @@ case class MessageHeader(MessageType: Int,
     case o: MessageHeader =>
       MessageType == o.MessageType &&
         HopLimit == o.HopLimit &&
-        Time.getTime / 1000 == o.Time.getTime / 1000 &&
         Origin == o.Origin &&
         Target == o.Target &&
-        SequenceNumber == o.SequenceNumber &&
-        Metric == o.Metric &&
         HopCount == o.HopCount
         // Don't compare length as it may be unknown (when header was just created without a body).
     case _ => false

@@ -37,7 +37,7 @@ the AES key is wrapped with the recipient's public RSA key.
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /                                                               /
-    \                    Header (variable length)                   \
+    \                      Header (76 bytes)                        \
     /                                                               /
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /                                                               /
@@ -52,18 +52,16 @@ the AES key is wrapped with the recipient's public RSA key.
 
 ### Header
 
-Every message starts with one 32 bit word indicating the message
+Every message starts with one 76 byte header indicating the message
 version, type and ID, followed by the length of the message. The
 header is in network byte order, i.e. big endian.
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |  Ver  |          Type         |   Hop Limit   |   Hop Count   |
+    |    Version    |     Type      |   Hop Limit   |   Hop Count   |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                            Length                             |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                             Time                              |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                                                               |
     |                       Origin Address                          |
@@ -73,14 +71,14 @@ header is in network byte order, i.e. big endian.
     |                       Target Address                          |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |        Sequence Number        |     Metric    |   Reserved    |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                         Body Length                           |
+    |                          Reserved                             |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Ver specifies the protocol version number. This is currently 0. A
+Version specifies the protocol version number. This is currently 0. A
 message with unknown version number MUST be ignored. The connection
 where such a packet came from MAY be closed.
+
+Type is one of the message types specified below.
 
 Hop Limit SHOULD be set to `MAX_HOP_COUNT` on message creation, and
 MUST NOT be changed by a forwarding node.
@@ -101,9 +99,6 @@ message.
 
 Target Address is the address of the node that should receive the
 message.
-
-Sequence number is the sequence number of either the source or target
-node for this message, depending on type.
 
 
 ### Encryption Data
@@ -203,7 +198,7 @@ A simple chat message.
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                            Reserved                           |
+    |                             Time                              |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                          Text Length                          |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -211,5 +206,7 @@ A simple chat message.
     \                   Text (variable length)                      \
     /                                                               /
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Time is the unix timestamp of message sending.
 
 Text the string to be transferred, encoded as UTF-8.

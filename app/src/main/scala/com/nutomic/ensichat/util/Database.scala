@@ -58,9 +58,9 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
         new Address(c.getString(c.getColumnIndex("origin"))),
         new Address(c.getString(c.getColumnIndex("target"))),
         -1,
-        -1,
+        -1)
+      val body = new Text(new String(c.getString(c.getColumnIndex ("text"))),
         new Date(c.getLong(c.getColumnIndex("date"))))
-      val body = new Text(new String(c.getString(c.getColumnIndex ("text"))))
       messages += new Message(header, body)
     }
     c.close()
@@ -71,13 +71,13 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
    * Inserts the given new message into the database.
    */
   def addMessage(message: Message): Unit = message.Body match {
-    case msg: Text =>
+    case text: Text =>
       val cv =  new ContentValues()
       cv.put("origin", message.Header.Origin.toString)
       cv.put("target", message.Header.Target.toString)
       // toString used as workaround for compile error with Long.
-      cv.put("date", message.Header.Time.getTime.toString)
-      cv.put("text", msg.text)
+      cv.put("date", text.time.getTime.toString)
+      cv.put("text", text.text)
       getWritableDatabase.insert("messages", null, cv)
     case _: ConnectionInfo | _: RequestAddContact | _: ResultAddContact =>
       // Never stored.

@@ -13,11 +13,11 @@ import scala.collection.immutable.TreeSet
 
 object MessageTest {
 
-  val m1 = new Message(h1, new Text("first"))
+  val m1 = new Message(h1, new Text("first", new GregorianCalendar(1970, 1, 1).getTime))
 
-  val m2 = new Message(h2, new Text("second"))
+  val m2 = new Message(h2, new Text("second", new GregorianCalendar(2014, 6, 10).getTime))
 
-  val m3 = new Message(h3, new Text("third"))
+  val m3 = new Message(h3, new Text("third", new GregorianCalendar(2020, 11, 11).getTime))
 
   val messages = Set(m1, m2, m3)
 
@@ -47,8 +47,7 @@ class MessageTest extends AndroidTestCase {
   }
 
   def testSerializeSigned(): Unit = {
-    val header = new MessageHeader(ConnectionInfo.Type, 0xff, AddressTest.a4, AddressTest.a2, 0, 56,
-      new GregorianCalendar(2020, 11, 11).getTime, 0xffff, 0)
+    val header = new MessageHeader(ConnectionInfo.Type, 0xff, AddressTest.a4, AddressTest.a2, 0, 56)
     val m = new Message(header, ConnectionInfoTest.generateCi(getContext))
 
     val signed = Crypto.sign(m)

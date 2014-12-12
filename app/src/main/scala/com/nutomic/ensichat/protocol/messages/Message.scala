@@ -8,7 +8,10 @@ object Message {
    * Orders messages by date, oldest messages first.
    */
   val Ordering = new Ordering[Message] {
-    override def compare(m1: Message, m2: Message) =  m1.Header.Time.compareTo(m2.Header.Time)
+    override def compare(m1: Message, m2: Message) =  (m1.Body, m2.Body) match {
+      case (t1: Text, t2: Text) => t1.time.compareTo(t2.time)
+      case _ => 0
+    }
   }
 
   def read(stream: InputStream): Message = {
