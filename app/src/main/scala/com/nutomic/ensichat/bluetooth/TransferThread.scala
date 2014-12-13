@@ -58,6 +58,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
           Log.i(Tag, "Received invalid message", e)
         case e: IOException =>
           Log.w(Tag, "Failed to read incoming message", e)
+          close()
           return
       }
     }
@@ -79,6 +80,8 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
       socket.close()
     } catch {
       case e: IOException => Log.e(Tag, "Failed to close socket", e);
+    } finally {
+      service.onConnectionChanged(new Device(device.bluetoothDevice, false), null)
     }
   }
 
