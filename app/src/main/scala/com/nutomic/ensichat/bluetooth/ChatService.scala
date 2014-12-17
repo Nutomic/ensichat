@@ -17,6 +17,8 @@ import com.nutomic.ensichat.util.Database
 
 import scala.collection.SortedSet
 import scala.collection.immutable.{HashMap, HashSet, TreeSet}
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.ref.WeakReference
 
 object ChatService {
@@ -94,13 +96,9 @@ class ChatService extends Service {
       startBluetoothConnections()
     }
 
-    if (!Crypto.localKeysExist) {
-      new Thread(new Runnable {
-        override def run(): Unit = {
-          Crypto.generateLocalKeys()
-        }
-      }).start()
-    } else
+    if (!Crypto.localKeysExist)
+      Future(Crypto.generateLocalKeys())
+    else
       Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress)
   }
 
