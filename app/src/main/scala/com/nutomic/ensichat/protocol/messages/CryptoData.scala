@@ -3,6 +3,7 @@ package com.nutomic.ensichat.protocol.messages
 import java.nio.ByteBuffer
 import java.util.Arrays
 
+import android.util.Log
 import com.nutomic.ensichat.protocol.BufferUtils
 
 object CryptoData {
@@ -12,11 +13,11 @@ object CryptoData {
    */
   def read(array: Array[Byte]): (CryptoData, Array[Byte]) = {
     val b = ByteBuffer.wrap(array)
-    val signatureLength = BufferUtils.getUnsignedInt(b).toInt
+    val signatureLength = BufferUtils.getUnsignedShort(b)
+    val keyLength = BufferUtils.getUnsignedShort(b)
     val signature = new Array[Byte](signatureLength)
     b.get(signature, 0, signatureLength)
 
-    val keyLength = BufferUtils.getUnsignedInt(b).toInt
     val key =
       if (keyLength != 0) {
         val key = new Array[Byte](keyLength)
@@ -46,18 +47,17 @@ case class CryptoData(Signature: Option[Array[Byte]], Key: Option[Array[Byte]]) 
 
   /**
    * Writes this object into a new byte array.
-   * @return
    */
   def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)
-    BufferUtils.putUnsignedInt(b, Signature.get.length)
+    BufferUtils.putUnsignedShort(b, Signature.get.length)
+    BufferUtils.putUnsignedShort(b, keyLength)
     b.put(Signature.get)
-    BufferUtils.putUnsignedInt(b, keyLength)
     if (Key.nonEmpty) b.put(Key.get)
     b.array()
   }
 
-  def length = 8 + Signature.get.length + keyLength
+  def length = 4 + Signature.get.length + keyLength
 
   private def keyLength = if (Key.isDefined) Key.get.length else 0
 
