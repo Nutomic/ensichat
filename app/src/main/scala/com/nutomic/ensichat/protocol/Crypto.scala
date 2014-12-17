@@ -23,7 +23,7 @@ object Crypto {
   /**
    * Number of bits for local key pair.
    */
-  val KeySize = 2048
+  val KeySize = 4096
 
   /**
    * Algorithm used for message signing.
@@ -94,7 +94,7 @@ class Crypto(Context: Context) {
 
     saveKey(PrivateKeyAlias, keyPair.getPrivate)
     saveKey(PublicKeyAlias, keyPair.getPublic)
-    Log.i(Tag, "Generating cryptographic keys, address is " + address)
+    Log.i(Tag, "Generated cryptographic keys, address is " + address)
   }
 
   /**
