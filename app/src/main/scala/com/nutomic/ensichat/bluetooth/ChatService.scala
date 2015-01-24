@@ -81,7 +81,7 @@ class ChatService extends Service {
   private val AddressDeviceMap = HashBiMap.create[Address, Device.ID]()
 
   /**
-   * Initializes BroadcastReceiver for discovery, starts discovery and listens for connections.
+   * Sets up bluetooth connectivity.
    */
   override def onCreate(): Unit = {
     super.onCreate()
@@ -92,14 +92,12 @@ class ChatService extends Service {
     registerReceiver(BluetoothStateReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
     registerReceiver(DiscoveryFinishedReceiver,
       new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED))
-    if (bluetoothAdapter.isEnabled) {
-      startBluetoothConnections()
-    }
 
-    if (!Crypto.localKeysExist)
-      Future(Crypto.generateLocalKeys())
-    else
+    Future {
+      Crypto.generateLocalKeys()
+      startBluetoothConnections()
       Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress)
+    }
   }
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int) = Service.START_STICKY
@@ -167,7 +165,8 @@ class ChatService extends Service {
     override def onReceive(context: Context, intent: Intent): Unit = {
       intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) match {
         case BluetoothAdapter.STATE_ON =>
-          startBluetoothConnections()
+          if (Crypto.localKeysExist)
+            startBluetoothConnections()
         case BluetoothAdapter.STATE_TURNING_OFF =>
           connections.foreach(d => d._2.close())
         case BluetoothAdapter.STATE_OFF =>

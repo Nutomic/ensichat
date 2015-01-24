@@ -73,8 +73,13 @@ class Crypto(Context: Context) {
 
   /**
    * Generates a new key pair using [[KeyAlgorithm]] with [[KeySize]] bits and stores the keys.
+   *
+   * Does nothing if the key pair already exists.
    */
   def generateLocalKeys(): Unit = {
+    if (localKeysExist)
+      return
+
     var address: Address = null
     var keyPair: KeyPair = null
     do {
