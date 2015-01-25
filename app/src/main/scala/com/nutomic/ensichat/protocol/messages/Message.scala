@@ -21,7 +21,10 @@ object Message {
 
     val contentLength = (header.Length - MessageHeader.Length).toInt
     val contentBytes = new Array[Byte](contentLength)
-    stream.read(contentBytes, 0, contentLength)
+    var numRead = 0
+    do {
+      numRead += stream.read(contentBytes, numRead, contentLength - numRead)
+    } while (numRead < contentLength)
 
     val (crypto, remaining) = CryptoData.read(contentBytes)
 
