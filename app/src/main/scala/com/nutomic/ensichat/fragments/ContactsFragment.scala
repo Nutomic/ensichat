@@ -7,7 +7,7 @@ import android.view._
 import android.widget.ListView
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.{AddContactsActivity, EnsiChatActivity, MainActivity, SettingsActivity}
-import com.nutomic.ensichat.bluetooth.ChatService
+import com.nutomic.ensichat.protocol.ChatService
 import com.nutomic.ensichat.util.DevicesAdapter
 
 /**
@@ -17,7 +17,7 @@ class ContactsFragment extends ListFragment {
 
   private lazy val Adapter = new DevicesAdapter(getActivity)
 
-  private lazy val Database = getActivity.asInstanceOf[EnsiChatActivity].service.database
+  private lazy val Database = getActivity.asInstanceOf[EnsiChatActivity].service.Database
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)

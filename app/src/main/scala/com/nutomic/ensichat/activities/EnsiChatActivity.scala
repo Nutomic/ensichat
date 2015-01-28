@@ -3,7 +3,8 @@ package com.nutomic.ensichat.activities
 import android.app.Activity
 import android.content.{ComponentName, Context, Intent, ServiceConnection}
 import android.os.{Bundle, IBinder}
-import com.nutomic.ensichat.bluetooth.{ChatService, ChatServiceBinder}
+import com.nutomic.ensichat.protocol.ChatService
+import com.nutomic.ensichat.protocol.ChatServiceBinder
 
 /**
  * Connects to [[ChatService]] and provides access to it.

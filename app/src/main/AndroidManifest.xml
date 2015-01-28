@@ -42,7 +42,7 @@
                 android:value=".activities.MainActivity" />
         </activity>
 
-        <service android:name=".bluetooth.ChatService" />
+        <service android:name=".protocol.ChatService" />
 
     </application>
 

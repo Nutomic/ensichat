@@ -1,4 +1,4 @@
-package com.nutomic.ensichat.bluetooth
+package com.nutomic.ensichat.protocol
 
 import android.os.Binder
 

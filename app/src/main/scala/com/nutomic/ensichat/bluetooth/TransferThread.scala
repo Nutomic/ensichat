@@ -16,8 +16,8 @@ import com.nutomic.ensichat.protocol.messages.{ConnectionInfo, Message, MessageH
  * @param socket An open socket to the given device.
  * @param onReceive Called when a message was received from the other device.
  */
-class TransferThread(device: Device, socket: BluetoothSocket, service: ChatService,
-                     crypto: Crypto, onReceive: (Message, Device.ID) => Unit)
+class TransferThread(device: Device, socket: BluetoothSocket, Handler: BluetoothInterface,
+                     Crypto: Crypto, onReceive: (Message, Device.ID) => Unit)
   extends Thread {
 
   private val Tag: String = "TransferThread"
@@ -43,8 +43,8 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
   override def run(): Unit = {
     Log.i(Tag, "Starting data transfer with " + device.toString)
 
-    send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type, ConnectionInfo.HopLimit,
-      Address.Null, Address.Null, 0, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
+    send(Crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type, ConnectionInfo.HopLimit,
+      Address.Null, Address.Null, 0, 0), new ConnectionInfo(Crypto.getLocalPublicKey))))
 
     while (socket.isConnected) {
       try {
@@ -62,8 +62,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
           return
       }
     }
-    service.onConnectionChanged(new Device(device.bluetoothDevice, false), null)
-    Log.i(Tag, "Neighbor " + device + " has disconnected")
+    close()
   }
 
   def send(msg: Message): Unit = {
@@ -81,7 +80,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, service: ChatServi
     } catch {
       case e: IOException => Log.e(Tag, "Failed to close socket", e);
     } finally {
-      service.onConnectionChanged(new Device(device.bluetoothDevice, false), null)
+      Handler.onConnectionClosed(new Device(device.bluetoothDevice, false), null)
     }
   }
 

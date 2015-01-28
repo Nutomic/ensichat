@@ -9,11 +9,10 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
-import com.nutomic.ensichat.bluetooth.ChatService
-import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.protocol.Address
+import com.nutomic.ensichat.protocol.{ChatService, Address}
+import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.messages.{Message, Text}
-import com.nutomic.ensichat.util.MessagesAdapter
+import com.nutomic.ensichat.util.{Database, MessagesAdapter}
 
 import scala.collection.SortedSet
 
@@ -53,7 +52,7 @@ class ChatFragment extends ListFragment with OnClickListener
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, address)
       chatService.registerMessageListener(ChatFragment.this)
-      onMessageReceived(chatService.database.getMessages(address, 15))
+      onMessageReceived(chatService.Database.getMessages(address, 15))
 
       if (listView != null) {
         listView.setAdapter(adapter)

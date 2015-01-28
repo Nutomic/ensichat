@@ -10,10 +10,8 @@ import android.view._
 import android.widget.AdapterView.OnItemClickListener
 import android.widget._
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.bluetooth.ChatService
-import com.nutomic.ensichat.bluetooth.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.messages.{Message, RequestAddContact, ResultAddContact}
-import com.nutomic.ensichat.protocol.{Address, Crypto}
+import com.nutomic.ensichat.protocol.{Address, ChatService, Crypto}
 import com.nutomic.ensichat.util.{DevicesAdapter, IdenticonGenerator}
 
 import scala.collection.SortedSet
@@ -23,14 +21,14 @@ import scala.collection.SortedSet
  *
  * Adding a contact requires confirmation on both sides.
  */
-class AddContactsActivity extends EnsiChatActivity with ChatService.OnNearbyContactsChangedListener
-  with OnItemClickListener with OnMessageReceivedListener {
+class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnectionsChangedListener
+  with OnItemClickListener with ChatService.OnMessageReceivedListener {
 
   private val Tag = "AddContactsActivity"
 
   private lazy val Adapter = new DevicesAdapter(this)
 
-  private lazy val Database = service.database
+  private lazy val Database = service.Database
 
   private lazy val Crypto = new Crypto(this)
 
@@ -46,8 +44,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnNearbyCont
    * @param localConfirmed If true, the local user has accepted adding the contact.
    * @param remoteConfirmed If true, the remote contact has accepted adding this device as contact.
    */
-  private class AddContactInfo(val localConfirmed: Boolean, val remoteConfirmed: Boolean) {
-  }
+  private class AddContactInfo(val localConfirmed: Boolean, val remoteConfirmed: Boolean)
 
   /**
    * Initializes layout, registers connection and message listeners.
@@ -71,7 +68,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnNearbyCont
   /**
    * Displays newly connected devices in the list.
    */
-  override def onNearbyContactsChanged(devices: Set[Address]): Unit = {
+  override def onConnectionsChanged(devices: Set[Address]): Unit = {
     runOnUiThread(new Runnable {
       override def run(): Unit  = {
         Adapter.clear()

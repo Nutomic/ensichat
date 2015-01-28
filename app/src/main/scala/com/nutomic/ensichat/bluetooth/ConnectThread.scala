@@ -14,7 +14,7 @@ class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Un
   private val Tag = "ConnectThread"
 
   private val Socket: BluetoothSocket =
-      device.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(ChatService.appUuid)
+      device.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(BluetoothInterface.AppUuid)
 
   override def run(): Unit = {
     Log.i(Tag, "Connecting to " + device.toString)

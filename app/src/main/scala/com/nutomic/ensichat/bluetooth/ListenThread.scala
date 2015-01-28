@@ -17,7 +17,7 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
 
   private val ServerSocket: BluetoothServerSocket =
     try {
-      adapter.listenUsingInsecureRfcommWithServiceRecord(name, ChatService.appUuid)
+      adapter.listenUsingInsecureRfcommWithServiceRecord(name, BluetoothInterface.AppUuid)
     } catch {
       case e: IOException =>
         Log.e(Tag, "Failed to create listener", e)
