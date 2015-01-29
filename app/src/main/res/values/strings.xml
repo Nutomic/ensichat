@@ -58,6 +58,9 @@
     <string name="settings">Settings</string>
 
     <!-- Preference title -->
+    <string name="user_name">Name</string>
+
+    <!-- Preference title -->
     <string name="scan_interval_seconds">Scan Interval (seconds)</string>
 
 </resources>

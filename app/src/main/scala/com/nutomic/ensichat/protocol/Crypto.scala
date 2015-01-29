@@ -257,11 +257,12 @@ class Crypto(Context: Context) {
     // Symmetric decryption of data
     val symmetricCipher = Cipher.getInstance(SymmetricCipherAlgorithm)
     symmetricCipher.init(Cipher.DECRYPT_MODE, key)
-    val decryped = copyThroughCipher(symmetricCipher, msg.Body.asInstanceOf[EncryptedBody].Data)
+    val decrypted = copyThroughCipher(symmetricCipher, msg.Body.asInstanceOf[EncryptedBody].Data)
     val body = msg.Header.MessageType match {
-      case RequestAddContact.Type => RequestAddContact.read(decryped)
-      case ResultAddContact.Type => ResultAddContact.read(decryped)
-      case Text.Type => Text.read(decryped)
+      case RequestAddContact.Type => RequestAddContact.read(decrypted)
+      case ResultAddContact.Type  => ResultAddContact.read(decrypted)
+      case Text.Type              => Text.read(decrypted)
+      case UserName.Type          => UserName.read(decrypted)
     }
     new Message(msg.Header, msg.Crypto, body)
   }

@@ -14,6 +14,8 @@ object Message {
     }
   }
 
+  val Charset = "UTF-8"
+
   def read(stream: InputStream): Message = {
     val headerBytes = new Array[Byte](MessageHeader.Length)
     stream.read(headerBytes, 0, MessageHeader.Length)

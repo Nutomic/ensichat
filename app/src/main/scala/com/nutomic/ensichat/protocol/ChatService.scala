@@ -1,15 +1,19 @@
 package com.nutomic.ensichat.protocol
 
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Handler
+import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
+import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.{OnMessageReceivedListener, OnConnectionsChangedListener}
-import com.nutomic.ensichat.protocol.messages.{ConnectionInfo, Message, MessageBody, MessageHeader}
+import com.nutomic.ensichat.protocol.messages._
 import com.nutomic.ensichat.util.Database
 
 import scala.collection.SortedSet
+import scala.collection.immutable.HashMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.ref.WeakReference
@@ -35,7 +39,7 @@ object ChatService {
    * connects or disconnects
    */
   trait OnConnectionsChangedListener {
-    def onConnectionsChanged(devices: Set[Address]): Unit
+    def onConnectionsChanged(contacts: Set[User]): Unit
   }
 
 }
@@ -67,16 +71,28 @@ class ChatService extends Service {
   private var messageListeners = Set[WeakReference[OnMessageReceivedListener]]()
 
   /**
+   * Holds all known users.
+   * 
+   * This is for user names that were received during runtime, and is not persistent.
+   */
+  private var connections = Set[User]()
+
+  /**
    * Generates keys and starts Bluetooth interface.
    */
   override def onCreate(): Unit = {
     super.onCreate()
 
+    val pm = PreferenceManager.getDefaultSharedPreferences(this)
+    if (pm.getString(SettingsFragment.KeyUserName, null) == null)
+      pm.edit().putString(SettingsFragment.KeyUserName,
+        BluetoothAdapter.getDefaultAdapter.getName).apply()
+
     Future {
       Crypto.generateLocalKeys()
-      Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress)
 
       BluetoothInterface.create()
+      Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress)
     }
   }
 
@@ -100,7 +116,7 @@ class ChatService extends Service {
    */
   def registerConnectionListener(listener: OnConnectionsChangedListener): Unit = {
     connectionListeners += new WeakReference[OnConnectionsChangedListener](listener)
-    listener.onConnectionsChanged(BluetoothInterface.getConnections)
+    listener.onConnectionsChanged(getConnections)
   }
 
   /**
@@ -132,17 +148,23 @@ class ChatService extends Service {
   }
 
   /**
-   * Calls all [[OnMessageReceivedListener]]s with the new message.
-   *
-   * This function is called both for locally and remotely sent messages.
+   * Handles all (locally and remotely sent) new messages.
    */
-  private def onNewMessage(msg: Message): Unit = {
-    Database.addMessage(msg)
-    MainHandler.post(new Runnable {
-      override def run(): Unit =
-        messageListeners
-          .filter(_.get.nonEmpty)
-          .foreach(_.apply().onMessageReceived(SortedSet(msg)(Message.Ordering)))
+  private def onNewMessage(msg: Message): Unit = msg.Body match {
+    case name: UserName =>
+      val contact = new User(msg.Header.Origin, name.Name)
+      connections += contact
+      if (Database.getContact(msg.Header.Origin).nonEmpty)
+        Database.changeContactName(contact)
+      
+      callConnectionListeners()
+    case _ =>
+      Database.addMessage(msg)
+      MainHandler.post(new Runnable {
+        override def run(): Unit =
+          messageListeners
+            .filter(_.get.nonEmpty)
+            .foreach(_.apply().onMessageReceived(SortedSet(msg)(Message.Ordering)))
     })
   }
 
@@ -154,20 +176,20 @@ class ChatService extends Service {
    *
    * The caller must invoke [[callConnectionListeners()]]
    *
-   * @param infoMsg The message containing [[ConnectionInfo]] to open the connection.
+   * @param msg The message containing [[ConnectionInfo]] to open the connection.
    * @return True if the connection is valid
    */
-  def onConnectionOpened(infoMsg: Message): Option[Address] = {
-    val info = infoMsg.Body.asInstanceOf[ConnectionInfo]
+  def onConnectionOpened(msg: Message): Boolean = {
+    val info = msg.Body.asInstanceOf[ConnectionInfo]
     val sender = Crypto.calculateAddress(info.key)
     if (sender == Address.Broadcast || sender == Address.Null) {
       Log.i(Tag, "Ignoring ConnectionInfo message with invalid sender " + sender)
-      None
+      false
     }
 
-    if (Crypto.havePublicKey(sender) && !Crypto.verify(infoMsg, Crypto.getPublicKey(sender))) {
+    if (Crypto.havePublicKey(sender) && !Crypto.verify(msg, Crypto.getPublicKey(sender))) {
       Log.i(Tag, "Ignoring ConnectionInfo message with invalid signature")
-      None
+      false
     }
 
     if (!Crypto.havePublicKey(sender)) {
@@ -176,7 +198,10 @@ class ChatService extends Service {
     }
 
     Log.i(Tag, "Node " + sender + " connected")
-    Some(sender)
+    val name = PreferenceManager.getDefaultSharedPreferences(this).getString("user_name", null)
+    sendTo(sender, new UserName(name))
+    callConnectionListeners()
+    true
   }
 
   /**
@@ -184,9 +209,22 @@ class ChatService extends Service {
    *
    * Should be called whenever a neighbor connects or disconnects.
    */
-  def callConnectionListeners(): Unit =
+  def callConnectionListeners(): Unit = {
     connectionListeners
-      .filter(_ != None)
-      .foreach(_.apply().onConnectionsChanged(BluetoothInterface.getConnections))
+      .filter(_.get.nonEmpty)
+      .foreach(_.apply().onConnectionsChanged(getConnections))
+  }
+
+  /**
+   * Returns all direct neighbors.
+   */
+  def getConnections: Set[User] = {
+    BluetoothInterface.getConnections.map{ address =>
+      (Database.getContacts ++ connections).find(_.Address == address) match {
+        case Some(contact) => contact
+        case None          => new User(address, address.toString)
+      }
+    }
+  }
 
 }

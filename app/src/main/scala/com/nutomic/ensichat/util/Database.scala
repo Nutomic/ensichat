@@ -4,6 +4,7 @@ import java.util.Date
 
 import android.content.{ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
+import android.util.Log
 import com.nutomic.ensichat.protocol._
 import com.nutomic.ensichat.protocol.messages._
 
@@ -25,7 +26,8 @@ object Database {
 
   private val CreateContactsTable = "CREATE TABLE contacts(" +
     "_id integer primary key autoincrement," +
-    "address text not null)"
+    "address text not null," +
+    "name text not null)"
 
 }
 
@@ -79,40 +81,58 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
       cv.put("date", text.time.getTime.toString)
       cv.put("text", text.text)
       getWritableDatabase.insert("messages", null, cv)
-    case _: ConnectionInfo | _: RequestAddContact | _: ResultAddContact =>
+    case _: ConnectionInfo | _: RequestAddContact | _: ResultAddContact | _: UserName =>
       // Never stored.
   }
 
   /**
-   * Returns a list of all contacts of this device.
+   * Returns all contacts of this user.
    */
-  def getContacts: Set[Address] = {
-    val c = getReadableDatabase.query(true, "contacts", Array("address"), "", Array(),
+  def getContacts: Set[User] = {
+    val c = getReadableDatabase.query(true, "contacts", Array("address", "name"), "", Array(),
       null, null, null, null)
-    var contacts = Set[Address]()
+    var contacts = Set[User]()
     while (c.moveToNext()) {
-      contacts += new Address(c.getString(c.getColumnIndex("address")))
+      contacts += new User(new Address(c.getString(c.getColumnIndex("address"))),
+                              c.getString(c.getColumnIndex("name")))
     }
     c.close()
     contacts
   }
 
   /**
-   * Returns true if a contact with the given device ID exists.
+   * Returns the contact with the given address if it exists.
    */
-  def isContact(address: Address): Boolean = {
-    val c = getReadableDatabase.query(true, "contacts", Array("_id"), "address = ?",
+  def getContact(address: Address): Option[User] = {
+    val c = getReadableDatabase.query(true, "contacts", Array("address", "name"), "address = ?",
       Array(address.toString), null, null, null, null)
-    c.getCount != 0
+    if (c.getCount != 0) {
+      c.moveToNext()
+      val s = Some(new User(new Address(c.getString(c.getColumnIndex("address"))),
+        c.getString(c.getColumnIndex("name"))))
+      c.close()
+      s
+    } else {
+      c.close()
+      None
+    }
   }
 
   /**
    * Inserts the given device into contacts.
    */
-  def addContact(address: Address): Unit = {
+  def addContact(contact: User): Unit = {
     val cv = new ContentValues()
-    cv.put("address", address.toString)
+    cv.put("address", contact.Address.toString)
+    cv.put("name", contact.Name.toString)
     getWritableDatabase.insert("contacts", null, cv)
+    contactsUpdatedListeners.foreach(_())
+  }
+  
+  def changeContactName(contact: User): Unit = {
+    val cv = new ContentValues()
+    cv.put("name", contact.Name.toString)
+    getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.Address.toString))
     contactsUpdatedListeners.foreach(_())
   }
 

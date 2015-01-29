@@ -9,7 +9,7 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
-import com.nutomic.ensichat.protocol.{ChatService, Address}
+import com.nutomic.ensichat.protocol.{User, ChatService, Address}
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.messages.{Message, Text}
 import com.nutomic.ensichat.util.{Database, MessagesAdapter}
@@ -48,6 +48,9 @@ class ChatFragment extends ListFragment with OnClickListener
     val activity = getActivity.asInstanceOf[EnsiChatActivity]
     activity.runOnServiceConnected(() => {
       chatService = activity.service
+
+      chatService.Database.getContact(address)
+        .foreach(c => getActivity.setTitle(c.Name))
 
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, address)
@@ -113,10 +116,5 @@ class ChatFragment extends ListFragment with OnClickListener
     messages.filter(m => Set(m.Header.Origin, m.Header.Target).contains(address))
       .foreach(adapter.add)
   }
-
-  /**
-   * Returns the device that this fragment shows chats for.
-   */
-  def getDevice = address
 
 }

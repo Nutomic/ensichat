@@ -9,8 +9,6 @@ object Text {
 
   val Type = 6
 
-  val Charset = "UTF-8"
-
   /**
    * Constructs [[Text]] instance from byte array.
    */
@@ -20,7 +18,7 @@ object Text {
     val length = BufferUtils.getUnsignedInt(b).toInt
     val bytes = new Array[Byte](length)
     b.get(bytes, 0, length)
-    new Text(new String(bytes, Text.Charset), time)
+    new Text(new String(bytes, Message.Charset), time)
   }
 
 }
@@ -33,15 +31,15 @@ case class Text(text: String, time: Date = new Date()) extends MessageBody {
   override def Type = Text.Type
 
   override def write: Array[Byte] = {
-    val bytes = text.getBytes(Text.Charset)
     val b = ByteBuffer.allocate(length)
     BufferUtils.putUnsignedInt(b, time.getTime / 1000)
+    val bytes = text.getBytes(Message.Charset)
     BufferUtils.putUnsignedInt(b, bytes.length)
     b.put(bytes)
     b.array()
   }
 
-  override def length = 8 + text.getBytes(Text.Charset).length
+  override def length = 8 + text.getBytes(Message.Charset).length
 
   override def equals(a: Any): Boolean = a match {
     case o: Text => text == text && time.getTime / 1000 == o.time.getTime / 1000

@@ -8,14 +8,14 @@ import android.widget.ListView
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.{AddContactsActivity, EnsiChatActivity, MainActivity, SettingsActivity}
 import com.nutomic.ensichat.protocol.ChatService
-import com.nutomic.ensichat.util.DevicesAdapter
+import com.nutomic.ensichat.util.UsersAdapter
 
 /**
  * Lists all nearby, connected devices.
  */
 class ContactsFragment extends ListFragment {
 
-  private lazy val Adapter = new DevicesAdapter(getActivity)
+  private lazy val Adapter = new UsersAdapter(getActivity)
 
   private lazy val Database = getActivity.asInstanceOf[EnsiChatActivity].service.Database
 
@@ -28,8 +28,12 @@ class ContactsFragment extends ListFragment {
     getActivity.asInstanceOf[EnsiChatActivity].runOnServiceConnected(() => {
       Database.getContacts.foreach(Adapter.add)
       Database.runOnContactsUpdated(() => {
-        Adapter.clear()
-        Database.getContacts.foreach(Adapter.add)
+        getActivity.runOnUiThread(new Runnable {
+          override def run(): Unit = {
+            Adapter.clear()
+            Database.getContacts.foreach(Adapter.add)
+          }
+        })
       })
     })
   }
@@ -64,6 +68,6 @@ class ContactsFragment extends ListFragment {
    * Opens a chat with the clicked device.
    */
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long): Unit =
-    getActivity.asInstanceOf[MainActivity].openChat(Adapter.getItem(position))
+    getActivity.asInstanceOf[MainActivity].openChat(Adapter.getItem(position).Address)
 
 }

@@ -1,6 +1,5 @@
 package com.nutomic.ensichat.util
 
-import java.io.File
 import java.util.concurrent.CountDownLatch
 
 import android.content.Context
@@ -8,8 +7,7 @@ import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.test.AndroidTestCase
 import android.test.mock.MockContext
-import com.nutomic.ensichat.protocol.AddressTest
-import com.nutomic.ensichat.protocol.messages.MessageTest
+import com.nutomic.ensichat.protocol.UserTest
 import com.nutomic.ensichat.protocol.messages.MessageTest._
 import junit.framework.Assert._
 
@@ -25,9 +23,10 @@ class DatabaseTest extends AndroidTestCase {
 
   private var dbFile: String = _
 
-  private lazy val Database = new Database(new TestContext(getContext))
+  private var Database: Database = _
 
   override def setUp(): Unit = {
+    Database = new Database(new TestContext(getContext))
     Database.addMessage(m1)
     Database.addMessage(m2)
     Database.addMessage(m3)
@@ -35,7 +34,8 @@ class DatabaseTest extends AndroidTestCase {
 
   override def tearDown(): Unit = {
     super.tearDown()
-    new File(dbFile).delete()
+    Database.close()
+    getContext.deleteDatabase(dbFile)
   }
 
   def testMessageCount(): Unit = {
@@ -58,11 +58,10 @@ class DatabaseTest extends AndroidTestCase {
   }
 
   def testAddContact(): Unit = {
-    Database.addContact(AddressTest.a1)
-    assertTrue(Database.isContact(AddressTest.a1))
+    Database.addContact(UserTest.u1)
     val contacts = Database.getContacts
     assertEquals(1, contacts.size)
-    contacts.foreach{assertEquals(AddressTest.a1, _)}
+    assertEquals(Some(UserTest.u1), Database.getContact(UserTest.u1.Address))
   }
 
   def testAddContactCallback(): Unit = {
@@ -70,8 +69,16 @@ class DatabaseTest extends AndroidTestCase {
     Database.runOnContactsUpdated(() => {
       latch.countDown()
     })
-    Database.addContact(AddressTest.a1)
+    Database.addContact(UserTest.u1)
     latch.await()
+  }
+  
+  def testGetContact(): Unit = {
+    Database.addContact(UserTest.u2)
+    assertTrue(Database.getContact(UserTest.u1.Address).isEmpty)
+    val c = Database.getContact(UserTest.u2.Address)
+    assertTrue(c.nonEmpty)
+    assertEquals(Some(UserTest.u2), c)
   }
 
 }

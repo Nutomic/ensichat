@@ -171,13 +171,11 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
    */
   private def onReceiveMessage(msg: Message, device: Device.ID): Unit = msg.Body match {
     case info: ConnectionInfo =>
-      val sender = Service.onConnectionOpened(msg)
-      sender match {
-        case Some(s) =>
-          AddressDeviceMap.put(Crypto.calculateAddress(info.key), device)
-          Service.callConnectionListeners()
-        case None =>
-      }
+      val address = Crypto.calculateAddress(info.key)
+      // Service.onConnectionOpened sends message, so mapping already needs to be in place.
+      AddressDeviceMap.put(address, device)
+      if (!Service.onConnectionOpened(msg))
+        AddressDeviceMap.remove(address)
     case _ =>
       Service.onMessageReceived(msg)
   }

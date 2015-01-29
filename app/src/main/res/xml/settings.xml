@@ -3,6 +3,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <EditTextPreference
+        android:title="@string/user_name"
+        android:key="user_name" />
+
+    <EditTextPreference
         android:title="@string/scan_interval_seconds"
         android:key="scan_interval_seconds"
         android:defaultValue="15"

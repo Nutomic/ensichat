@@ -96,6 +96,7 @@ class MainActivity extends EnsiChatActivity {
         .commit()
       currentChat = None
       getActionBar.setDisplayHomeAsUpEnabled(false)
+      setTitle(R.string.app_name)
     } else
       super.onBackPressed()
   }

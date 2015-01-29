@@ -113,7 +113,7 @@ message.
     /                                                               /
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /                                                               /
-    \               Key (variable length)                \
+    \                      Key (variable length)                    \
     /                                                               /
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -122,7 +122,6 @@ body.
 
 Signature is the cryptographic signature over the (unencrypted) message
 header and message body.
-
 
 
 ConnectionInfo (Type = 0)
@@ -142,8 +141,8 @@ that node can only be sent once a new ConnectionInfo message
 for it has been received.
 
 
-This key is to be used for message
-encryption when communicating with the sending node.
+This key is to be used for message encryption when communicating
+with the sending node.
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -189,6 +188,7 @@ Accepted bit (A) is true if the user accepts the new contact, false
 otherwise. Nodes should only add another node as a contact if both
 users agreed.
 
+
 ### Text (Type = 6)
 
 A simple chat message.
@@ -208,3 +208,17 @@ A simple chat message.
 Time is the unix timestamp of message sending.
 
 Text the string to be transferred, encoded as UTF-8.
+
+### UserName (Type = 7)
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                          Name Length                          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    /                                                               /
+    \                   Name (variable length)                      \
+    /                                                               /
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Contains the sender's name, which should be used for display to users.
