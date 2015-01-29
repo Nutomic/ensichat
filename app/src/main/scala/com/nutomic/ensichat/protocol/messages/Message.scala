@@ -1,6 +1,7 @@
 package com.nutomic.ensichat.protocol.messages
 
 import java.io.InputStream
+import java.security.spec.InvalidKeySpecException
 
 object Message {
 
@@ -16,27 +17,35 @@ object Message {
 
   val Charset = "UTF-8"
 
+  class ReadMessageException(throwable: Throwable)
+    extends RuntimeException(throwable)
+
   def read(stream: InputStream): Message = {
-    val headerBytes = new Array[Byte](MessageHeader.Length)
-    stream.read(headerBytes, 0, MessageHeader.Length)
-    val header = MessageHeader.read(headerBytes)
+    try {
+      val headerBytes = new Array[Byte](MessageHeader.Length)
+      stream.read(headerBytes, 0, MessageHeader.Length)
+      val header = MessageHeader.read(headerBytes)
 
-    val contentLength = (header.Length - MessageHeader.Length).toInt
-    val contentBytes = new Array[Byte](contentLength)
-    var numRead = 0
-    do {
-      numRead += stream.read(contentBytes, numRead, contentLength - numRead)
-    } while (numRead < contentLength)
+      val contentLength = (header.Length - MessageHeader.Length).toInt
+      val contentBytes = new Array[Byte](contentLength)
+      var numRead = 0
+      do {
+        numRead += stream.read(contentBytes, numRead, contentLength - numRead)
+      } while (numRead < contentLength)
 
-    val (crypto, remaining) = CryptoData.read(contentBytes)
+      val (crypto, remaining) = CryptoData.read(contentBytes)
 
-    val body =
-      header.MessageType match {
-        case ConnectionInfo.Type => ConnectionInfo.read(remaining)
-        case _                   => new EncryptedBody(remaining)
-      }
+      val body =
+        header.MessageType match {
+          case ConnectionInfo.Type => ConnectionInfo.read(remaining)
+          case _ => new EncryptedBody(remaining)
+        }
 
-    new Message(header, crypto, body)
+      new Message(header, crypto, body)
+    } catch {
+      case e @ (_ : OutOfMemoryError | _ : InvalidKeySpecException) =>
+        throw new ReadMessageException(e)
+    }
   }
 
 }

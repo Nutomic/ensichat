@@ -5,6 +5,7 @@ import java.io._
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.nutomic.ensichat.protocol._
+import com.nutomic.ensichat.protocol.messages.Message.ReadMessageException
 import com.nutomic.ensichat.protocol.messages.{ConnectionInfo, Message, MessageHeader}
 
 /**
@@ -54,8 +55,8 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
           onReceive(msg, device.Id)
         }
       } catch {
-        case e: RuntimeException =>
-          Log.i(Tag, "Received invalid message", e)
+        case e: ReadMessageException =>
+          Log.i(Tag, "Failed to read message", e)
         case e: IOException =>
           Log.w(Tag, "Failed to read incoming message", e)
           close()
