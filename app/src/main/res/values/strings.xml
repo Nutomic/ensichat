@@ -42,9 +42,6 @@
     <!-- Empty text for devices list -->
     <string name="no_devices_nearby">No nearby devices found</string>
 
-    <!-- Toast shown when trying to add a contact again -->
-    <string name="contact_already_added">You already added this contact</string>
-
     <!-- Toast shown when a new contact was added. Parameter is contact name -->
     <string name="contact_added">%1$s was added as a contact</string>
 

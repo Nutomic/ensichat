@@ -12,7 +12,7 @@ import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.protocol.messages.{Message, RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.protocol.{User, Address, ChatService, Crypto}
-import com.nutomic.ensichat.util.{UsersAdapter, IdenticonGenerator}
+import com.nutomic.ensichat.util.{Database, UsersAdapter, IdenticonGenerator}
 
 import scala.collection.SortedSet
 
@@ -62,31 +62,17 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
     runOnServiceConnected(() => {
       service.registerConnectionListener(AddContactsActivity.this)
       service.registerMessageListener(this)
+      Database.runOnContactsUpdated(updateList)
     })
   }
 
-  /**
-   * Displays newly connected devices in the list.
-   */
-  override def onConnectionsChanged(contacts: Set[User]): Unit = {
-    runOnUiThread(new Runnable {
-      override def run(): Unit  = {
-        Adapter.clear()
-        contacts.foreach(Adapter.add)
-      }
-    })
-  }
+  override def onConnectionsChanged() = updateList()
 
   /**
    * Initiates adding the device as contact if it hasn't been added yet.
    */
   override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = {
     val contact = Adapter.getItem(position)
-    if (Database.getContact(contact.Address).nonEmpty) {
-      Toast.makeText(this, R.string.contact_already_added, Toast.LENGTH_SHORT).show()
-      return
-    }
-
     service.sendTo(contact.Address, new RequestAddContact())
     addDeviceDialog(contact)
   }
@@ -179,6 +165,18 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
       true
     case _ =>
       super.onOptionsItemSelected(item);
+  }
+
+  /**
+   * Fetches connections and displays them (excluding contacts).
+   */
+  private def updateList(): Unit ={
+    runOnUiThread(new Runnable {
+      override def run(): Unit  = {
+        Adapter.clear()
+        (service.getConnections -- service.Database.getContacts).foreach(Adapter.add)
+      }
+    })
   }
 
 }

@@ -39,7 +39,7 @@ object ChatService {
    * connects or disconnects
    */
   trait OnConnectionsChangedListener {
-    def onConnectionsChanged(contacts: Set[User]): Unit
+    def onConnectionsChanged(): Unit
   }
 
 }
@@ -116,7 +116,7 @@ class ChatService extends Service {
    */
   def registerConnectionListener(listener: OnConnectionsChangedListener): Unit = {
     connectionListeners += new WeakReference[OnConnectionsChangedListener](listener)
-    listener.onConnectionsChanged(getConnections)
+    listener.onConnectionsChanged()
   }
 
   /**
@@ -212,7 +212,7 @@ class ChatService extends Service {
   def callConnectionListeners(): Unit = {
     connectionListeners
       .filter(_.get.nonEmpty)
-      .foreach(_.apply().onConnectionsChanged(getConnections))
+      .foreach(_.apply().onConnectionsChanged())
   }
 
   /**
