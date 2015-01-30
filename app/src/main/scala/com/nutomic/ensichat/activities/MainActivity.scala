@@ -10,6 +10,13 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.fragments.{ChatFragment, ContactsFragment}
 import com.nutomic.ensichat.protocol.Address
 
+object MainActivity {
+
+  val ActionOpenChat = "open_chat"
+
+  val ExtraAddress = "address"
+}
+
 /**
  * Main activity, entry point for app start.
  */
@@ -47,6 +54,9 @@ class MainActivity extends EnsiChatActivity {
         .add(android.R.id.content, ContactsFragment)
         .commit()
     }
+
+    if (getIntent.getAction == MainActivity.ActionOpenChat)
+      openChat(new Address(getIntent.getStringExtra(MainActivity.ExtraAddress)))
   }
 
   /**

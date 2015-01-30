@@ -2,7 +2,7 @@ package com.nutomic.ensichat.activities
 
 import android.app.AlertDialog
 import android.content.DialogInterface.OnClickListener
-import android.content.{Context, DialogInterface}
+import android.content.{Intent, Context, DialogInterface}
 import android.os.Bundle
 import android.support.v4.app.NavUtils
 import android.util.Log
@@ -129,19 +129,23 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
       case _: RequestAddContact =>
         Log.i(Tag, "Remote device " + msg.Header.Origin + " wants to add us as a contact, showing dialog")
         service.getConnections.find(_.Address == msg.Header.Origin).foreach(addDeviceDialog)
-      case _: ResultAddContact =>
+      case m: ResultAddContact =>
         currentlyAdding.keys.find(_.Address == msg.Header.Origin).foreach(contact =>
-          if (msg.Body.asInstanceOf[ResultAddContact].Accepted) {
+          if (m.Accepted) {
             Log.i(Tag, contact.toString + " accepted us as a contact, updating state")
             currentlyAdding += (contact ->
               new AddContactInfo(true, currentlyAdding(contact).remoteConfirmed))
             addContactIfBothConfirmed(contact)
+            val intent = new Intent(this, classOf[MainActivity])
+            intent.setAction(MainActivity.ActionOpenChat)
+            intent.putExtra(MainActivity.ExtraAddress, msg.Header.Origin.toString)
+            startActivity(intent)
+            finish()
           } else {
             Log.i(Tag, contact.toString + " denied us as a contact, showing toast")
             Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
             currentlyAdding -= contact
-          }
-          )
+          })
       case _ =>
     }
   }
