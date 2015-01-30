@@ -5,6 +5,7 @@ import java.util.Date
 import android.content.{ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import android.util.Log
+import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol._
 import com.nutomic.ensichat.protocol.messages._
 
@@ -34,8 +35,9 @@ object Database {
 /**
  * Stores all messages and contacts in SQL database.
  */
-class Database(context: Context) extends SQLiteOpenHelper(context, Database.DatabaseName,
-                                                          null, Database.DatabaseVersion) {
+class Database(context: Context)
+  extends SQLiteOpenHelper(context, Database.DatabaseName, null, Database.DatabaseVersion)
+  with OnMessageReceivedListener {
 
   private var contactsUpdatedListeners = Set[() => Unit]()
 
@@ -72,16 +74,16 @@ class Database(context: Context) extends SQLiteOpenHelper(context, Database.Data
   /**
    * Inserts the given new message into the database.
    */
-  def addMessage(message: Message): Unit = message.Body match {
+  override def onMessageReceived(msg: Message): Unit = msg.Body match {
     case text: Text =>
       val cv =  new ContentValues()
-      cv.put("origin", message.Header.Origin.toString)
-      cv.put("target", message.Header.Target.toString)
+      cv.put("origin", msg.Header.Origin.toString)
+      cv.put("target", msg.Header.Target.toString)
       // toString used as workaround for compile error with Long.
       cv.put("date", text.time.getTime.toString)
       cv.put("text", text.text)
       getWritableDatabase.insert("messages", null, cv)
-    case _: ConnectionInfo | _: RequestAddContact | _: ResultAddContact | _: UserName =>
+    case _: RequestAddContact | _: ResultAddContact =>
       // Never stored.
   }
 

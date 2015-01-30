@@ -121,27 +121,29 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    * These are only handled here and require user action, so contacts can only be added if
    * the user is in this activity.
    */
-  override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.filter(_.Header.Target == Crypto.getLocalAddress)
-      .foreach{
-        case m if m.Body.isInstanceOf[RequestAddContact] =>
-          Log.i(Tag, "Remote device " + m.Header.Origin + " wants to add us as a contact, showing dialog")
-          service.getConnections.find(_.Address == m.Header.Origin).foreach(addDeviceDialog)
-        case m if m.Body.isInstanceOf[ResultAddContact] =>
-          currentlyAdding.keys.find(_.Address == m.Header.Origin)foreach(contact =>
-            if (m.Body.asInstanceOf[ResultAddContact].Accepted) {
-              Log.i(Tag, contact.toString + " accepted us as a contact, updating state")
-              currentlyAdding += (contact ->
-                new AddContactInfo(true, currentlyAdding(contact).remoteConfirmed))
-              addContactIfBothConfirmed(contact)
-            } else {
-              Log.i(Tag, contact.toString + " denied us as a contact, showing toast")
-              Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
-              currentlyAdding -= contact
-            }
+  override def onMessageReceived(msg: Message): Unit = {
+    if (msg.Header.Target != Crypto.getLocalAddress)
+      return
+
+    msg.Body match {
+      case _: RequestAddContact =>
+        Log.i(Tag, "Remote device " + msg.Header.Origin + " wants to add us as a contact, showing dialog")
+        service.getConnections.find(_.Address == msg.Header.Origin).foreach(addDeviceDialog)
+      case _: ResultAddContact =>
+        currentlyAdding.keys.find(_.Address == msg.Header.Origin).foreach(contact =>
+          if (msg.Body.asInstanceOf[ResultAddContact].Accepted) {
+            Log.i(Tag, contact.toString + " accepted us as a contact, updating state")
+            currentlyAdding += (contact ->
+              new AddContactInfo(true, currentlyAdding(contact).remoteConfirmed))
+            addContactIfBothConfirmed(contact)
+          } else {
+            Log.i(Tag, contact.toString + " denied us as a contact, showing toast")
+            Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
+            currentlyAdding -= contact
+          }
           )
-        case _ =>
-      }
+      case _ =>
+    }
   }
 
   /**

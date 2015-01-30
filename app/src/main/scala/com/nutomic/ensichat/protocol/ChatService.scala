@@ -31,7 +31,7 @@ object ChatService {
   }
 
   trait OnMessageReceivedListener {
-    def onMessageReceived(messages: SortedSet[Message]): Unit
+    def onMessageReceived(messages: Message): Unit
   }
 
   /**
@@ -72,7 +72,7 @@ class ChatService extends Service {
 
   /**
    * Holds all known users.
-   * 
+   *
    * This is for user names that were received during runtime, and is not persistent.
    */
   private var connections = Set[User]()
@@ -87,6 +87,8 @@ class ChatService extends Service {
     if (pm.getString(SettingsFragment.KeyUserName, null) == null)
       pm.edit().putString(SettingsFragment.KeyUserName,
         BluetoothAdapter.getDefaultAdapter.getName).apply()
+
+    registerMessageListener(Database)
 
     Future {
       Crypto.generateLocalKeys()
@@ -156,15 +158,14 @@ class ChatService extends Service {
       connections += contact
       if (Database.getContact(msg.Header.Origin).nonEmpty)
         Database.changeContactName(contact)
-      
+
       callConnectionListeners()
     case _ =>
-      Database.addMessage(msg)
       MainHandler.post(new Runnable {
         override def run(): Unit =
           messageListeners
             .filter(_.get.nonEmpty)
-            .foreach(_.apply().onMessageReceived(SortedSet(msg)(Message.Ordering)))
+            .foreach(_.apply().onMessageReceived(msg))
     })
   }
 

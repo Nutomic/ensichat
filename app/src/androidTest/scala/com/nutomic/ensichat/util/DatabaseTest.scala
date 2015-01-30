@@ -27,9 +27,9 @@ class DatabaseTest extends AndroidTestCase {
 
   override def setUp(): Unit = {
     Database = new Database(new TestContext(getContext))
-    Database.addMessage(m1)
-    Database.addMessage(m2)
-    Database.addMessage(m3)
+    Database.onMessageReceived(m1)
+    Database.onMessageReceived(m2)
+    Database.onMessageReceived(m3)
   }
 
   override def tearDown(): Unit = {

@@ -55,7 +55,7 @@ class ChatFragment extends ListFragment with OnClickListener
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, address)
       chatService.registerMessageListener(ChatFragment.this)
-      onMessageReceived(chatService.Database.getMessages(address, 15))
+      chatService.Database.getMessages(address, 15).foreach(adapter.add)
 
       if (listView != null) {
         listView.setAdapter(adapter)
@@ -112,9 +112,9 @@ class ChatFragment extends ListFragment with OnClickListener
   /**
    * Displays new messages in UI.
    */
-  override def onMessageReceived(messages: SortedSet[Message]): Unit = {
-    messages.filter(m => Set(m.Header.Origin, m.Header.Target).contains(address))
-      .foreach(adapter.add)
+  override def onMessageReceived(msg: Message): Unit = {
+    if (Set(msg.Header.Origin, msg.Header.Target).contains(address))
+      adapter.add(msg)
   }
 
 }
