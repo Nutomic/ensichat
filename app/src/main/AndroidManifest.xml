@@ -35,6 +35,11 @@
         </activity>
 
         <activity
+            android:name=".activities.ConfirmAddContactDialog"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true" />
+
+        <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/settings" >
             <meta-data

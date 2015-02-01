@@ -27,6 +27,12 @@
     <!-- Activity title -->
     <string name="add_contacts">Add Contacts</string>
 
+    <!-- Empty text for devices list -->
+    <string name="no_devices_nearby">No nearby devices found</string>
+
+
+    <!-- ConfirmAddContactDialog -->
+
     <!-- Title of dialog shown when clicking a device -->
     <string name="add_contact_dialog">Do you want to add %1$s as a new contact?</string>
 
@@ -39,14 +45,11 @@
     <!-- Information text shown in the "add contact" dialog -->
     <string name="add_contact_dialog_hint">Before accepting, make sure the images match on both devices</string>
 
-    <!-- Empty text for devices list -->
-    <string name="no_devices_nearby">No nearby devices found</string>
+    <!-- Toast shown when a contact is not added because it was not accepted on the other device -->
+    <string name="contact_not_added">Contact not added (denied by other device)</string>
 
     <!-- Toast shown when a new contact was added. Parameter is contact name -->
     <string name="contact_added">%1$s was added as a contact</string>
-
-    <!-- Toast shown when a contact is not added because it was not accepted on the other device -->
-    <string name="contact_not_added">Contact not added (denied by other device)</string>
 
 
     <!-- SettingsActivity -->
@@ -59,5 +62,11 @@
 
     <!-- Preference title -->
     <string name="scan_interval_seconds">Scan Interval (seconds)</string>
+
+
+    <!-- ChatService -->
+
+    <!-- Notification text for incoming friend request -->
+    <string name="notification_friend_request">New friend request!</string>
 
 </resources>

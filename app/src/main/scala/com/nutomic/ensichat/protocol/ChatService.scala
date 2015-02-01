@@ -1,19 +1,19 @@
 package com.nutomic.ensichat.protocol
 
-import android.app.Service
+import android.app.{Notification, NotificationManager, PendingIntent, Service}
 import android.bluetooth.BluetoothAdapter
-import android.content.Intent
+import android.content.{Context, Intent}
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
+import com.nutomic.ensichat.R
+import com.nutomic.ensichat.activities.ConfirmAddContactDialog
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
-import com.nutomic.ensichat.protocol.ChatService.{OnMessageReceivedListener, OnConnectionsChangedListener}
+import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
 import com.nutomic.ensichat.protocol.messages._
 import com.nutomic.ensichat.util.Database
 
-import scala.collection.SortedSet
-import scala.collection.immutable.HashMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.ref.WeakReference
@@ -57,9 +57,11 @@ class ChatService extends Service {
 
   private lazy val Binder = new ChatServiceBinder(this)
 
-  private lazy val Crypto = new Crypto(this)
+  private lazy val crypto = new Crypto(this)
 
-  private lazy val BluetoothInterface = new BluetoothInterface(this, Crypto)
+  private lazy val bluetoothInterface = new BluetoothInterface(this, crypto)
+
+  private val notificationIdGenerator = Stream.from(100)
 
   /**
    * For this (and [[messageListeners]], functions would be useful instead of instances,
@@ -91,15 +93,15 @@ class ChatService extends Service {
     registerMessageListener(Database)
 
     Future {
-      Crypto.generateLocalKeys()
+      crypto.generateLocalKeys()
 
-      BluetoothInterface.create()
-      Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress)
+      bluetoothInterface.create()
+      Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress(this))
     }
   }
 
   override def onDestroy(): Unit = {
-    BluetoothInterface.destroy()
+    bluetoothInterface.destroy()
   }
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int) = Service.START_STICKY
@@ -125,15 +127,15 @@ class ChatService extends Service {
    * Sends a new message to the given target address.
    */
   def sendTo(target: Address, body: MessageBody): Unit = {
-    if (!BluetoothInterface.getConnections.contains(target))
+    if (!bluetoothInterface.getConnections.contains(target))
       return
 
     val header = new MessageHeader(body.Type, MessageHeader.DefaultHopLimit,
-      Crypto.getLocalAddress, target, 0, 0)
+      Crypto.getLocalAddress(this), target, 0, 0)
 
     val msg = new Message(header, body)
-    val encrypted = Crypto.encrypt(Crypto.sign(msg))
-    BluetoothInterface.send(encrypted)
+    val encrypted = crypto.encrypt(crypto.sign(msg))
+    bluetoothInterface.send(encrypted)
     onNewMessage(msg)
   }
 
@@ -141,8 +143,8 @@ class ChatService extends Service {
    * Decrypts and verifies incoming messages, forwards valid ones to [[onNewMessage()]].
    */
   def onMessageReceived(msg: Message): Unit = {
-    val decrypted = Crypto.decrypt(msg)
-    if (!Crypto.verify(decrypted)) {
+    val decrypted = crypto.decrypt(msg)
+    if (!crypto.verify(decrypted)) {
       Log.i(Tag, "Ignoring message with invalid signature from " + msg.Header.Origin)
       return
     }
@@ -160,6 +162,25 @@ class ChatService extends Service {
         Database.changeContactName(contact)
 
       callConnectionListeners()
+    case _: RequestAddContact =>
+      if (msg.Header.Origin == Crypto.getLocalAddress(this))
+        return
+
+      Log.i(Tag, "Remote device " + msg.Header.Origin + 
+        " wants to add us as a contact, showing notification")
+      val intent = new Intent(this, classOf[ConfirmAddContactDialog])
+      intent.putExtra(ConfirmAddContactDialog.ExtraContactAddress, msg.Header.Origin.toString)
+      val pi = PendingIntent.getActivity(this, 0, intent,
+        PendingIntent.FLAG_UPDATE_CURRENT)
+
+      val notification = new Notification.Builder(this)
+        .setContentTitle(getString(R.string.notification_friend_request, getUser(msg.Header.Origin)))
+        .setSmallIcon(R.drawable.ic_launcher)
+        .setContentIntent(pi)
+        .setAutoCancel(true)
+        .build()
+      val nm = getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
+      nm.notify(notificationIdGenerator.iterator.next(), notification)
     case _ =>
       MainHandler.post(new Runnable {
         override def run(): Unit =
@@ -182,19 +203,19 @@ class ChatService extends Service {
    */
   def onConnectionOpened(msg: Message): Boolean = {
     val info = msg.Body.asInstanceOf[ConnectionInfo]
-    val sender = Crypto.calculateAddress(info.key)
+    val sender = crypto.calculateAddress(info.key)
     if (sender == Address.Broadcast || sender == Address.Null) {
       Log.i(Tag, "Ignoring ConnectionInfo message with invalid sender " + sender)
       false
     }
 
-    if (Crypto.havePublicKey(sender) && !Crypto.verify(msg, Crypto.getPublicKey(sender))) {
+    if (crypto.havePublicKey(sender) && !crypto.verify(msg, crypto.getPublicKey(sender))) {
       Log.i(Tag, "Ignoring ConnectionInfo message with invalid signature")
       false
     }
 
-    if (!Crypto.havePublicKey(sender)) {
-      Crypto.addPublicKey(sender, info.key)
+    if (!crypto.havePublicKey(sender)) {
+      crypto.addPublicKey(sender, info.key)
       Log.i(Tag, "Added public key for new device " + sender.toString)
     }
 
@@ -220,12 +241,15 @@ class ChatService extends Service {
    * Returns all direct neighbors.
    */
   def getConnections: Set[User] = {
-    BluetoothInterface.getConnections.map{ address =>
+    bluetoothInterface.getConnections.map{ address =>
       (Database.getContacts ++ connections).find(_.Address == address) match {
         case Some(contact) => contact
         case None          => new User(address, address.toString)
       }
     }
   }
+
+  def getUser(address: Address) =
+    getConnections.find(_.Address == address).getOrElse(new User(address, address.toString))
 
 }

@@ -308,6 +308,4 @@ class Crypto(Context: Context) {
     new Address(hash)
   }
 
-  def getLocalAddress = Crypto.getLocalAddress(Context)
-
 }
