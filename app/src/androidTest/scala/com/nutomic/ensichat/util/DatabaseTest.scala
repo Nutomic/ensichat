@@ -23,60 +23,60 @@ class DatabaseTest extends AndroidTestCase {
 
   private var dbFile: String = _
 
-  private var Database: Database = _
+  private var database: Database = _
 
   override def setUp(): Unit = {
-    Database = new Database(new TestContext(getContext))
-    Database.onMessageReceived(m1)
-    Database.onMessageReceived(m2)
-    Database.onMessageReceived(m3)
+    database = new Database(new TestContext(getContext))
+    database.onMessageReceived(m1)
+    database.onMessageReceived(m2)
+    database.onMessageReceived(m3)
   }
 
   override def tearDown(): Unit = {
     super.tearDown()
-    Database.close()
+    database.close()
     getContext.deleteDatabase(dbFile)
   }
 
   def testMessageCount(): Unit = {
-    val msg1 = Database.getMessages(m1.Header.Origin, 1)
+    val msg1 = database.getMessages(m1.Header.Origin, 1)
     assertEquals(1, msg1.size)
 
-    val msg2 = Database.getMessages(m1.Header.Origin, 3)
+    val msg2 = database.getMessages(m1.Header.Origin, 3)
     assertEquals(2, msg2.size)
   }
 
   def testMessageOrder(): Unit = {
-    val msg = Database.getMessages(m1.Header.Target, 1)
+    val msg = database.getMessages(m1.Header.Target, 1)
     assertTrue(msg.contains(m3))
   }
 
   def testMessageSelect(): Unit = {
-    val msg = Database.getMessages(m1.Header.Target, 2)
+    val msg = database.getMessages(m1.Header.Target, 2)
     assertTrue(msg.contains(m1))
     assertTrue(msg.contains(m3))
   }
 
   def testAddContact(): Unit = {
-    Database.addContact(UserTest.u1)
-    val contacts = Database.getContacts
+    database.addContact(UserTest.u1)
+    val contacts = database.getContacts
     assertEquals(1, contacts.size)
-    assertEquals(Some(UserTest.u1), Database.getContact(UserTest.u1.Address))
+    assertEquals(Some(UserTest.u1), database.getContact(UserTest.u1.Address))
   }
 
   def testAddContactCallback(): Unit = {
     val latch = new CountDownLatch(1)
-    Database.runOnContactsUpdated(() => {
+    database.runOnContactsUpdated(() => {
       latch.countDown()
     })
-    Database.addContact(UserTest.u1)
+    database.addContact(UserTest.u1)
     latch.await()
   }
   
   def testGetContact(): Unit = {
-    Database.addContact(UserTest.u2)
-    assertTrue(Database.getContact(UserTest.u1.Address).isEmpty)
-    val c = Database.getContact(UserTest.u2.Address)
+    database.addContact(UserTest.u2)
+    assertTrue(database.getContact(UserTest.u1.Address).isEmpty)
+    val c = database.getContact(UserTest.u2.Address)
     assertTrue(c.nonEmpty)
     assertEquals(Some(UserTest.u2), c)
   }

@@ -30,20 +30,20 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
 
   private val Tag = "BluetoothInterface"
 
-  private lazy val BtAdapter = BluetoothAdapter.getDefaultAdapter
+  private lazy val btAdapter = BluetoothAdapter.getDefaultAdapter
 
   private var devices = new HashMap[Device.ID, Device]()
 
   private var connections = new HashMap[Device.ID, TransferThread]()
 
-  private lazy val ListenThread =
-    new ListenThread(Service.getString(R.string.app_name), BtAdapter, onConnectionOpened)
+  private lazy val listenThread =
+    new ListenThread(Service.getString(R.string.app_name), btAdapter, onConnectionOpened)
 
   private var cancelDiscovery = false
 
   private var discovered = Set[Device]()
 
-  private val AddressDeviceMap = HashBiMap.create[Address, Device.ID]()
+  private val addressDeviceMap = HashBiMap.create[Address, Device.ID]()
 
   /**
    * Initializes and starts discovery and listening.
@@ -62,7 +62,7 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
    * Stops discovery and listening.
    */
   override def destroy(): Unit = {
-    ListenThread.cancel()
+    listenThread.cancel()
     cancelDiscovery = true
     Service.unregisterReceiver(DeviceDiscoveredReceiver)
     Service.unregisterReceiver(BluetoothStateReceiver)
@@ -73,7 +73,7 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
    * Starts discovery and listening.
    */
   private def startBluetoothConnections(): Unit = {
-    ListenThread.start()
+    listenThread.start()
     cancelDiscovery = false
     discover()
   }
@@ -85,9 +85,9 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
     if (cancelDiscovery)
       return
 
-    if (!BtAdapter.isDiscovering) {
+    if (!btAdapter.isDiscovering) {
       Log.v(Tag, "Starting discovery")
-      BtAdapter.startDiscovery()
+      btAdapter.startDiscovery()
     }
 
     val scanInterval = PreferenceManager.getDefaultSharedPreferences(Service)
@@ -113,9 +113,9 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
     override def onReceive(context: Context, intent: Intent): Unit = {
       discovered.filterNot(d => connections.keySet.contains(d.Id))
         .foreach { d =>
-        new ConnectThread(d, onConnectionOpened).start()
-        devices += (d.Id -> d)
-      }
+          new ConnectThread(d, onConnectionOpened).start()
+          devices += (d.Id -> d)
+        }
       discovered = Set[Device]()
     }
   }
@@ -131,7 +131,7 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
             startBluetoothConnections()
         case BluetoothAdapter.STATE_TURNING_OFF =>
           Log.i(Tag, "Bluetooth disabled, stopping connectivity")
-          ListenThread.cancel()
+          listenThread.cancel()
           cancelDiscovery = true
           connections.foreach(_._2.close())
         case _ =>
@@ -156,9 +156,8 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
   def onConnectionClosed(device: Device, socket: BluetoothSocket): Unit = {
     devices -= device.Id
     connections -= device.Id
-    val inv = AddressDeviceMap.inverse()
     Service.callConnectionListeners()
-    inv.remove(device.Id)
+    addressDeviceMap.inverse().remove(device.Id)
   }
 
   /**
@@ -173,9 +172,9 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
     case info: ConnectionInfo =>
       val address = Crypto.calculateAddress(info.key)
       // Service.onConnectionOpened sends message, so mapping already needs to be in place.
-      AddressDeviceMap.put(address, device)
+      addressDeviceMap.put(address, device)
       if (!Service.onConnectionOpened(msg))
-        AddressDeviceMap.remove(address)
+        addressDeviceMap.remove(address)
     case _ =>
       Service.onMessageReceived(msg)
   }
@@ -183,14 +182,13 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
   /**
    * Sends the message to the target address specified in the message header.
    */
-  override def send(msg: Message): Unit = {
-    connections.apply(AddressDeviceMap.get(msg.Header.Target)).send(msg)
-  }
+  override def send(msg: Message): Unit =
+    connections.apply(addressDeviceMap.get(msg.Header.Target)).send(msg)
 
   /**
    * Returns all active Bluetooth connections.
    */
   def getConnections: Set[Address] =
-    connections.map(x => AddressDeviceMap.inverse().get(x._1)).toSet
+    connections.map(x => addressDeviceMap.inverse().get(x._1)).toSet
 
 }

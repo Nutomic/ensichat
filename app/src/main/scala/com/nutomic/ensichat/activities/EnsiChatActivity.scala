@@ -3,8 +3,7 @@ package com.nutomic.ensichat.activities
 import android.app.Activity
 import android.content.{ComponentName, Context, Intent, ServiceConnection}
 import android.os.{Bundle, IBinder}
-import com.nutomic.ensichat.protocol.ChatService
-import com.nutomic.ensichat.protocol.ChatServiceBinder
+import com.nutomic.ensichat.protocol.{ChatService, ChatServiceBinder}
 
 /**
  * Connects to [[ChatService]] and provides access to it.
@@ -39,7 +38,7 @@ class EnsiChatActivity extends Activity with ServiceConnection {
    */
   override def onServiceConnected(componentName: ComponentName, iBinder: IBinder): Unit = {
     val binder = iBinder.asInstanceOf[ChatServiceBinder]
-    chatService = Option(binder.getService)
+    chatService = Option(binder.Service)
     listeners.foreach(_())
     listeners = Set.empty
   }

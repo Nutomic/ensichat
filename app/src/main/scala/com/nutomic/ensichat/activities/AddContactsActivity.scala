@@ -19,7 +19,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
 
   private val Tag = "AddContactsActivity"
 
-  private lazy val Adapter = new UsersAdapter(this)
+  private lazy val adapter = new UsersAdapter(this)
 
   /**
    * Initializes layout, registers connection and message listeners.
@@ -30,13 +30,13 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
 
     setContentView(R.layout.activity_add_contacts)
     val list = findViewById(android.R.id.list).asInstanceOf[ListView]
-    list.setAdapter(Adapter)
+    list.setAdapter(adapter)
     list.setOnItemClickListener(this)
     list.setEmptyView(findViewById(android.R.id.empty))
 
     runOnServiceConnected(() => {
       service.registerConnectionListener(AddContactsActivity.this)
-      service.Database.runOnContactsUpdated(updateList)
+      service.database.runOnContactsUpdated(updateList)
     })
   }
 
@@ -46,7 +46,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    * Initiates adding the device as contact if it hasn't been added yet.
    */
   override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = {
-    val contact = Adapter.getItem(position)
+    val contact = adapter.getItem(position)
     service.sendTo(contact.Address, new RequestAddContact())
     val intent = new Intent(this, classOf[ConfirmAddContactDialog])
     intent.putExtra(ConfirmAddContactDialog.ExtraContactAddress, contact.Address.toString)
@@ -67,8 +67,8 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
   private def updateList(): Unit ={
     runOnUiThread(new Runnable {
       override def run(): Unit  = {
-        Adapter.clear()
-        (service.getConnections -- service.Database.getContacts).foreach(Adapter.add)
+        adapter.clear()
+        (service.getConnections -- service.database.getContacts).foreach(adapter.add)
       }
     })
   }

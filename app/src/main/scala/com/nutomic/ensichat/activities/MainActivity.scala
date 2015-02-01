@@ -24,7 +24,7 @@ class MainActivity extends EnsiChatActivity {
 
   private val RequestSetDiscoverable = 1
 
-  private var ContactsFragment: ContactsFragment = _
+  private var contactsFragment: ContactsFragment = _
 
   private var currentChat: Option[Address] = None
 
@@ -42,16 +42,16 @@ class MainActivity extends EnsiChatActivity {
 
     val fm = getFragmentManager
     if (savedInstanceState != null) {
-      ContactsFragment = fm.getFragment(savedInstanceState, classOf[ContactsFragment].getName)
+      contactsFragment = fm.getFragment(savedInstanceState, classOf[ContactsFragment].getName)
         .asInstanceOf[ContactsFragment]
       if (savedInstanceState.containsKey("current_chat")) {
         currentChat = Option(new Address(savedInstanceState.getByteArray("current_chat")))
         openChat(currentChat.get)
       }
     } else {
-      ContactsFragment = new ContactsFragment()
+      contactsFragment = new ContactsFragment()
       fm.beginTransaction()
-        .add(android.R.id.content, ContactsFragment)
+        .add(android.R.id.content, contactsFragment)
         .commit()
     }
 
@@ -64,14 +64,14 @@ class MainActivity extends EnsiChatActivity {
    */
   override def onSaveInstanceState(outState: Bundle): Unit = {
     super.onSaveInstanceState(outState)
-    getFragmentManager.putFragment(outState, classOf[ContactsFragment].getName, ContactsFragment)
+    getFragmentManager.putFragment(outState, classOf[ContactsFragment].getName, contactsFragment)
     currentChat.collect{case c => outState.putByteArray("current_chat", c.Bytes)}
   }
 
   /**
    * Exits with error if bluetooth was not enabled/not set discoverable,
    */
-  override def onActivityResult(requestCode: Int, resultCode: Int, data: Intent): Unit = {
+  override def onActivityResult(requestCode: Int, resultCode: Int, data: Intent): Unit = 
     requestCode match {
       case RequestSetDiscoverable =>
         if (resultCode == Activity.RESULT_CANCELED) {
@@ -79,7 +79,6 @@ class MainActivity extends EnsiChatActivity {
           finish()
         }
     }
-  }
 
   /**
    * Opens a chat fragment for the given device, creating the fragment if needed.
@@ -88,21 +87,21 @@ class MainActivity extends EnsiChatActivity {
     currentChat = Some(address)
     getFragmentManager
       .beginTransaction()
-      .detach(ContactsFragment)
+      .detach(contactsFragment)
       .add(android.R.id.content, new ChatFragment(address))
       .commit()
     getActionBar.setDisplayHomeAsUpEnabled(true)
   }
 
   /**
-   * If in a ChatFragment, goes back up to ContactsFragment.
+   * If in a ChatFragment, goes back up to contactsFragment.
    */
   override def onBackPressed(): Unit = {
     if (currentChat != None) {
       getFragmentManager
         .beginTransaction()
         .remove(getFragmentManager.findFragmentById(android.R.id.content))
-        .attach(ContactsFragment)
+        .attach(contactsFragment)
         .commit()
       currentChat = None
       getActionBar.setDisplayHomeAsUpEnabled(false)

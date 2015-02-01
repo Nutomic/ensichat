@@ -2,11 +2,11 @@ package com.nutomic.ensichat.protocol.messages
 
 import java.io.ByteArrayInputStream
 import java.util.GregorianCalendar
-import com.nutomic.ensichat.protocol.messages.MessageHeaderTest._
-import com.nutomic.ensichat.protocol.messages.MessageTest._
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.protocol.{AddressTest, Crypto, messages}
+import com.nutomic.ensichat.protocol.messages.MessageHeaderTest._
+import com.nutomic.ensichat.protocol.messages.MessageTest._
+import com.nutomic.ensichat.protocol.{AddressTest, Crypto}
 import junit.framework.Assert._
 
 import scala.collection.immutable.TreeSet
@@ -25,12 +25,12 @@ object MessageTest {
 
 class MessageTest extends AndroidTestCase {
 
-  lazy val Crypto: Crypto = new Crypto(getContext)
+  private lazy val crypto: Crypto = new Crypto(getContext)
 
   override def setUp(): Unit = {
     super.setUp()
-    if (!Crypto.localKeysExist) {
-      Crypto.generateLocalKeys()
+    if (!crypto.localKeysExist) {
+      crypto.generateLocalKeys()
     }
   }
 
@@ -50,26 +50,26 @@ class MessageTest extends AndroidTestCase {
     val header = new MessageHeader(ConnectionInfo.Type, 0xff, AddressTest.a4, AddressTest.a2, 0, 56)
     val m = new Message(header, ConnectionInfoTest.generateCi(getContext))
 
-    val signed = Crypto.sign(m)
+    val signed = crypto.sign(m)
     val bytes = signed.write
     val read = Message.read(new ByteArrayInputStream(bytes))
 
     assertEquals(signed, read)
-    assertTrue(Crypto.verify(read, Crypto.getLocalPublicKey))
+    assertTrue(crypto.verify(read, crypto.getLocalPublicKey))
   }
 
   def testSerializeEncrypted(): Unit = {
     MessageTest.messages.foreach{ m =>
-      val signed = Crypto.sign(m)
-      val encrypted = Crypto.encrypt(signed, Crypto.getLocalPublicKey)
+      val signed = crypto.sign(m)
+      val encrypted = crypto.encrypt(signed, crypto.getLocalPublicKey)
       val bytes = encrypted.write
 
       val read = Message.read(new ByteArrayInputStream(bytes))
       assertEquals(encrypted.Crypto, read.Crypto)
-      val decrypted = Crypto.decrypt(read)
+      val decrypted = crypto.decrypt(read)
       assertEquals(m.Header, decrypted.Header)
       assertEquals(m.Body, decrypted.Body)
-      assertTrue(Crypto.verify(decrypted, Crypto.getLocalPublicKey))
+      assertTrue(crypto.verify(decrypted, crypto.getLocalPublicKey))
     }
   }
 

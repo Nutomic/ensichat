@@ -15,23 +15,23 @@ import com.nutomic.ensichat.util.UsersAdapter
  */
 class ContactsFragment extends ListFragment {
 
-  private lazy val Adapter = new UsersAdapter(getActivity)
+  private lazy val adapter = new UsersAdapter(getActivity)
 
-  private lazy val Database = getActivity.asInstanceOf[EnsiChatActivity].service.Database
+  private lazy val database = getActivity.asInstanceOf[EnsiChatActivity].service.database
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
 
-    setListAdapter(Adapter)
+    setListAdapter(adapter)
     setHasOptionsMenu(true)
 
     getActivity.asInstanceOf[EnsiChatActivity].runOnServiceConnected(() => {
-      Database.getContacts.foreach(Adapter.add)
-      Database.runOnContactsUpdated(() => {
+      database.getContacts.foreach(adapter.add)
+      database.runOnContactsUpdated(() => {
         getActivity.runOnUiThread(new Runnable {
           override def run(): Unit = {
-            Adapter.clear()
-            Database.getContacts.foreach(Adapter.add)
+            adapter.clear()
+            database.getContacts.foreach(adapter.add)
           }
         })
       })
@@ -47,27 +47,25 @@ class ContactsFragment extends ListFragment {
     inflater.inflate(R.menu.main, menu)
   }
 
-  override def onOptionsItemSelected(item: MenuItem): Boolean = {
-    item.getItemId match {
-      case R.id.add_contact =>
-        startActivity(new Intent(getActivity, classOf[AddContactsActivity]))
-        true
-      case R.id.settings =>
-        startActivity(new Intent(getActivity, classOf[SettingsActivity]))
-        true
-      case R.id.exit =>
-        getActivity.stopService(new Intent(getActivity, classOf[ChatService]))
-        getActivity.finish()
-        true
-      case _ =>
-        super.onOptionsItemSelected(item)
-    }
+  override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
+    case R.id.add_contact =>
+      startActivity(new Intent(getActivity, classOf[AddContactsActivity]))
+      true
+    case R.id.settings =>
+      startActivity(new Intent(getActivity, classOf[SettingsActivity]))
+      true
+    case R.id.exit =>
+      getActivity.stopService(new Intent(getActivity, classOf[ChatService]))
+      getActivity.finish()
+      true
+    case _ =>
+      super.onOptionsItemSelected(item)
   }
 
   /**
    * Opens a chat with the clicked device.
    */
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long): Unit =
-    getActivity.asInstanceOf[MainActivity].openChat(Adapter.getItem(position).Address)
+    getActivity.asInstanceOf[MainActivity].openChat(adapter.getItem(position).Address)
 
 }

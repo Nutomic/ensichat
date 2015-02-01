@@ -27,7 +27,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
 
   private val Tag = "ConfirmAddContactDialog"
 
-  private lazy val User = service.getUser(
+  private lazy val user = service.getUser(
     new Address(getIntent.getStringExtra(ConfirmAddContactDialog.ExtraContactAddress)))
 
   private var localConfirmed = false
@@ -55,11 +55,11 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
     val remoteTitle = view.findViewById(R.id.remote_identicon_title).asInstanceOf[TextView]
 
     local.setImageBitmap(IdenticonGenerator.generate(Crypto.getLocalAddress(this), (150, 150), this))
-    remote.setImageBitmap(IdenticonGenerator.generate(User.Address, (150, 150), this))
-    remoteTitle.setText(getString(R.string.remote_fingerprint_title, User.Name))
+    remote.setImageBitmap(IdenticonGenerator.generate(user.Address, (150, 150), this))
+    remoteTitle.setText(getString(R.string.remote_fingerprint_title, user.Name))
 
     new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AppTheme))
-      .setTitle(getString(R.string.add_contact_dialog, User.Name))
+      .setTitle(getString(R.string.add_contact_dialog, user.Name))
       .setView(view)
       .setCancelable(false)
       .setPositiveButton(android.R.string.yes, this)
@@ -76,7 +76,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
       case DialogInterface.BUTTON_NEGATIVE =>
         false
     }
-    service.sendTo(User.Address, new ResultAddContact(result))
+    service.sendTo(user.Address, new ResultAddContact(result))
   }
 
   /**
@@ -84,10 +84,10 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
    */
   private def addContactIfBothConfirmed(): Unit = {
     if (localConfirmed && remoteConfirmed) {
-      Log.i(Tag, "Adding new contact " + User.toString)
+      Log.i(Tag, "Adding new contact " + user.toString)
       // Get the user again, in case
-      service.Database.addContact(service.getUser(User.Address))
-      Toast.makeText(this, getString(R.string.contact_added, User.Name), Toast.LENGTH_SHORT)
+      service.database.addContact(service.getUser(user.Address))
+      Toast.makeText(this, getString(R.string.contact_added, user.Name), Toast.LENGTH_SHORT)
         .show()
       finish()
     }
@@ -100,17 +100,17 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
    * the user is in this activity.
    */
   override def onMessageReceived(msg: Message): Unit = {
-    if (msg.Header.Origin != User.Address || msg.Header.Target != Crypto.getLocalAddress(this))
+    if (msg.Header.Origin != user.Address || msg.Header.Target != Crypto.getLocalAddress(this))
       return
 
     msg.Body match {
       case m: ResultAddContact =>
         if (m.Accepted) {
-          Log.i(Tag, User.toString + " accepted us as a contact, updating state")
+          Log.i(Tag, user.toString + " accepted us as a contact, updating state")
           remoteConfirmed = true
           addContactIfBothConfirmed()
         } else {
-          Log.i(Tag, User.toString + " denied us as a contact, showing toast")
+          Log.i(Tag, user.toString + " denied us as a contact, showing toast")
           Toast.makeText(this, R.string.contact_not_added, Toast.LENGTH_LONG).show()
           finish()
         }

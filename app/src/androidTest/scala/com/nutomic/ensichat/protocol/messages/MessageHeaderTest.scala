@@ -1,11 +1,9 @@
 package com.nutomic.ensichat.protocol.messages
 
-import java.util.GregorianCalendar
-
 import android.test.AndroidTestCase
+import com.nutomic.ensichat.protocol.messages.MessageHeaderTest._
 import com.nutomic.ensichat.protocol.{Address, AddressTest}
 import junit.framework.Assert._
-import com.nutomic.ensichat.protocol.messages.MessageHeaderTest._
 
 object MessageHeaderTest {
 

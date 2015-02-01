@@ -1,15 +1,12 @@
 package com.nutomic.ensichat.fragments
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.preference.Preference.OnPreferenceChangeListener
-import android.preference.{PreferenceManager, Preference, PreferenceFragment}
-import android.util.Log
+import android.preference.{Preference, PreferenceFragment, PreferenceManager}
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
-import com.nutomic.ensichat.protocol.Address
-import com.nutomic.ensichat.protocol.messages.UserName
 import com.nutomic.ensichat.fragments.SettingsFragment._
+import com.nutomic.ensichat.protocol.messages.UserName
 
 object SettingsFragment {
 
@@ -28,9 +25,9 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
     super.onCreate(savedInstanceState)
 
     addPreferencesFromResource(R.xml.settings)
-    val name = findPreference(KeyUserName)
-    name.setOnPreferenceChangeListener(this)
+    val name         = findPreference(KeyUserName)
     val scanInterval = findPreference(KeyScanInterval)
+    name.setOnPreferenceChangeListener(this)
     scanInterval.setOnPreferenceChangeListener(this)
     
     val pm = PreferenceManager.getDefaultSharedPreferences(getActivity)
@@ -44,7 +41,7 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
   override def onPreferenceChange(preference: Preference, newValue: AnyRef): Boolean = {
     if (preference.getKey == KeyUserName) {
       val service = getActivity.asInstanceOf[EnsiChatActivity].service
-      service.Database.getContacts
+      service.database.getContacts
         .foreach(c => service.sendTo(c.Address, new UserName(newValue.toString)))
     }
     preference.setSummary(newValue.toString)

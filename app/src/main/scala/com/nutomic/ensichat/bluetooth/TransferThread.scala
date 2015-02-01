@@ -23,7 +23,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
 
   private val Tag: String = "TransferThread"
 
-  val InStream: InputStream =
+  val inStream: InputStream =
     try {
       socket.getInputStream
     } catch {
@@ -32,7 +32,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
         null
     }
 
-  val OutStream: OutputStream =
+  val outStream: OutputStream =
     try {
       socket.getOutputStream
     } catch {
@@ -49,8 +49,8 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
 
     while (socket.isConnected) {
       try {
-        if (InStream.available() > 0) {
-          val msg = Message.read(InStream)
+        if (inStream.available() > 0) {
+          val msg = Message.read(inStream)
 
           onReceive(msg, device.Id)
         }
@@ -68,7 +68,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
 
   def send(msg: Message): Unit = {
     try {
-      OutStream.write(msg.write)
+      outStream.write(msg.write)
     } catch {
       case e: IOException => Log.e(Tag, "Failed to write message", e)
     }

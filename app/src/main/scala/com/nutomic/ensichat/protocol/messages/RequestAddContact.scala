@@ -20,7 +20,7 @@ object RequestAddContact {
  */
 case class RequestAddContact() extends MessageBody {
 
-  override def Type = RequestAddContact.Type
+  override def messageType = RequestAddContact.Type
 
   override def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)

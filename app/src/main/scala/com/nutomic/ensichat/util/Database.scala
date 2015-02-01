@@ -4,7 +4,6 @@ import java.util.Date
 
 import android.content.{ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
-import android.util.Log
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol._
 import com.nutomic.ensichat.protocol.messages._

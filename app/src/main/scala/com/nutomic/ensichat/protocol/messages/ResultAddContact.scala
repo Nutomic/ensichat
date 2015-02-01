@@ -25,7 +25,7 @@ object ResultAddContact {
  */
 case class ResultAddContact(Accepted: Boolean) extends MessageBody {
 
-  override def Type = ResultAddContact.Type
+  override def messageType = ResultAddContact.Type
 
   override def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)

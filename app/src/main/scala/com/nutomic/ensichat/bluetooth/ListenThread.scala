@@ -15,7 +15,7 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
 
   private val Tag: String = "ListenThread"
 
-  private val ServerSocket: BluetoothServerSocket =
+  private val serverSocket: BluetoothServerSocket =
     try {
       adapter.listenUsingInsecureRfcommWithServiceRecord(name, BluetoothInterface.AppUuid)
     } catch {
@@ -32,7 +32,7 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
       try {
         // This is a blocking call and will only return on a
         // successful connection or an exception
-        socket = ServerSocket.accept()
+        socket = serverSocket.accept()
       } catch {
         case e: IOException =>
           // This happens if Bluetooth is disabled manually.
@@ -49,7 +49,7 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
   def cancel(): Unit = {
     Log.i(Tag, "Canceling listening")
     try {
-      ServerSocket.close()
+      serverSocket.close()
     } catch {
       case e: IOException =>
         Log.e(Tag, "Failed to close listener", e)

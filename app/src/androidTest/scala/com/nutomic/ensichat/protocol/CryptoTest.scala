@@ -6,19 +6,19 @@ import junit.framework.Assert._
 
 class CryptoTest extends AndroidTestCase {
 
-  lazy val Crypto: Crypto = new Crypto(getContext)
+  private lazy val crypto: Crypto = new Crypto(getContext)
 
   override def setUp(): Unit = {
     super.setUp()
-    if (!Crypto.localKeysExist) {
-      Crypto.generateLocalKeys()
+    if (!crypto.localKeysExist) {
+      crypto.generateLocalKeys()
     }
   }
 
   def testSignVerify(): Unit = {
     MessageTest.messages.foreach { m =>
-      val signed = Crypto.sign(m)
-      assertTrue(Crypto.verify(signed, Crypto.getLocalPublicKey))
+      val signed = crypto.sign(m)
+      assertTrue(crypto.verify(signed, crypto.getLocalPublicKey))
       assertEquals(m.Header, signed.Header)
       assertEquals(m.Body, signed.Body)
     }
@@ -26,8 +26,8 @@ class CryptoTest extends AndroidTestCase {
 
   def testEncryptDecrypt(): Unit = {
     MessageTest.messages.foreach{ m =>
-      val encrypted = Crypto.encrypt(Crypto.sign(m), Crypto.getLocalPublicKey)
-      val decrypted = Crypto.decrypt(encrypted)
+      val encrypted = crypto.encrypt(crypto.sign(m), crypto.getLocalPublicKey)
+      val decrypted = crypto.decrypt(encrypted)
       assertEquals(m.Body, decrypted.Body)
       assertEquals(m.Header, encrypted.Header)
     }

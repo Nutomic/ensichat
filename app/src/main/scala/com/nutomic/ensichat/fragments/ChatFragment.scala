@@ -9,12 +9,10 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
-import com.nutomic.ensichat.protocol.{User, ChatService, Address}
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.messages.{Message, Text}
-import com.nutomic.ensichat.util.{Database, MessagesAdapter}
-
-import scala.collection.SortedSet
+import com.nutomic.ensichat.protocol.{Address, ChatService}
+import com.nutomic.ensichat.util.MessagesAdapter
 
 /**
  * Represents a single chat with another specific device.
@@ -49,13 +47,13 @@ class ChatFragment extends ListFragment with OnClickListener
     activity.runOnServiceConnected(() => {
       chatService = activity.service
 
-      chatService.Database.getContact(address)
+      chatService.database.getContact(address)
         .foreach(c => getActivity.setTitle(c.Name))
 
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, address)
       chatService.registerMessageListener(ChatFragment.this)
-      chatService.Database.getMessages(address, 15).foreach(adapter.add)
+      chatService.database.getMessages(address, 15).foreach(adapter.add)
 
       if (listView != null) {
         listView.setAdapter(adapter)
@@ -86,9 +84,8 @@ class ChatFragment extends ListFragment with OnClickListener
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
 
-    if (savedInstanceState != null) {
+    if (savedInstanceState != null)
       address = new Address(savedInstanceState.getByteArray("device"))
-    }
   }
 
   override def onSaveInstanceState(outState: Bundle): Unit = {

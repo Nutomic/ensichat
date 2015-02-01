@@ -1,7 +1,6 @@
 package com.nutomic.ensichat.protocol.messages
 
 import java.nio.ByteBuffer
-import java.util.Date
 
 import com.nutomic.ensichat.protocol.{Address, BufferUtils}
 

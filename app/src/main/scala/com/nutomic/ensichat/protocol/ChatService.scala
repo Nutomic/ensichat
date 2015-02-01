@@ -51,11 +51,11 @@ class ChatService extends Service {
 
   private val Tag = "ChatService"
 
-  lazy val Database = new Database(this)
+  lazy val database = new Database(this)
 
   val MainHandler = new Handler()
 
-  private lazy val Binder = new ChatServiceBinder(this)
+  private lazy val binder = new ChatServiceBinder(this)
 
   private lazy val crypto = new Crypto(this)
 
@@ -90,7 +90,7 @@ class ChatService extends Service {
       pm.edit().putString(SettingsFragment.KeyUserName,
         BluetoothAdapter.getDefaultAdapter.getName).apply()
 
-    registerMessageListener(Database)
+    registerMessageListener(database)
 
     Future {
       crypto.generateLocalKeys()
@@ -106,7 +106,7 @@ class ChatService extends Service {
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int) = Service.START_STICKY
 
-  override def onBind(intent: Intent) =  Binder
+  override def onBind(intent: Intent) =  binder
 
   /**
    * Registers a listener that is called whenever a new message is sent or received.
@@ -130,7 +130,7 @@ class ChatService extends Service {
     if (!bluetoothInterface.getConnections.contains(target))
       return
 
-    val header = new MessageHeader(body.Type, MessageHeader.DefaultHopLimit,
+    val header = new MessageHeader(body.messageType, MessageHeader.DefaultHopLimit,
       Crypto.getLocalAddress(this), target, 0, 0)
 
     val msg = new Message(header, body)
@@ -158,8 +158,8 @@ class ChatService extends Service {
     case name: UserName =>
       val contact = new User(msg.Header.Origin, name.Name)
       connections += contact
-      if (Database.getContact(msg.Header.Origin).nonEmpty)
-        Database.changeContactName(contact)
+      if (database.getContact(msg.Header.Origin).nonEmpty)
+        database.changeContactName(contact)
 
       callConnectionListeners()
     case _: RequestAddContact =>
@@ -242,7 +242,7 @@ class ChatService extends Service {
    */
   def getConnections: Set[User] = {
     bluetoothInterface.getConnections.map{ address =>
-      (Database.getContacts ++ connections).find(_.Address == address) match {
+      (database.getContacts ++ connections).find(_.Address == address) match {
         case Some(contact) => contact
         case None          => new User(address, address.toString)
       }

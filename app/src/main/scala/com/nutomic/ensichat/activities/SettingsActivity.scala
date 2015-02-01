@@ -38,7 +38,7 @@ class SettingsActivity extends EnsiChatActivity {
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
       case android.R.id.home =>
         NavUtils.navigateUpFromSameTask(this)
-        true;
+        true
       case _ =>
         super.onOptionsItemSelected(item);
   }

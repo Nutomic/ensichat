@@ -26,8 +26,7 @@ object UserName {
  */
 case class UserName(Name: String) extends MessageBody {
 
-  override def Type = UserName.Type
-
+  override def messageType = UserName.Type
 
   override def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)

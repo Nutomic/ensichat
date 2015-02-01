@@ -1,9 +1,8 @@
 package com.nutomic.ensichat.protocol.messages
 
 import java.nio.ByteBuffer
-import java.util.Arrays
+import java.util
 
-import android.util.Log
 import com.nutomic.ensichat.protocol.BufferUtils
 
 object CryptoData {
@@ -40,8 +39,8 @@ object CryptoData {
 case class CryptoData(Signature: Option[Array[Byte]], Key: Option[Array[Byte]]) {
 
   override def equals(a: Any): Boolean = a match {
-    case o: CryptoData =>
-      Arrays.equals(Signature.orNull, o.Signature.orNull) && Arrays.equals(Key.orNull, o.Key.orNull)
+    case o: CryptoData => util.Arrays.equals(Signature.orNull, o.Signature.orNull) && 
+      util.Arrays.equals(Key.orNull, o.Key.orNull)
     case _ => false
   }
 
