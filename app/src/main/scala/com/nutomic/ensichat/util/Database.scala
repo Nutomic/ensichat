@@ -7,8 +7,9 @@ import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol._
 import com.nutomic.ensichat.protocol.messages._
+import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 
-import scala.collection.SortedSet
+import scala.collection.{mutable, SortedSet}
 import scala.collection.immutable.TreeSet
 
 object Database {
@@ -29,6 +30,10 @@ object Database {
     "address text not null," +
     "name text not null)"
 
+  trait OnContactsUpdatedListener {
+    def onContactsUpdated()
+  }
+
 }
 
 /**
@@ -38,7 +43,8 @@ class Database(context: Context)
   extends SQLiteOpenHelper(context, Database.DatabaseName, null, Database.DatabaseVersion)
   with OnMessageReceivedListener {
 
-  private var contactsUpdatedListeners = Set[() => Unit]()
+  private var contactsUpdatedListeners =
+    new mutable.WeakHashMap[OnContactsUpdatedListener, Unit].keySet
 
   override def onCreate(db: SQLiteDatabase): Unit = {
     db.execSQL(Database.CreateContactsTable)
@@ -127,20 +133,21 @@ class Database(context: Context)
     cv.put("address", contact.Address.toString)
     cv.put("name", contact.Name.toString)
     getWritableDatabase.insert("contacts", null, cv)
-    contactsUpdatedListeners.foreach(_())
+    contactsUpdatedListeners.foreach(_.onContactsUpdated()    )
   }
   
   def changeContactName(contact: User): Unit = {
     val cv = new ContentValues()
     cv.put("name", contact.Name.toString)
     getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.Address.toString))
-    contactsUpdatedListeners.foreach(_())
+    contactsUpdatedListeners.foreach(_.onContactsUpdated())
   }
 
   /**
    * Pass a callback that is called whenever a new contact is added.
    */
-  def runOnContactsUpdated(l: () => Unit): Unit = contactsUpdatedListeners += l
+  def runOnContactsUpdated(listener: OnContactsUpdatedListener) =
+    contactsUpdatedListeners += listener
 
   override def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int): Unit = {
   }

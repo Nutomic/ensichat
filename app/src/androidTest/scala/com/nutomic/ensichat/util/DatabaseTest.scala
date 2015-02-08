@@ -9,6 +9,7 @@ import android.test.AndroidTestCase
 import android.test.mock.MockContext
 import com.nutomic.ensichat.protocol.UserTest
 import com.nutomic.ensichat.protocol.messages.MessageTest._
+import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import junit.framework.Assert._
 
 class DatabaseTest extends AndroidTestCase {
@@ -66,8 +67,8 @@ class DatabaseTest extends AndroidTestCase {
 
   def testAddContactCallback(): Unit = {
     val latch = new CountDownLatch(1)
-    database.runOnContactsUpdated(() => {
-      latch.countDown()
+    database.runOnContactsUpdated(new OnContactsUpdatedListener {
+      override def onContactsUpdated() = latch.countDown()
     })
     database.addContact(UserTest.u1)
     latch.await()

@@ -9,13 +9,14 @@ import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.protocol.ChatService
 import com.nutomic.ensichat.protocol.messages.RequestAddContact
+import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import com.nutomic.ensichat.util.UsersAdapter
 
 /**
  * Lists all nearby, connected devices and allows adding them to be added as contacts.
  */
 class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnectionsChangedListener
-  with OnItemClickListener {
+  with OnItemClickListener with OnContactsUpdatedListener {
 
   private val Tag = "AddContactsActivity"
 
@@ -36,11 +37,11 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
 
     runOnServiceConnected(() => {
       service.registerConnectionListener(AddContactsActivity.this)
-      service.database.runOnContactsUpdated(updateList)
+      service.database.runOnContactsUpdated(this)
     })
   }
 
-  override def onConnectionsChanged() = updateList()
+  override def onConnectionsChanged() = onContactsUpdated()
 
   /**
    * Initiates adding the device as contact if it hasn't been added yet.
@@ -64,7 +65,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
   /**
    * Fetches connections and displays them (excluding contacts).
    */
-  private def updateList(): Unit ={
+  override def onContactsUpdated(): Unit ={
     runOnUiThread(new Runnable {
       override def run(): Unit  = {
         adapter.clear()
