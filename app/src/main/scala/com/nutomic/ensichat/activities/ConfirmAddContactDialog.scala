@@ -64,6 +64,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
       .setCancelable(false)
       .setPositiveButton(android.R.string.yes, this)
       .setNegativeButton(android.R.string.no, this)
+      .setCancelable(false)
       .show()
   }
 
@@ -74,6 +75,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
         addContactIfBothConfirmed()
         true
       case DialogInterface.BUTTON_NEGATIVE =>
+        finish()
         false
     }
     service.sendTo(user.Address, new ResultAddContact(result))
@@ -85,7 +87,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
   private def addContactIfBothConfirmed(): Unit = {
     if (localConfirmed && remoteConfirmed) {
       Log.i(Tag, "Adding new contact " + user.toString)
-      // Get the user again, in case
+      // Get the user again, in case it was updated in the mean time.
       service.database.addContact(service.getUser(user.Address))
       Toast.makeText(this, getString(R.string.contact_added, user.Name), Toast.LENGTH_SHORT)
         .show()
