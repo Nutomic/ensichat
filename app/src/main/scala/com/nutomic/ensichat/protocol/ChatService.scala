@@ -100,7 +100,7 @@ class ChatService extends Service {
       crypto.generateLocalKeys()
 
       btInterface.create()
-      Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress(this))
+      Log.i(Tag, "Service started, address is " + crypto.localAddress)
     }
   }
 
@@ -135,7 +135,7 @@ class ChatService extends Service {
       return
 
     val header = new MessageHeader(body.messageType, MessageHeader.DefaultHopLimit,
-      Crypto.getLocalAddress(this), target, seqNumGenerator.next())
+      crypto.localAddress, target, seqNumGenerator.next())
 
     val msg = new Message(header, body)
     val encrypted = crypto.encrypt(crypto.sign(msg))
@@ -150,7 +150,7 @@ class ChatService extends Service {
    * Decrypts and verifies incoming messages, forwards valid ones to [[onNewMessage()]].
    */
   def onMessageReceived(msg: Message): Unit = {
-    if (msg.Header.target == Crypto.getLocalAddress(this)) {
+    if (msg.Header.target == crypto.localAddress) {
       val decrypted = crypto.decrypt(msg)
       if (!crypto.verify(decrypted)) {
         Log.i(Tag, "Ignoring message with invalid signature from " + msg.Header.origin)
@@ -174,7 +174,7 @@ class ChatService extends Service {
 
       callConnectionListeners()
     case _: RequestAddContact =>
-      if (msg.Header.origin == Crypto.getLocalAddress(this))
+      if (msg.Header.origin == crypto.localAddress)
         return
 
       Log.i(Tag, "Remote device " + msg.Header.origin +

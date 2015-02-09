@@ -34,6 +34,8 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
 
   private var remoteConfirmed = false
 
+  private lazy val crypto = new Crypto(this)
+
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
 
@@ -54,7 +56,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
     val remote      = view.findViewById(R.id.remote_identicon).asInstanceOf[ImageView]
     val remoteTitle = view.findViewById(R.id.remote_identicon_title).asInstanceOf[TextView]
 
-    local.setImageBitmap(IdenticonGenerator.generate(Crypto.getLocalAddress(this), (150, 150), this))
+    local.setImageBitmap(IdenticonGenerator.generate(crypto.localAddress, (150, 150), this))
     remote.setImageBitmap(IdenticonGenerator.generate(user.address, (150, 150), this))
     remoteTitle.setText(getString(R.string.remote_fingerprint_title, user.name))
 
@@ -102,7 +104,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
    * the user is in this activity.
    */
   override def onMessageReceived(msg: Message): Unit = {
-    if (msg.Header.origin != user.address || msg.Header.target != Crypto.getLocalAddress(this))
+    if (msg.Header.origin != user.address || msg.Header.target != crypto.localAddress)
       return
 
     msg.Body match {

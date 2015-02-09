@@ -47,11 +47,9 @@ object Crypto {
 
   private val LocalAddressKey = "local_address"
 
-  /**
-   * Returns the address of the local node.
-   */
-  def getLocalAddress(context: Context) = new Address(
-      PreferenceManager.getDefaultSharedPreferences(context).getString(LocalAddressKey, null))
+  private val PrivateKeyAlias = "local-private"
+
+  private val PublicKeyAlias = "local-public"
 
 }
 
@@ -61,13 +59,9 @@ object Crypto {
  * @note We can't use [[KeyStore]], because it requires certificates, and does not work for
  *       private keys
  */
-class Crypto(Context: Context) {
+class Crypto(context: Context) {
 
   private val Tag = "Crypto"
-
-  private val PrivateKeyAlias = "local-private"
-
-  private val PublicKeyAlias = "local-public"
 
   PRNGFixes.apply()
 
@@ -92,7 +86,7 @@ class Crypto(Context: Context) {
       // The hash must have at least one bit set to not collide with the broadcast address.
     } while(address == Address.Broadcast || address == Address.Null)
 
-    PreferenceManager.getDefaultSharedPreferences(Context)
+    PreferenceManager.getDefaultSharedPreferences(context)
       .edit()
       .putString(Crypto.LocalAddressKey, address.toString)
       .commit()
@@ -226,7 +220,7 @@ class Crypto(Context: Context) {
   /**
    * Returns the folder where keys are stored.
    */
-  private def keyFolder = new File(Context.getFilesDir, "keys")
+  private def keyFolder = new File(context.getFilesDir, "keys")
 
   def encrypt(msg: Message, key: PublicKey = null): Message = {
     assert(msg.Crypto.signature.isDefined, "Message must be signed before encryption")
@@ -307,5 +301,11 @@ class Crypto(Context: Context) {
     val hash = md.digest(key.getEncoded)
     new Address(hash)
   }
+
+  /**
+   * Returns the address of the local node.
+   */
+  def localAddress = new Address(
+    PreferenceManager.getDefaultSharedPreferences(context).getString(LocalAddressKey, null))
 
 }
