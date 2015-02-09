@@ -48,9 +48,9 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    */
   override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = {
     val contact = adapter.getItem(position)
-    service.sendTo(contact.Address, new RequestAddContact())
+    service.sendTo(contact.address, new RequestAddContact())
     val intent = new Intent(this, classOf[ConfirmAddContactDialog])
-    intent.putExtra(ConfirmAddContactDialog.ExtraContactAddress, contact.Address.toString)
+    intent.putExtra(ConfirmAddContactDialog.ExtraContactAddress, contact.address.toString)
     startActivity(intent)
   }
 

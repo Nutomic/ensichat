@@ -26,7 +26,7 @@ object Message {
       stream.read(headerBytes, 0, MessageHeader.Length)
       val header = MessageHeader.read(headerBytes)
 
-      val contentLength = (header.Length - MessageHeader.Length).toInt
+      val contentLength = (header.length - MessageHeader.Length).toInt
       val contentBytes = new Array[Byte](contentLength)
       var numRead = 0
       do {
@@ -36,7 +36,7 @@ object Message {
       val (crypto, remaining) = CryptoData.read(contentBytes)
 
       val body =
-        header.MessageType match {
+        header.messageType match {
           case ConnectionInfo.Type => ConnectionInfo.read(remaining)
           case _ => new EncryptedBody(remaining)
         }

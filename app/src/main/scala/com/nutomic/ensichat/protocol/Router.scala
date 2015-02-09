@@ -10,7 +10,7 @@ class Router(activeConnections: () => Set[Address], send: (Address, Message) => 
   private var messageSeen = Set[(Address, Int)]()
 
   def onReceive(msg: Message): Unit = {
-    val info = (msg.Header.Origin, msg.Header.SeqNum)
+    val info = (msg.Header.origin, msg.Header.seqNum)
     if (messageSeen.contains(info))
       return
 

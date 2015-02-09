@@ -24,18 +24,18 @@ object UserName {
 /**
  * Holds the display name of the sender.
  */
-case class UserName(Name: String) extends MessageBody {
+case class UserName(name: String) extends MessageBody {
 
   override def messageType = UserName.Type
 
   override def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)
-    val bytes = Name.getBytes(Message.Charset)
+    val bytes = name.getBytes(Message.Charset)
     BufferUtils.putUnsignedInt(b, bytes.length)
     b.put(bytes)
     b.array()
   }
 
-  override def length = 4 + Name.getBytes(Message.Charset).length
+  override def length = 4 + name.getBytes(Message.Charset).length
 
 }

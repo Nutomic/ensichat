@@ -38,7 +38,7 @@ class EnsiChatActivity extends Activity with ServiceConnection {
    */
   override def onServiceConnected(componentName: ComponentName, iBinder: IBinder): Unit = {
     val binder = iBinder.asInstanceOf[ChatServiceBinder]
-    chatService = Option(binder.Service)
+    chatService = Option(binder.service)
     listeners.foreach(_())
     listeners = Set.empty
   }

@@ -65,7 +65,7 @@ class MainActivity extends EnsiChatActivity {
   override def onSaveInstanceState(outState: Bundle): Unit = {
     super.onSaveInstanceState(outState)
     getFragmentManager.putFragment(outState, classOf[ContactsFragment].getName, contactsFragment)
-    currentChat.collect{case c => outState.putByteArray("current_chat", c.Bytes)}
+    currentChat.collect{case c => outState.putByteArray("current_chat", c.bytes)}
   }
 
   /**

@@ -55,11 +55,11 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
     val remoteTitle = view.findViewById(R.id.remote_identicon_title).asInstanceOf[TextView]
 
     local.setImageBitmap(IdenticonGenerator.generate(Crypto.getLocalAddress(this), (150, 150), this))
-    remote.setImageBitmap(IdenticonGenerator.generate(user.Address, (150, 150), this))
-    remoteTitle.setText(getString(R.string.remote_fingerprint_title, user.Name))
+    remote.setImageBitmap(IdenticonGenerator.generate(user.address, (150, 150), this))
+    remoteTitle.setText(getString(R.string.remote_fingerprint_title, user.name))
 
     new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AppTheme))
-      .setTitle(getString(R.string.add_contact_dialog, user.Name))
+      .setTitle(getString(R.string.add_contact_dialog, user.name))
       .setView(view)
       .setCancelable(false)
       .setPositiveButton(android.R.string.yes, this)
@@ -78,7 +78,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
         finish()
         false
     }
-    service.sendTo(user.Address, new ResultAddContact(result))
+    service.sendTo(user.address, new ResultAddContact(result))
   }
 
   /**
@@ -88,8 +88,8 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
     if (localConfirmed && remoteConfirmed) {
       Log.i(Tag, "Adding new contact " + user.toString)
       // Get the user again, in case it was updated in the mean time.
-      service.database.addContact(service.getUser(user.Address))
-      Toast.makeText(this, getString(R.string.contact_added, user.Name), Toast.LENGTH_SHORT)
+      service.database.addContact(service.getUser(user.address))
+      Toast.makeText(this, getString(R.string.contact_added, user.name), Toast.LENGTH_SHORT)
         .show()
       finish()
     }
@@ -102,12 +102,12 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
    * the user is in this activity.
    */
   override def onMessageReceived(msg: Message): Unit = {
-    if (msg.Header.Origin != user.Address || msg.Header.Target != Crypto.getLocalAddress(this))
+    if (msg.Header.origin != user.address || msg.Header.target != Crypto.getLocalAddress(this))
       return
 
     msg.Body match {
       case m: ResultAddContact =>
-        if (m.Accepted) {
+        if (m.accepted) {
           Log.i(Tag, user.toString + " accepted us as a contact, updating state")
           remoteConfirmed = true
           addContactIfBothConfirmed()

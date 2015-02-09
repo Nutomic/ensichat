@@ -82,8 +82,8 @@ class Database(context: Context)
   override def onMessageReceived(msg: Message): Unit = msg.Body match {
     case text: Text =>
       val cv =  new ContentValues()
-      cv.put("origin", msg.Header.Origin.toString)
-      cv.put("target", msg.Header.Target.toString)
+      cv.put("origin", msg.Header.origin.toString)
+      cv.put("target", msg.Header.target.toString)
       // toString used as workaround for compile error with Long.
       cv.put("date", text.time.getTime.toString)
       cv.put("text", text.text)
@@ -130,16 +130,16 @@ class Database(context: Context)
    */
   def addContact(contact: User): Unit = {
     val cv = new ContentValues()
-    cv.put("address", contact.Address.toString)
-    cv.put("name", contact.Name.toString)
+    cv.put("address", contact.address.toString)
+    cv.put("name", contact.name.toString)
     getWritableDatabase.insert("contacts", null, cv)
     contactsUpdatedListeners.foreach(_.onContactsUpdated()    )
   }
   
   def changeContactName(contact: User): Unit = {
     val cv = new ContentValues()
-    cv.put("name", contact.Name.toString)
-    getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.Address.toString))
+    cv.put("name", contact.name.toString)
+    getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.address.toString))
     contactsUpdatedListeners.foreach(_.onContactsUpdated())
   }
 

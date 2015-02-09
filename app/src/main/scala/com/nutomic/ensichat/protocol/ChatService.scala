@@ -17,7 +17,6 @@ import com.nutomic.ensichat.util.Database
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.ref.WeakReference
 
 object ChatService {
 
@@ -151,10 +150,10 @@ class ChatService extends Service {
    * Decrypts and verifies incoming messages, forwards valid ones to [[onNewMessage()]].
    */
   def onMessageReceived(msg: Message): Unit = {
-    if (msg.Header.Target == Crypto.getLocalAddress(this)) {
+    if (msg.Header.target == Crypto.getLocalAddress(this)) {
       val decrypted = crypto.decrypt(msg)
       if (!crypto.verify(decrypted)) {
-        Log.i(Tag, "Ignoring message with invalid signature from " + msg.Header.Origin)
+        Log.i(Tag, "Ignoring message with invalid signature from " + msg.Header.origin)
         return
       }
       onNewMessage(decrypted)
@@ -168,25 +167,25 @@ class ChatService extends Service {
    */
   private def onNewMessage(msg: Message): Unit = msg.Body match {
     case name: UserName =>
-      val contact = new User(msg.Header.Origin, name.Name)
+      val contact = new User(msg.Header.origin, name.name)
       knownUsers += contact
-      if (database.getContact(msg.Header.Origin).nonEmpty)
+      if (database.getContact(msg.Header.origin).nonEmpty)
         database.changeContactName(contact)
 
       callConnectionListeners()
     case _: RequestAddContact =>
-      if (msg.Header.Origin == Crypto.getLocalAddress(this))
+      if (msg.Header.origin == Crypto.getLocalAddress(this))
         return
 
-      Log.i(Tag, "Remote device " + msg.Header.Origin + 
+      Log.i(Tag, "Remote device " + msg.Header.origin +
         " wants to add us as a contact, showing notification")
       val intent = new Intent(this, classOf[ConfirmAddContactDialog])
-      intent.putExtra(ConfirmAddContactDialog.ExtraContactAddress, msg.Header.Origin.toString)
+      intent.putExtra(ConfirmAddContactDialog.ExtraContactAddress, msg.Header.origin.toString)
       val pi = PendingIntent.getActivity(this, 0, intent,
         PendingIntent.FLAG_UPDATE_CURRENT)
 
       val notification = new Notification.Builder(this)
-        .setContentTitle(getString(R.string.notification_friend_request, getUser(msg.Header.Origin)))
+        .setContentTitle(getString(R.string.notification_friend_request, getUser(msg.Header.origin)))
         .setSmallIcon(R.drawable.ic_launcher)
         .setContentIntent(pi)
         .setAutoCancel(true)
@@ -259,6 +258,6 @@ class ChatService extends Service {
     btInterface.getConnections
 
   def getUser(address: Address) =
-    knownUsers.find(_.Address == address).getOrElse(new User(address, address.toString))
+    knownUsers.find(_.address == address).getOrElse(new User(address, address.toString))
 
 }

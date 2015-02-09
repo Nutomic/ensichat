@@ -29,7 +29,7 @@ class MessageHeaderTest extends AndroidTestCase {
       val bytes = h.write(0)
       val header = MessageHeader.read(bytes)
       assertEquals(h, header)
-      assertEquals(bytes.length, header.Length)
+      assertEquals(bytes.length, header.length)
     }
   }
 

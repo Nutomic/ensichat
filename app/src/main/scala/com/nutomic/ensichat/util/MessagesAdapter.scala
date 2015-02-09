@@ -26,7 +26,7 @@ class MessagesAdapter(context: Context, remoteAddress: Address) extends
 
     val lp = new RelativeLayout.LayoutParams(tv.getLayoutParams)
     val margin = (MessageMargin * context.getResources.getDisplayMetrics.density).toInt
-    if (getItem(position).Header.Origin != remoteAddress) {
+    if (getItem(position).Header.origin != remoteAddress) {
       view.setGravity(Gravity.RIGHT)
       lp.setMargins(margin, 0, 0, 0)
     } else {

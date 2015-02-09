@@ -32,7 +32,7 @@ class AddressTest extends AndroidTestCase {
     }
 
     assertEquals(a1, new Address(a1Binary))
-    assertEquals(a1Binary.deep, a1.Bytes.deep)
+    assertEquals(a1Binary.deep, a1.bytes.deep)
   }
 
 }

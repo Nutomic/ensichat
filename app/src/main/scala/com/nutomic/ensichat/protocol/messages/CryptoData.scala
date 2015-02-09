@@ -36,11 +36,11 @@ object CryptoData {
 /**
  * Holds the signature and (optional) key that are stored in a message.
  */
-case class CryptoData(Signature: Option[Array[Byte]], Key: Option[Array[Byte]]) {
+case class CryptoData(signature: Option[Array[Byte]], key: Option[Array[Byte]]) {
 
   override def equals(a: Any): Boolean = a match {
-    case o: CryptoData => util.Arrays.equals(Signature.orNull, o.Signature.orNull) && 
-      util.Arrays.equals(Key.orNull, o.Key.orNull)
+    case o: CryptoData => util.Arrays.equals(signature.orNull, o.signature.orNull) &&
+      util.Arrays.equals(key.orNull, o.key.orNull)
     case _ => false
   }
 
@@ -49,15 +49,15 @@ case class CryptoData(Signature: Option[Array[Byte]], Key: Option[Array[Byte]]) 
    */
   def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)
-    BufferUtils.putUnsignedShort(b, Signature.get.length)
+    BufferUtils.putUnsignedShort(b, signature.get.length)
     BufferUtils.putUnsignedShort(b, keyLength)
-    b.put(Signature.get)
-    if (Key.nonEmpty) b.put(Key.get)
+    b.put(signature.get)
+    if (key.nonEmpty) b.put(key.get)
     b.array()
   }
 
-  def length = 4 + Signature.get.length + keyLength
+  def length = 4 + signature.get.length + keyLength
 
-  private def keyLength = if (Key.isDefined) Key.get.length else 0
+  private def keyLength = if (key.isDefined) key.get.length else 0
 
 }

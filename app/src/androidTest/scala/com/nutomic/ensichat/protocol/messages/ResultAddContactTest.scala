@@ -11,7 +11,7 @@ class ResultAddContactTest extends AndroidTestCase {
       val rac = new ResultAddContact(a)
       val bytes = rac.write
       val read = ResultAddContact.read(bytes)
-      assertEquals(a, read.Accepted)
+      assertEquals(a, read.accepted)
     }
   }
 

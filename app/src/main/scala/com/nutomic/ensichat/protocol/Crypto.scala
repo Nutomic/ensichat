@@ -141,11 +141,11 @@ class Crypto(Context: Context) {
   def verify(msg: Message, key: PublicKey = null): Boolean = {
     val publicKey =
       if (key != null) key
-      else loadKey(msg.Header.Origin.toString, classOf[PublicKey])
+      else loadKey(msg.Header.origin.toString, classOf[PublicKey])
     val sig = Signature.getInstance(SignAlgorithm)
     sig.initVerify(publicKey)
     sig.update(msg.Body.write)
-    sig.verify(msg.Crypto.Signature.get)
+    sig.verify(msg.Crypto.signature.get)
   }
 
   /**
@@ -229,7 +229,7 @@ class Crypto(Context: Context) {
   private def keyFolder = new File(Context.getFilesDir, "keys")
 
   def encrypt(msg: Message, key: PublicKey = null): Message = {
-    assert(msg.Crypto.Signature.isDefined, "Message must be signed before encryption")
+    assert(msg.Crypto.signature.isDefined, "Message must be signed before encryption")
 
     // Symmetric encryption of data
     val secretKey = makeSecretKey()
@@ -240,25 +240,25 @@ class Crypto(Context: Context) {
     // Asymmetric encryption of secret key
     val publicKey =
       if (key != null) key
-      else loadKey(msg.Header.Target.toString, classOf[PublicKey])
+      else loadKey(msg.Header.target.toString, classOf[PublicKey])
     val asymmetricCipher = Cipher.getInstance(KeyAlgorithm)
     asymmetricCipher.init(Cipher.WRAP_MODE, publicKey)
 
     new Message(msg.Header,
-      new CryptoData(msg.Crypto.Signature, Option(asymmetricCipher.wrap(secretKey))), encrypted)
+      new CryptoData(msg.Crypto.signature, Option(asymmetricCipher.wrap(secretKey))), encrypted)
   }
 
   def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
     val asymmetricCipher = Cipher.getInstance(KeyAlgorithm)
     asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))
-    val key = asymmetricCipher.unwrap(msg.Crypto.Key.get, SymmetricKeyAlgorithm, Cipher.SECRET_KEY)
+    val key = asymmetricCipher.unwrap(msg.Crypto.key.get, SymmetricKeyAlgorithm, Cipher.SECRET_KEY)
 
     // Symmetric decryption of data
     val symmetricCipher = Cipher.getInstance(SymmetricCipherAlgorithm)
     symmetricCipher.init(Cipher.DECRYPT_MODE, key)
-    val decrypted = copyThroughCipher(symmetricCipher, msg.Body.asInstanceOf[EncryptedBody].Data)
-    val body = msg.Header.MessageType match {
+    val decrypted = copyThroughCipher(symmetricCipher, msg.Body.asInstanceOf[EncryptedBody].data)
+    val body = msg.Header.messageType match {
       case RequestAddContact.Type => RequestAddContact.read(decrypted)
       case ResultAddContact.Type  => ResultAddContact.read(decrypted)
       case Text.Type              => Text.read(decrypted)

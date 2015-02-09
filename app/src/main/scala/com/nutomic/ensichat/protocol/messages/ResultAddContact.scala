@@ -23,13 +23,13 @@ object ResultAddContact {
 /**
  * Contains the result of a [[RequestAddContact]] message.
  */
-case class ResultAddContact(Accepted: Boolean) extends MessageBody {
+case class ResultAddContact(accepted: Boolean) extends MessageBody {
 
   override def messageType = ResultAddContact.Type
 
   override def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)
-    BufferUtils.putUnsignedByte(b, if (Accepted) 0x80 else 0)
+    BufferUtils.putUnsignedByte(b, if (accepted) 0x80 else 0)
     (0 to 1).foreach(_ => BufferUtils.putUnsignedByte(b, 0))
     b.array()
   }

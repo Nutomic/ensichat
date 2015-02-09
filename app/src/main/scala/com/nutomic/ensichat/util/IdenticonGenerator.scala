@@ -25,7 +25,7 @@ object IdenticonGenerator {
    * @param size The size of the bitmap returned.
    */
   def generate(address: Address, size: (Int, Int), context: Context): Bitmap = {
-    val hash = address.Bytes
+    val hash = address.bytes
 
     // Create base image and colors.
     var identicon = Bitmap.createBitmap(Width, Height, Config.ARGB_8888)

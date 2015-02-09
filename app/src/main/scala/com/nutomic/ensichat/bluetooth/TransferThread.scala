@@ -52,7 +52,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
         if (inStream.available() > 0) {
           val msg = Message.read(inStream)
 
-          onReceive(msg, device.Id)
+          onReceive(msg, device.id)
           Log.v(Tag, "Receiving " + msg)
         }
       } catch {

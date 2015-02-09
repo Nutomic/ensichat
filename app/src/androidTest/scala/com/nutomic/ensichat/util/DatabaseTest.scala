@@ -40,20 +40,20 @@ class DatabaseTest extends AndroidTestCase {
   }
 
   def testMessageCount(): Unit = {
-    val msg1 = database.getMessages(m1.Header.Origin, 1)
+    val msg1 = database.getMessages(m1.Header.origin, 1)
     assertEquals(1, msg1.size)
 
-    val msg2 = database.getMessages(m1.Header.Origin, 3)
+    val msg2 = database.getMessages(m1.Header.origin, 3)
     assertEquals(2, msg2.size)
   }
 
   def testMessageOrder(): Unit = {
-    val msg = database.getMessages(m1.Header.Target, 1)
+    val msg = database.getMessages(m1.Header.target, 1)
     assertTrue(msg.contains(m3))
   }
 
   def testMessageSelect(): Unit = {
-    val msg = database.getMessages(m1.Header.Target, 2)
+    val msg = database.getMessages(m1.Header.target, 2)
     assertTrue(msg.contains(m1))
     assertTrue(msg.contains(m3))
   }
@@ -62,7 +62,7 @@ class DatabaseTest extends AndroidTestCase {
     database.addContact(UserTest.u1)
     val contacts = database.getContacts
     assertEquals(1, contacts.size)
-    assertEquals(Some(UserTest.u1), database.getContact(UserTest.u1.Address))
+    assertEquals(Some(UserTest.u1), database.getContact(UserTest.u1.address))
   }
 
   def testAddContactCallback(): Unit = {
@@ -76,8 +76,8 @@ class DatabaseTest extends AndroidTestCase {
   
   def testGetContact(): Unit = {
     database.addContact(UserTest.u2)
-    assertTrue(database.getContact(UserTest.u1.Address).isEmpty)
-    val c = database.getContact(UserTest.u2.Address)
+    assertTrue(database.getContact(UserTest.u1.address).isEmpty)
+    val c = database.getContact(UserTest.u2.address)
     assertTrue(c.nonEmpty)
     assertEquals(Some(UserTest.u2), c)
   }

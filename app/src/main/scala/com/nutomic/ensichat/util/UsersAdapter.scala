@@ -15,7 +15,7 @@ class UsersAdapter(context: Context) extends
   override def getView(position: Int, convertView: View, parent: ViewGroup): View = {
     val view = super.getView(position, convertView, parent)
     val title: TextView = view.findViewById(android.R.id.text1).asInstanceOf[TextView]
-    title.setText(getItem(position).Name)
+    title.setText(getItem(position).name)
     view
   }
 

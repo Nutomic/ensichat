@@ -3,11 +3,11 @@ package com.nutomic.ensichat.protocol.messages
 /**
  * Represents the data in an encrypted message body.
  */
-case class EncryptedBody(Data: Array[Byte]) extends MessageBody {
+case class EncryptedBody(data: Array[Byte]) extends MessageBody {
 
   override def messageType = -1
 
-  def write = Data
+  def write = data
 
-  override def length = Data.length
+  override def length = data.length
 }

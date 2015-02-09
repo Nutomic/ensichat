@@ -21,23 +21,23 @@ object Address {
 /**
  * Holds a device address and provides conversion methods.
  *
- * @param Bytes SHA-256 hash of the node's public key.
+ * @param bytes SHA-256 hash of the node's public key.
  */
-case class Address(Bytes: Array[Byte]) {
+case class Address(bytes: Array[Byte]) {
 
-  require(Bytes.length == Address.Length, "Invalid address length (was " + Bytes.length + ")")
+  require(bytes.length == Address.Length, "Invalid address length (was " + bytes.length + ")")
 
   def this(base16: String) {
     this(BaseEncoding.base16().decode(base16))
   }
 
-  override def hashCode = util.Arrays.hashCode(Bytes)
+  override def hashCode = util.Arrays.hashCode(bytes)
 
   override def equals(a: Any) = a match {
-    case o: Address => Bytes.deep == o.Bytes.deep
+    case o: Address => bytes.deep == o.bytes.deep
     case _ => false
   }
 
-  override def toString = BaseEncoding.base16().encode(Bytes)
+  override def toString = BaseEncoding.base16().encode(bytes)
 
 }
