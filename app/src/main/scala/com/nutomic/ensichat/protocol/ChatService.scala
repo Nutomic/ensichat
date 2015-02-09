@@ -14,6 +14,7 @@ import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, 
 import com.nutomic.ensichat.protocol.messages._
 import com.nutomic.ensichat.util.Database
 
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.ref.WeakReference
@@ -72,9 +73,9 @@ class ChatService extends Service {
    * but on a Nexus S (Android 4.1.2), these functions are garbage collected even when
    * referenced.
    */
-  private var connectionListeners = Set[WeakReference[OnConnectionsChangedListener]]()
+  private var connectionListeners = new mutable.WeakHashMap[OnConnectionsChangedListener, Unit].keySet
 
-  private var messageListeners = Set[WeakReference[OnMessageReceivedListener]]()
+  private var messageListeners = new mutable.WeakHashMap[OnMessageReceivedListener, Unit].keySet
 
   /**
    * Holds all known users.
@@ -116,14 +117,14 @@ class ChatService extends Service {
    * Registers a listener that is called whenever a new message is sent or received.
    */
   def registerMessageListener(listener: OnMessageReceivedListener): Unit = {
-    messageListeners += new WeakReference[OnMessageReceivedListener](listener)
+    messageListeners += listener
   }
 
   /**
    * Registers a listener that is called whenever a new device is connected.
    */
   def registerConnectionListener(listener: OnConnectionsChangedListener): Unit = {
-    connectionListeners += new WeakReference[OnConnectionsChangedListener](listener)
+    connectionListeners += listener
     listener.onConnectionsChanged()
   }
 
@@ -195,9 +196,7 @@ class ChatService extends Service {
     case _ =>
       MainHandler.post(new Runnable {
         override def run(): Unit =
-          messageListeners
-            .filter(_.get.nonEmpty)
-            .foreach(_.apply().onMessageReceived(msg))
+          messageListeners.foreach(_.onMessageReceived(msg))
     })
   }
 
@@ -253,8 +252,7 @@ class ChatService extends Service {
    */
   def callConnectionListeners(): Unit = {
     connectionListeners
-      .filter(_.get.nonEmpty)
-      .foreach(_.apply().onConnectionsChanged())
+      .foreach(_.onConnectionsChanged())
   }
 
   def connections() =
