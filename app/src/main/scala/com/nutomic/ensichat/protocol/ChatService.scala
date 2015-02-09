@@ -26,7 +26,7 @@ object ChatService {
 
     def destroy(): Unit
 
-    def send(msg: Message): Unit
+    def send(nextHop: Address, msg: Message): Unit
 
   }
 
@@ -59,9 +59,13 @@ class ChatService extends Service {
 
   private lazy val crypto = new Crypto(this)
 
-  private lazy val bluetoothInterface = new BluetoothInterface(this, crypto)
+  private lazy val btInterface = new BluetoothInterface(this, crypto)
 
-  private val notificationIdGenerator = Stream.from(100)
+  private lazy val router = new Router(connections, sendVia)
+
+  private lazy val seqNumGenerator = new SeqNumGenerator(this)
+
+  private val notificationIdGenerator = Stream.from(100).iterator
 
   /**
    * For this (and [[messageListeners]], functions would be useful instead of instances,
@@ -77,7 +81,7 @@ class ChatService extends Service {
    *
    * This is for user names that were received during runtime, and is not persistent.
    */
-  private var connections = Set[User]()
+  private var knownUsers = Set[User]()
 
   /**
    * Generates keys and starts Bluetooth interface.
@@ -95,13 +99,13 @@ class ChatService extends Service {
     Future {
       crypto.generateLocalKeys()
 
-      bluetoothInterface.create()
+      btInterface.create()
       Log.i(Tag, "Service started, address is " + Crypto.getLocalAddress(this))
     }
   }
 
   override def onDestroy(): Unit = {
-    bluetoothInterface.destroy()
+    btInterface.destroy()
   }
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int) = Service.START_STICKY
@@ -127,28 +131,35 @@ class ChatService extends Service {
    * Sends a new message to the given target address.
    */
   def sendTo(target: Address, body: MessageBody): Unit = {
-    if (!bluetoothInterface.getConnections.contains(target))
+    if (!btInterface.getConnections.contains(target))
       return
 
     val header = new MessageHeader(body.messageType, MessageHeader.DefaultHopLimit,
-      Crypto.getLocalAddress(this), target, 0, 0)
+      Crypto.getLocalAddress(this), target, seqNumGenerator.next())
 
     val msg = new Message(header, body)
     val encrypted = crypto.encrypt(crypto.sign(msg))
-    bluetoothInterface.send(encrypted)
+    router.onReceive(encrypted)
     onNewMessage(msg)
   }
+
+  private def sendVia(nextHop: Address, msg: Message) =
+    btInterface.send(nextHop, msg)
 
   /**
    * Decrypts and verifies incoming messages, forwards valid ones to [[onNewMessage()]].
    */
   def onMessageReceived(msg: Message): Unit = {
-    val decrypted = crypto.decrypt(msg)
-    if (!crypto.verify(decrypted)) {
-      Log.i(Tag, "Ignoring message with invalid signature from " + msg.Header.Origin)
-      return
+    if (msg.Header.Target == Crypto.getLocalAddress(this)) {
+      val decrypted = crypto.decrypt(msg)
+      if (!crypto.verify(decrypted)) {
+        Log.i(Tag, "Ignoring message with invalid signature from " + msg.Header.Origin)
+        return
+      }
+      onNewMessage(decrypted)
+    } else {
+      router.onReceive(msg)
     }
-    onNewMessage(decrypted)
   }
 
   /**
@@ -157,7 +168,7 @@ class ChatService extends Service {
   private def onNewMessage(msg: Message): Unit = msg.Body match {
     case name: UserName =>
       val contact = new User(msg.Header.Origin, name.Name)
-      connections += contact
+      knownUsers += contact
       if (database.getContact(msg.Header.Origin).nonEmpty)
         database.changeContactName(contact)
 
@@ -180,7 +191,7 @@ class ChatService extends Service {
         .setAutoCancel(true)
         .build()
       val nm = getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
-      nm.notify(notificationIdGenerator.iterator.next(), notification)
+      nm.notify(notificationIdGenerator.next(), notification)
     case _ =>
       MainHandler.post(new Runnable {
         override def run(): Unit =
@@ -202,6 +213,15 @@ class ChatService extends Service {
    * @return True if the connection is valid
    */
   def onConnectionOpened(msg: Message): Boolean = {
+    val maxConnections = PreferenceManager
+      .getDefaultSharedPreferences(this)
+      .getString(SettingsFragment.MaxConnections, Int.MaxValue.toString)
+      .toInt
+    if (connections().size == maxConnections) {
+      Log.i(Tag, "Maximum number of connections reached")
+      false
+    }
+
     val info = msg.Body.asInstanceOf[ConnectionInfo]
     val sender = crypto.calculateAddress(info.key)
     if (sender == Address.Broadcast || sender == Address.Null) {
@@ -237,19 +257,10 @@ class ChatService extends Service {
       .foreach(_.apply().onConnectionsChanged())
   }
 
-  /**
-   * Returns all direct neighbors.
-   */
-  def getConnections: Set[User] = {
-    bluetoothInterface.getConnections.map{ address =>
-      (database.getContacts ++ connections).find(_.Address == address) match {
-        case Some(contact) => contact
-        case None          => new User(address, address.toString)
-      }
-    }
-  }
+  def connections() =
+    btInterface.getConnections
 
   def getUser(address: Address) =
-    getConnections.find(_.Address == address).getOrElse(new User(address, address.toString))
+    knownUsers.find(_.Address == address).getOrElse(new User(address, address.toString))
 
 }

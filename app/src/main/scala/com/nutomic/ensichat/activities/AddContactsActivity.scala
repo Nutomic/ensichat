@@ -7,7 +7,7 @@ import android.view._
 import android.widget.AdapterView.OnItemClickListener
 import android.widget._
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.protocol.ChatService
+import com.nutomic.ensichat.protocol.{User, ChatService}
 import com.nutomic.ensichat.protocol.messages.RequestAddContact
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import com.nutomic.ensichat.util.UsersAdapter
@@ -69,7 +69,8 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
     runOnUiThread(new Runnable {
       override def run(): Unit  = {
         adapter.clear()
-        (service.getConnections -- service.database.getContacts).foreach(adapter.add)
+        (service.connections().map(a => service.getUser(a)) -- service.database.getContacts)
+          .foreach(adapter.add)
       }
     })
   }

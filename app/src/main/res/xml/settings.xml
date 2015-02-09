@@ -12,5 +12,11 @@
         android:defaultValue="15"
         android:inputType="number"
         android:numeric="integer" />
+    
+    <EditTextPreference
+        android:title="@string/max_connections"
+        android:key="max_connections"
+        android:inputType="number"
+        android:numeric="integer" />
 
 </PreferenceScreen>

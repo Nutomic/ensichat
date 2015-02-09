@@ -180,10 +180,10 @@ class BluetoothInterface(Service: ChatService, Crypto: Crypto) extends Interface
   }
 
   /**
-   * Sends the message to the target address specified in the message header.
+   * Sends the message to nextHop.
    */
-  override def send(msg: Message): Unit =
-    connections.apply(addressDeviceMap.get(msg.Header.Target)).send(msg)
+  override def send(nextHop: Address, msg: Message): Unit =
+    connections.get(addressDeviceMap.get(nextHop)).foreach(_.send(msg))
 
   /**
    * Returns all active Bluetooth connections.

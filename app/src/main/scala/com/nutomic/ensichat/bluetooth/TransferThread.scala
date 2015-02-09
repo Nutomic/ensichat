@@ -53,13 +53,11 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
           val msg = Message.read(inStream)
 
           onReceive(msg, device.Id)
+          Log.v(Tag, "Receiving " + msg)
         }
       } catch {
-        case e: ReadMessageException =>
-          Log.i(Tag, "Failed to read message", e)
-        case e: IOException =>
+        case e @ (_: ReadMessageException | _: IOException) =>
           Log.w(Tag, "Failed to read incoming message", e)
-          close()
           return
       }
     }
@@ -69,6 +67,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
   def send(msg: Message): Unit = {
     try {
       outStream.write(msg.write)
+      Log.v(Tag, "Sending " + msg)
     } catch {
       case e: IOException => Log.e(Tag, "Failed to write message", e)
     }

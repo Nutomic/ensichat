@@ -13,7 +13,9 @@ object SettingsFragment {
   val KeyUserName = "user_name"
   
   val KeyScanInterval = "scan_interval_seconds"
-  
+
+  val MaxConnections = "max_connections"
+
 }
 
 /**
@@ -25,14 +27,18 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
     super.onCreate(savedInstanceState)
 
     addPreferencesFromResource(R.xml.settings)
-    val name         = findPreference(KeyUserName)
-    val scanInterval = findPreference(KeyScanInterval)
+    val name           = findPreference(KeyUserName)
+    val scanInterval   = findPreference(KeyScanInterval)
+    val maxConnections = findPreference(MaxConnections)
     name.setOnPreferenceChangeListener(this)
     scanInterval.setOnPreferenceChangeListener(this)
+    maxConnections.setOnPreferenceChangeListener(this)
     
     val pm = PreferenceManager.getDefaultSharedPreferences(getActivity)
     name.setSummary(pm.getString(KeyUserName, ""))
     scanInterval.setSummary(pm.getString(KeyScanInterval, "15"))
+    maxConnections.setDefaultValue(Int.MaxValue)
+    maxConnections.setSummary(pm.getString(MaxConnections, Int.MaxValue.toString))
   }
 
   /**

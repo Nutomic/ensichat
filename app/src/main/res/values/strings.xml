@@ -62,6 +62,9 @@
 
     <!-- Preference title -->
     <string name="scan_interval_seconds">Scan Interval (seconds)</string>
+    
+    <!-- Preference title (debug only)-->
+    <string name="max_connections">Maximum Number of Connections</string>
 
 
     <!-- ChatService -->

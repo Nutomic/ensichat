@@ -11,6 +11,8 @@ object MessageHeader {
   val DefaultHopLimit = 20
 
   val Version = 0
+  
+  val SeqNumRange = 0 until ((2 << 16) - 1)
 
   class ParseMessageException(detailMessage: String) extends RuntimeException(detailMessage) {
   }
@@ -33,7 +35,9 @@ object MessageHeader {
     val origin = new Address(BufferUtils.getByteArray(b, Address.Length))
     val target = new Address(BufferUtils.getByteArray(b, Address.Length))
 
-    new MessageHeader(messageType, hopLimit, origin, target, length, hopCount)
+    val seqNum = BufferUtils.getUnsignedShort(b)
+
+    new MessageHeader(messageType, hopLimit, origin, target, seqNum, length, hopCount)
   }
 
 }
@@ -45,6 +49,7 @@ case class MessageHeader(MessageType: Int,
                     HopLimit: Int,
                     Origin: Address,
                     Target: Address,
+                    SeqNum: Int,
                     Length: Long = -1,
                     HopCount: Int = 0) {
 
@@ -63,7 +68,8 @@ case class MessageHeader(MessageType: Int,
     b.put(Origin.Bytes)
     b.put(Target.Bytes)
 
-    BufferUtils.putUnsignedInt(b, 0)
+    BufferUtils.putUnsignedShort(b, SeqNum)
+    BufferUtils.putUnsignedShort(b, 0)
 
     b.array()
   }

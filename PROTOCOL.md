@@ -71,7 +71,7 @@ header is in network byte order, i.e. big endian.
     |                       Target Address                          |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                          Reserved                             |
+    |         Sequence Number       |           Reserved            |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Version specifies the protocol version number. This is currently 0. A
@@ -99,6 +99,11 @@ message.
 
 Target Address is the address of the node that should receive the
 message.
+
+Sequence number is set by the sender, and MUST increment by 1 for
+each new message sent (after 2^16-1 comes 0 again). It SHOULD
+be persistent during restarts. It is used by intermediate nodes
+to avoid forwarding the same message multiple times.
 
 
 ### Encryption Data
