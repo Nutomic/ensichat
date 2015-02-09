@@ -4,6 +4,7 @@ import java.util.UUID
 
 import android.bluetooth.{BluetoothAdapter, BluetoothDevice, BluetoothSocket}
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
+import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import com.google.common.collect.HashBiMap
@@ -26,7 +27,8 @@ object BluetoothInterface {
 /**
  * Handles all Bluetooth connectivity.
  */
-class BluetoothInterface(service: ChatService, crypto: Crypto) extends InterfaceHandler {
+class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Handler)
+  extends InterfaceHandler {
 
   private val Tag = "BluetoothInterface"
 
@@ -92,7 +94,7 @@ class BluetoothInterface(service: ChatService, crypto: Crypto) extends Interface
 
     val scanInterval = PreferenceManager.getDefaultSharedPreferences(service)
       .getString("scan_interval_seconds", "15").toInt * 1000
-    service.MainHandler.postDelayed(new Runnable {
+    mainHandler.postDelayed(new Runnable {
       override def run(): Unit = discover()
     }, scanInterval)
   }

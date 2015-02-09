@@ -53,13 +53,13 @@ class ChatService extends Service {
 
   lazy val database = new Database(this)
 
-  val MainHandler = new Handler()
+  private val mainHandler = new Handler()
 
   private lazy val binder = new ChatServiceBinder(this)
 
   private lazy val crypto = new Crypto(this)
 
-  private lazy val btInterface = new BluetoothInterface(this, crypto)
+  private lazy val btInterface = new BluetoothInterface(this, crypto, mainHandler)
 
   private lazy val router = new Router(connections, sendVia)
 
@@ -193,7 +193,7 @@ class ChatService extends Service {
       val nm = getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
       nm.notify(notificationIdGenerator.next(), notification)
     case _ =>
-      MainHandler.post(new Runnable {
+      mainHandler.post(new Runnable {
         override def run(): Unit =
           messageListeners.foreach(_.onMessageReceived(msg))
     })
