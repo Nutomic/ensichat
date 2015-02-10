@@ -1,6 +1,8 @@
 ensichat
 ========
 
+[![BitCoin donate button](https://img.shields.io/badge/bitcoin-donate-yellow.svg)](https://blockchain.info/address/1DmU6QVGSKXGXJU1bqmmStPDNsNnYoMJB4)
+
 Instant messanger for Android that is fully decentralized. Messages are sent directly between
 devices via Bluetooth, without any central server. A simple flood-based routing is used for
 message propagation.
