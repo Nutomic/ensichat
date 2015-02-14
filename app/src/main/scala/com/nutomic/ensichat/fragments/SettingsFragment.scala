@@ -36,9 +36,10 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
     
     val pm = PreferenceManager.getDefaultSharedPreferences(getActivity)
     name.setSummary(pm.getString(KeyUserName, ""))
-    scanInterval.setSummary(pm.getString(KeyScanInterval, "15"))
-    maxConnections.setDefaultValue(Int.MaxValue)
-    maxConnections.setSummary(pm.getString(MaxConnections, Int.MaxValue.toString))
+    scanInterval.setSummary(pm.getString(KeyScanInterval,
+      getResources.getString(R.string.default_scan_interval)))
+    maxConnections.setSummary(pm.getString(MaxConnections,
+      getResources.getString(R.string.default_max_connections)))
   }
 
   /**

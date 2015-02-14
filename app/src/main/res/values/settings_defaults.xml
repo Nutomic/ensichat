@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources translatable="false">
+    
+    <string name="default_scan_interval">15</string>
+    
+    <string name="default_max_connections">1000000</string>
+    
+</resources>

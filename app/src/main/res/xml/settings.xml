@@ -9,13 +9,14 @@
     <EditTextPreference
         android:title="@string/scan_interval_seconds"
         android:key="scan_interval_seconds"
-        android:defaultValue="15"
+        android:defaultValue="@string/default_scan_interval"
         android:inputType="number"
         android:numeric="integer" />
     
     <EditTextPreference
         android:title="@string/max_connections"
         android:key="max_connections"
+        android:defaultValue="@string/default_max_connections"
         android:inputType="number"
         android:numeric="integer" />
 

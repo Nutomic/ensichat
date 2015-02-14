@@ -211,10 +211,9 @@ class ChatService extends Service {
    * @return True if the connection is valid
    */
   def onConnectionOpened(msg: Message): Boolean = {
-    val maxConnections = PreferenceManager
-      .getDefaultSharedPreferences(this)
-      .getString(SettingsFragment.MaxConnections, Int.MaxValue.toString)
-      .toInt
+    val pm = PreferenceManager.getDefaultSharedPreferences(this)
+    val maxConnections = pm.getString(SettingsFragment.MaxConnections,
+      getResources.getString(R.string.default_max_connections)).toInt
     if (connections().size == maxConnections) {
       Log.i(Tag, "Maximum number of connections reached")
       false
