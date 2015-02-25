@@ -62,9 +62,20 @@
 
     <!-- Preference title -->
     <string name="scan_interval_seconds">Scan Interval (seconds)</string>
-    
+
     <!-- Preference title (debug only)-->
     <string name="max_connections">Maximum Number of Connections</string>
+
+    <!-- Preference title -->
+    <string name="report_issue">Report Issue</string>
+
+    <!-- Preference summary -->
+    <string name="report_issue_summary">Open the EnsiChat issue tracker</string>
+
+    <string name="issue_tracker_url" translatable="false">https://github.com/Nutomic/ensichat/issues</string>
+
+    <!-- Preference title -->
+    <string name="version">Version</string>
 
 
     <!-- ChatService -->

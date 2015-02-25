@@ -12,12 +12,24 @@
         android:defaultValue="@string/default_scan_interval"
         android:inputType="number"
         android:numeric="integer" />
-    
+
     <EditTextPreference
         android:title="@string/max_connections"
         android:key="max_connections"
         android:defaultValue="@string/default_max_connections"
         android:inputType="number"
         android:numeric="integer" />
+
+    <Preference
+        android:title="@string/report_issue"
+        android:summary="@string/report_issue_summary" >
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="@string/issue_tracker_url" />
+    </Preference>
+
+    <Preference
+        android:title="@string/version"
+        android:key="version" />
 
 </PreferenceScreen>

@@ -16,6 +16,8 @@ object SettingsFragment {
 
   val MaxConnections = "max_connections"
 
+  val Version = "version"
+
 }
 
 /**
@@ -30,9 +32,12 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
     val name           = findPreference(KeyUserName)
     val scanInterval   = findPreference(KeyScanInterval)
     val maxConnections = findPreference(MaxConnections)
+    val version        = findPreference(Version)
     name.setOnPreferenceChangeListener(this)
     scanInterval.setOnPreferenceChangeListener(this)
     maxConnections.setOnPreferenceChangeListener(this)
+    version.setSummary(getActivity.getPackageManager.getPackageInfo(
+      getActivity.getPackageName, 0).versionName)
     
     val pm = PreferenceManager.getDefaultSharedPreferences(getActivity)
     name.setSummary(pm.getString(KeyUserName, ""))
