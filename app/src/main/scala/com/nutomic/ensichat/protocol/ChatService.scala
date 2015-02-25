@@ -59,7 +59,8 @@ class ChatService extends Service {
 
   private lazy val crypto = new Crypto(this)
 
-  private lazy val btInterface = new BluetoothInterface(this, crypto, mainHandler)
+  private lazy val btInterface = new BluetoothInterface(this, mainHandler,
+    onMessageReceived, callConnectionListeners, onConnectionOpened)
 
   private lazy val router = new Router(connections, sendVia)
 

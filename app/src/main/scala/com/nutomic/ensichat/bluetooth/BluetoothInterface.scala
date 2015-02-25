@@ -28,19 +28,23 @@ object BluetoothInterface {
 /**
  * Handles all Bluetooth connectivity.
  */
-class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Handler)
+class BluetoothInterface(context: Context, mainHandler: Handler,
+                         onMessageReceived: Message => Unit, callConnectionListeners: () => Unit,
+                         onConnectionOpened: (Message) => Boolean)
   extends InterfaceHandler {
 
   private val Tag = "BluetoothInterface"
 
   private lazy val btAdapter = BluetoothAdapter.getDefaultAdapter
 
+  private lazy val crypto = new Crypto(context)
+
   private var devices = new HashMap[Device.ID, Device]()
 
   private var connections = new HashMap[Device.ID, TransferThread]()
 
   private lazy val listenThread =
-    new ListenThread(service.getString(R.string.app_name), btAdapter, onConnectionOpened)
+    new ListenThread(context.getString(R.string.app_name), btAdapter, connectionOpened)
 
   private var cancelDiscovery = false
 
@@ -52,13 +56,15 @@ class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Hand
    * Initializes and starts discovery and listening.
    */
   override def create(): Unit = {
-    service.registerReceiver(DeviceDiscoveredReceiver,
+    context.registerReceiver(DeviceDiscoveredReceiver,
       new IntentFilter(BluetoothDevice.ACTION_FOUND))
-    service.registerReceiver(BluetoothStateReceiver,
+    context.registerReceiver(BluetoothStateReceiver,
       new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
-    service.registerReceiver(DiscoveryFinishedReceiver,
+    context.registerReceiver(DiscoveryFinishedReceiver,
       new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED))
-    startBluetoothConnections()
+    // Otherwise, connections are started in [[BluetoothStateReceiver]].
+    if (btAdapter.isEnabled)
+      startBluetoothConnections()
   }
 
   /**
@@ -67,9 +73,9 @@ class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Hand
   override def destroy(): Unit = {
     listenThread.cancel()
     cancelDiscovery = true
-    service.unregisterReceiver(DeviceDiscoveredReceiver)
-    service.unregisterReceiver(BluetoothStateReceiver)
-    service.unregisterReceiver(DiscoveryFinishedReceiver)
+    context.unregisterReceiver(DeviceDiscoveredReceiver)
+    context.unregisterReceiver(BluetoothStateReceiver)
+    context.unregisterReceiver(DiscoveryFinishedReceiver)
   }
 
   /**
@@ -93,9 +99,9 @@ class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Hand
       btAdapter.startDiscovery()
     }
 
-    val pm = PreferenceManager.getDefaultSharedPreferences(service)
+    val pm = PreferenceManager.getDefaultSharedPreferences(context)
     val scanInterval = pm.getString(SettingsFragment.KeyScanInterval,
-      service.getResources.getString(R.string.default_scan_interval)).toInt * 1000
+      context.getResources.getString(R.string.default_scan_interval)).toInt * 1000
     mainHandler.postDelayed(new Runnable {
       override def run(): Unit = discover()
     }, scanInterval)
@@ -117,7 +123,7 @@ class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Hand
     override def onReceive(context: Context, intent: Intent): Unit = {
       discovered.filterNot(d => connections.keySet.contains(d.id))
         .foreach { d =>
-          new ConnectThread(d, onConnectionOpened).start()
+          new ConnectThread(d, connectionOpened).start()
           devices += (d.id -> d)
         }
       discovered = Set[Device]()
@@ -131,8 +137,7 @@ class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Hand
     override def onReceive(context: Context, intent: Intent): Unit = {
       intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) match {
         case BluetoothAdapter.STATE_ON =>
-          if (crypto.localKeysExist)
-            startBluetoothConnections()
+          startBluetoothConnections()
         case BluetoothAdapter.STATE_TURNING_OFF =>
           Log.i(Tag, "Bluetooth disabled, stopping connectivity")
           listenThread.cancel()
@@ -147,7 +152,7 @@ class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Hand
   /**
    * Initiates data transfer with device.
    */
-  def onConnectionOpened(device: Device, socket: BluetoothSocket): Unit = {
+  def connectionOpened(device: Device, socket: BluetoothSocket): Unit = {
     devices += (device.id -> device)
     connections += (device.id ->
       new TransferThread(device, socket, this, crypto, onReceiveMessage))
@@ -160,7 +165,7 @@ class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Hand
   def onConnectionClosed(device: Device, socket: BluetoothSocket): Unit = {
     devices -= device.id
     connections -= device.id
-    service.callConnectionListeners()
+    callConnectionListeners()
     addressDeviceMap.inverse().remove(device.id)
   }
 
@@ -177,10 +182,10 @@ class BluetoothInterface(service: ChatService, crypto: Crypto, mainHandler: Hand
       val address = crypto.calculateAddress(info.key)
       // Service.onConnectionOpened sends message, so mapping already needs to be in place.
       addressDeviceMap.put(address, device)
-      if (!service.onConnectionOpened(msg))
+      if (!onConnectionOpened(msg))
         addressDeviceMap.remove(address)
     case _ =>
-      service.onMessageReceived(msg)
+      onMessageReceived(msg)
   }
 
   /**
