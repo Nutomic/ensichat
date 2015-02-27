@@ -35,11 +35,10 @@ class MainActivity extends EnsiChatActivity {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
 
-    if (BluetoothAdapter.getDefaultAdapter.isEnabled) {
-      val intent: Intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
-      intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0)
-      startActivityForResult(intent, RequestSetDiscoverable)
-    }
+    val intent: Intent = new
+        Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+    intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0)
+    startActivityForResult(intent, RequestSetDiscoverable)
 
     val fm = getFragmentManager
     if (savedInstanceState != null) {
