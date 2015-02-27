@@ -34,6 +34,9 @@ object Database {
     def onContactsUpdated()
   }
 
+  private var contactsUpdatedListeners =
+    new mutable.WeakHashMap[OnContactsUpdatedListener, Unit].keySet
+
 }
 
 /**
@@ -42,9 +45,6 @@ object Database {
 class Database(context: Context)
   extends SQLiteOpenHelper(context, Database.DatabaseName, null, Database.DatabaseVersion)
   with OnMessageReceivedListener {
-
-  private var contactsUpdatedListeners =
-    new mutable.WeakHashMap[OnContactsUpdatedListener, Unit].keySet
 
   override def onCreate(db: SQLiteDatabase): Unit = {
     db.execSQL(Database.CreateContactsTable)
@@ -133,21 +133,21 @@ class Database(context: Context)
     cv.put("address", contact.address.toString)
     cv.put("name", contact.name.toString)
     getWritableDatabase.insert("contacts", null, cv)
-    contactsUpdatedListeners.foreach(_.onContactsUpdated()    )
+    Database.contactsUpdatedListeners.foreach(_.onContactsUpdated()    )
   }
   
   def changeContactName(contact: User): Unit = {
     val cv = new ContentValues()
     cv.put("name", contact.name.toString)
     getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.address.toString))
-    contactsUpdatedListeners.foreach(_.onContactsUpdated())
+    Database.contactsUpdatedListeners.foreach(_.onContactsUpdated())
   }
 
   /**
    * Pass a callback that is called whenever a new contact is added.
    */
   def runOnContactsUpdated(listener: OnContactsUpdatedListener) =
-    contactsUpdatedListeners += listener
+    Database.contactsUpdatedListeners += listener
 
   override def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int): Unit = {
   }

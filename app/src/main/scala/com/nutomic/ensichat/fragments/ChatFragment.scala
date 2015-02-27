@@ -12,7 +12,7 @@ import com.nutomic.ensichat.activities.EnsiChatActivity
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.messages.{Message, Text}
 import com.nutomic.ensichat.protocol.{Address, ChatService}
-import com.nutomic.ensichat.util.MessagesAdapter
+import com.nutomic.ensichat.util.{Database, MessagesAdapter}
 
 /**
  * Represents a single chat with another specific device.
@@ -27,6 +27,8 @@ class ChatFragment extends ListFragment with OnClickListener
     this
     this.address = address
   }
+
+  private val database = new Database(getActivity)
 
   private var address: Address = _
 
@@ -47,13 +49,12 @@ class ChatFragment extends ListFragment with OnClickListener
     activity.runOnServiceConnected(() => {
       chatService = activity.service
 
-      chatService.database.getContact(address)
-        .foreach(c => getActivity.setTitle(c.name))
+      database.getContact(address).foreach(c => getActivity.setTitle(c.name))
 
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, address)
       chatService.registerMessageListener(ChatFragment.this)
-      chatService.database.getMessages(address, 15).foreach(adapter.add)
+      database.getMessages(address, 15).foreach(adapter.add)
 
       if (listView != null) {
         listView.setAdapter(adapter)

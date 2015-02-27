@@ -11,7 +11,7 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.messages.{Message, RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.protocol.{Address, Crypto}
-import com.nutomic.ensichat.util.IdenticonGenerator
+import com.nutomic.ensichat.util.{Database, IdenticonGenerator}
 
 object ConfirmAddContactDialog {
 
@@ -26,6 +26,8 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
   with OnClickListener {
 
   private val Tag = "ConfirmAddContactDialog"
+
+  private lazy val database = new Database(this)
 
   private lazy val user = service.getUser(
     new Address(getIntent.getStringExtra(ConfirmAddContactDialog.ExtraContactAddress)))
@@ -90,7 +92,7 @@ class ConfirmAddContactDialog extends EnsiChatActivity with OnMessageReceivedLis
     if (localConfirmed && remoteConfirmed) {
       Log.i(Tag, "Adding new contact " + user.toString)
       // Get the user again, in case it was updated in the mean time.
-      service.database.addContact(service.getUser(user.address))
+      database.addContact(service.getUser(user.address))
       Toast.makeText(this, getString(R.string.contact_added, user.name), Toast.LENGTH_SHORT)
         .show()
       finish()

@@ -9,7 +9,7 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.{AddContactsActivity, EnsiChatActivity, MainActivity, SettingsActivity}
 import com.nutomic.ensichat.protocol.ChatService
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
-import com.nutomic.ensichat.util.UsersAdapter
+import com.nutomic.ensichat.util.{Database, UsersAdapter}
 
 /**
  * Lists all nearby, connected devices.
@@ -18,7 +18,7 @@ class ContactsFragment extends ListFragment with OnContactsUpdatedListener {
 
   private lazy val adapter = new UsersAdapter(getActivity)
 
-  private lazy val database = getActivity.asInstanceOf[EnsiChatActivity].service.database
+  private lazy val database = new Database(getActivity)
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)

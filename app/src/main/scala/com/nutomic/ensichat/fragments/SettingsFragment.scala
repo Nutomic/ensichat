@@ -7,6 +7,7 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
 import com.nutomic.ensichat.fragments.SettingsFragment._
 import com.nutomic.ensichat.protocol.messages.UserName
+import com.nutomic.ensichat.util.Database
 
 object SettingsFragment {
 
@@ -24,6 +25,8 @@ object SettingsFragment {
  * Settings screen.
  */
 class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListener {
+
+  private lazy val database = new Database(getActivity)
 
   override def onCreate(savedInstanceState: Bundle): Unit =  {
     super.onCreate(savedInstanceState)
@@ -53,8 +56,7 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
   override def onPreferenceChange(preference: Preference, newValue: AnyRef): Boolean = {
     if (preference.getKey == KeyUserName) {
       val service = getActivity.asInstanceOf[EnsiChatActivity].service
-      service.database.getContacts
-        .foreach(c => service.sendTo(c.address, new UserName(newValue.toString)))
+      database.getContacts.foreach(c => service.sendTo(c.address, new UserName(newValue.toString)))
     }
     preference.setSummary(newValue.toString)
     true

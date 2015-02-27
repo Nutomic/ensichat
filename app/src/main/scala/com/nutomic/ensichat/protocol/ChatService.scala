@@ -51,7 +51,7 @@ class ChatService extends Service {
 
   private val Tag = "ChatService"
 
-  lazy val database = new Database(this)
+  private lazy val database = new Database(this)
 
   private val mainHandler = new Handler()
 

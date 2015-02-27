@@ -10,7 +10,7 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.protocol.{User, ChatService}
 import com.nutomic.ensichat.protocol.messages.RequestAddContact
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
-import com.nutomic.ensichat.util.UsersAdapter
+import com.nutomic.ensichat.util.{Database, UsersAdapter}
 
 /**
  * Lists all nearby, connected devices and allows adding them to be added as contacts.
@@ -19,6 +19,8 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
   with OnItemClickListener with OnContactsUpdatedListener {
 
   private val Tag = "AddContactsActivity"
+
+  private lazy val database = new Database(this)
 
   private lazy val adapter = new UsersAdapter(this)
 
@@ -37,7 +39,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
 
     runOnServiceConnected(() => {
       service.registerConnectionListener(AddContactsActivity.this)
-      service.database.runOnContactsUpdated(this)
+      database.runOnContactsUpdated(this)
     })
   }
 
@@ -69,7 +71,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
     runOnUiThread(new Runnable {
       override def run(): Unit  = {
         adapter.clear()
-        (service.connections().map(a => service.getUser(a)) -- service.database.getContacts)
+        (service.connections().map(a => service.getUser(a)) -- database.getContacts)
           .foreach(adapter.add)
       }
     })
