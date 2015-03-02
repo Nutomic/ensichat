@@ -28,7 +28,7 @@ class ChatFragment extends ListFragment with OnClickListener
     this.address = address
   }
 
-  private val database = new Database(getActivity)
+  private lazy val database = new Database(getActivity)
 
   private var address: Address = _
 
