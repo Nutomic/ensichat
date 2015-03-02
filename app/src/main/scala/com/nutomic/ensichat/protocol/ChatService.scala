@@ -7,12 +7,12 @@ import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.ConfirmAddContactDialog
+import com.nutomic.ensichat.activities.{MainActivity, ConfirmAddContactDialog}
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
 import com.nutomic.ensichat.protocol.messages._
-import com.nutomic.ensichat.util.Database
+import com.nutomic.ensichat.util.{NotificationHandler, Database}
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -62,11 +62,13 @@ class ChatService extends Service {
   private lazy val btInterface = new BluetoothInterface(this, mainHandler,
     onMessageReceived, callConnectionListeners, onConnectionOpened)
 
+  private lazy val notificationHandler = new NotificationHandler(this)
+
   private lazy val router = new Router(connections, sendVia)
 
   private lazy val seqNumGenerator = new SeqNumGenerator(this)
 
-  private val notificationIdGenerator = Stream.from(100).iterator
+  private val notificationIdAddContactGenerator = Stream.from(100).iterator
 
   /**
    * For this (and [[messageListeners]], functions would be useful instead of instances,
@@ -96,6 +98,7 @@ class ChatService extends Service {
         BluetoothAdapter.getDefaultAdapter.getName).apply()
 
     registerMessageListener(database)
+    registerMessageListener(notificationHandler)
 
     Future {
       crypto.generateLocalKeys()
@@ -192,7 +195,7 @@ class ChatService extends Service {
         .setAutoCancel(true)
         .build()
       val nm = getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
-      nm.notify(notificationIdGenerator.next(), notification)
+      nm.notify(notificationIdAddContactGenerator.next(), notification)
     case _ =>
       mainHandler.post(new Runnable {
         override def run(): Unit =

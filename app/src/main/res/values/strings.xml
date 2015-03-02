@@ -83,4 +83,7 @@
     <!-- Notification text for incoming friend request -->
     <string name="notification_friend_request">New friend request!</string>
 
+    <!-- Notification text for incoming message -->
+    <string name="notification_message">New message!</string>
+
 </resources>
