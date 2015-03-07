@@ -32,6 +32,7 @@ class NotificationHandler(context: Context) extends OnMessageReceivedListener {
       val nm = context.getSystemService(Context.NOTIFICATION_SERVICE)
         .asInstanceOf[NotificationManager]
       nm.notify(notificationIdNewMessage, notification)
+    case _ =>
   }
 
 }

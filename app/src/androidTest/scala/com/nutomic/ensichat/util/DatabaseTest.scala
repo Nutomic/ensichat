@@ -6,28 +6,38 @@ import android.content.Context
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.test.AndroidTestCase
-import android.test.mock.MockContext
+import android.test.mock
 import com.nutomic.ensichat.protocol.UserTest
 import com.nutomic.ensichat.protocol.messages.MessageTest._
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import junit.framework.Assert._
 
-class DatabaseTest extends AndroidTestCase {
+object DatabaseTest {
 
-  private class TestContext(context: Context) extends MockContext {
+  /**
+   * Provides a temporary database file that can be deleted with [[MockContext#deleteDbFile]].
+   *
+   * Does not work if multiple db files are opened!
+   */
+  class MockContext(context: Context) extends mock.MockContext {
+    private var dbFile: String = _
     override def openOrCreateDatabase(file: String, mode: Int, factory:
     SQLiteDatabase.CursorFactory, errorHandler: DatabaseErrorHandler): SQLiteDatabase = {
       dbFile = file + "-test"
       context.openOrCreateDatabase(dbFile, mode, factory, errorHandler)
     }
+    def deleteDbFile() = context.deleteDatabase(dbFile)
   }
 
-  private var dbFile: String = _
+}
 
-  private var database: Database = _
+class DatabaseTest extends AndroidTestCase {
+
+  private lazy val context = new DatabaseTest.MockContext(getContext)
+
+  private lazy val database = new Database(context)
 
   override def setUp(): Unit = {
-    database = new Database(new TestContext(getContext))
     database.onMessageReceived(m1)
     database.onMessageReceived(m2)
     database.onMessageReceived(m3)
@@ -36,7 +46,7 @@ class DatabaseTest extends AndroidTestCase {
   override def tearDown(): Unit = {
     super.tearDown()
     database.close()
-    getContext.deleteDatabase(dbFile)
+    context.deleteDbFile()
   }
 
   def testMessageCount(): Unit = {

@@ -7,12 +7,12 @@ import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.{MainActivity, ConfirmAddContactDialog}
+import com.nutomic.ensichat.activities.{MainActivity, ConfirmAddContactActivity}
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
 import com.nutomic.ensichat.protocol.messages._
-import com.nutomic.ensichat.util.{NotificationHandler, Database}
+import com.nutomic.ensichat.util.{AddContactsHandler, NotificationHandler, Database}
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -64,11 +64,11 @@ class ChatService extends Service {
 
   private lazy val notificationHandler = new NotificationHandler(this)
 
+  private lazy val addContactsHandler = new AddContactsHandler(this, getUser, crypto.localAddress)
+
   private lazy val router = new Router(connections, sendVia)
 
   private lazy val seqNumGenerator = new SeqNumGenerator(this)
-
-  private val notificationIdAddContactGenerator = Stream.from(100).iterator
 
   /**
    * For this (and [[messageListeners]], functions would be useful instead of instances,
@@ -97,11 +97,11 @@ class ChatService extends Service {
       pm.edit().putString(SettingsFragment.KeyUserName,
         BluetoothAdapter.getDefaultAdapter.getName).apply()
 
-    registerMessageListener(database)
-    registerMessageListener(notificationHandler)
-
     Future {
       crypto.generateLocalKeys()
+      registerMessageListener(database)
+      registerMessageListener(notificationHandler)
+      registerMessageListener(addContactsHandler)
 
       btInterface.create()
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
@@ -177,25 +177,6 @@ class ChatService extends Service {
         database.changeContactName(contact)
 
       callConnectionListeners()
-    case _: RequestAddContact =>
-      if (msg.Header.origin == crypto.localAddress)
-        return
-
-      Log.i(Tag, "Remote device " + msg.Header.origin +
-        " wants to add us as a contact, showing notification")
-      val intent = new Intent(this, classOf[ConfirmAddContactDialog])
-      intent.putExtra(ConfirmAddContactDialog.ExtraContactAddress, msg.Header.origin.toString)
-      val pi = PendingIntent.getActivity(this, 0, intent,
-        PendingIntent.FLAG_UPDATE_CURRENT)
-
-      val notification = new Notification.Builder(this)
-        .setContentTitle(getString(R.string.notification_friend_request, getUser(msg.Header.origin)))
-        .setSmallIcon(R.drawable.ic_launcher)
-        .setContentIntent(pi)
-        .setAutoCancel(true)
-        .build()
-      val nm = getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
-      nm.notify(notificationIdAddContactGenerator.next(), notification)
     case _ =>
       mainHandler.post(new Runnable {
         override def run(): Unit =
