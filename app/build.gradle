@@ -13,9 +13,9 @@ buildscript {
 dependencies {
     compile "com.android.support:support-v4:21.0.3"
     // For `flat` debug config, as `flatProvided` is unknown.
-    provided "org.scala-lang:scala-library:2.11.5"
-    debugCompile "org.scala-lang:scala-library:2.11.5"
-    releaseCompile "org.scala-lang:scala-library:2.11.5"
+    provided "org.scala-lang:scala-library:2.11.6"
+    debugCompile "org.scala-lang:scala-library:2.11.6"
+    releaseCompile "org.scala-lang:scala-library:2.11.6"
     compile 'com.google.guava:guava:18.0'
 }
 
