@@ -21,9 +21,9 @@ The _null address_ is
 `0x0000000000000000000000000000000000000000000000000000000000000000`
 (i.e. no bits set).
 
-Nodes MUST NOT use a public key with the broadcast address or null
-address as hash (they must generate a new key pair). Also, other
-nodes MUST NOT connect to a node with either address.
+Nodes MUST NOT have a public key with the broadcast address or null
+address as hash. Additionally, nodes MUST NOT connect to a node with
+either address.
 
 
 Messages
@@ -64,11 +64,11 @@ header is in network byte order, i.e. big endian.
     |                            Length                             |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                                                               |
-    |                       Origin Address                          |
+    |                   Origin Address (32 bytes)                   |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                                                               |
-    |                       Target Address                          |
+    |                   Target Address (32 bytes)                   |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |         Sequence Number       |           Reserved            |
