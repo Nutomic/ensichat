@@ -19,16 +19,16 @@ object Database {
   private val DatabaseVersion = 1
 
   private val CreateMessagesTable = "CREATE TABLE messages(" +
-    "_id integer primary key autoincrement," +
-    "origin text not null," +
-    "target text not null," +
-    "text text not null," +
-    "date integer not null);" // Unix timestamp of message.
+    "_id INT PRIMARY KEY," +
+    "origin TEXT NOT NULL," +
+    "target TEXT NOT NULL," +
+    "text TEXT NOT NULL," +
+    "date INT NOT NULL);" // Unix timestamp of message.
 
   private val CreateContactsTable = "CREATE TABLE contacts(" +
-    "_id integer primary key autoincrement," +
-    "address text not null," +
-    "name text not null)"
+    "_id INT PRIMARY KEY," +
+    "address TEXT NOT NULL," +
+    "name TEXT NOT NULL)"
 
   trait OnContactsUpdatedListener {
     def onContactsUpdated()
