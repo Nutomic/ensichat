@@ -19,14 +19,14 @@ object Database {
   private val DatabaseVersion = 1
 
   private val CreateMessagesTable = "CREATE TABLE messages(" +
-    "_id INT PRIMARY KEY," +
+    "_id INTEGER PRIMARY KEY," +
     "origin TEXT NOT NULL," +
     "target TEXT NOT NULL," +
     "text TEXT NOT NULL," +
     "date INT NOT NULL);" // Unix timestamp of message.
 
   private val CreateContactsTable = "CREATE TABLE contacts(" +
-    "_id INT PRIMARY KEY," +
+    "_id INTEGER PRIMARY KEY," +
     "address TEXT NOT NULL," +
     "name TEXT NOT NULL)"
 
