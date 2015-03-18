@@ -56,13 +56,13 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Initializes and starts discovery and listening.
    */
   override def create(): Unit = {
-    context.registerReceiver(DeviceDiscoveredReceiver,
+    context.registerReceiver(deviceDiscoveredReceiver,
       new IntentFilter(BluetoothDevice.ACTION_FOUND))
-    context.registerReceiver(BluetoothStateReceiver,
+    context.registerReceiver(bluetoothStateReceiver,
       new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
-    context.registerReceiver(DiscoveryFinishedReceiver,
+    context.registerReceiver(discoveryFinishedReceiver,
       new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED))
-    // Otherwise, connections are started in [[BluetoothStateReceiver]].
+    // Otherwise, connections are started in [[bluetoothStateReceiver]].
     if (btAdapter.isEnabled)
       startBluetoothConnections()
   }
@@ -73,9 +73,15 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
   override def destroy(): Unit = {
     listenThread.cancel()
     cancelDiscovery = true
-    context.unregisterReceiver(DeviceDiscoveredReceiver)
-    context.unregisterReceiver(BluetoothStateReceiver)
-    context.unregisterReceiver(DiscoveryFinishedReceiver)
+    try {
+      context.unregisterReceiver(deviceDiscoveredReceiver)
+      context.unregisterReceiver(bluetoothStateReceiver)
+      context.unregisterReceiver(discoveryFinishedReceiver)
+    } catch {
+      case e: IllegalArgumentException =>
+        // This seems to happen for no reason, both on Android 4.4 and 5.0.
+        Log.w(Tag, "Failed to unregister receiver", e)
+    }
   }
 
   /**
@@ -110,7 +116,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
   /**
    * Stores newly discovered devices.
    */
-  private val DeviceDiscoveredReceiver = new BroadcastReceiver() {
+  private val deviceDiscoveredReceiver = new BroadcastReceiver() {
     override def onReceive(context: Context, intent: Intent) {
       discovered += new Device(intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE), false)
     }
@@ -119,7 +125,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
   /**
    * Initiates connection to discovered devices.
    */
-  private val DiscoveryFinishedReceiver = new BroadcastReceiver() {
+  private val discoveryFinishedReceiver = new BroadcastReceiver() {
     override def onReceive(context: Context, intent: Intent): Unit = {
       discovered.filterNot(d => connections.keySet.contains(d.id))
         .foreach { d =>
@@ -133,7 +139,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
   /**
    * Starts or stops listening and discovery based on bluetooth state.
    */
-  private val BluetoothStateReceiver = new BroadcastReceiver {
+  private val bluetoothStateReceiver = new BroadcastReceiver {
     override def onReceive(context: Context, intent: Intent): Unit = {
       intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) match {
         case BluetoothAdapter.STATE_ON =>
