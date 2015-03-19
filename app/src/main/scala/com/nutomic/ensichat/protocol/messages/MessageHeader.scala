@@ -23,11 +23,10 @@ object MessageHeader {
   def read(bytes: Array[Byte]): MessageHeader = {
     val b = ByteBuffer.wrap(bytes, 0, Length)
 
-    val versionAndType = BufferUtils.getUnsignedShort(b)
-    val version = versionAndType >>> 12
+    val version = BufferUtils.getUnsignedByte(b)
     if (version != Version)
       throw new ParseMessageException("Failed to parse message with unsupported version " + version)
-    val messageType = versionAndType & 0xfff
+    val messageType = BufferUtils.getUnsignedByte(b)
     val hopLimit = BufferUtils.getUnsignedByte(b)
     val hopCount = BufferUtils.getUnsignedByte(b)
 
@@ -59,8 +58,8 @@ case class MessageHeader(messageType: Int,
   def write(contentLength: Int): Array[Byte] = {
     val b = ByteBuffer.allocate(MessageHeader.Length)
 
-    val versionAndType = (MessageHeader.Version << 12) | messageType
-    BufferUtils.putUnsignedShort(b, versionAndType)
+    BufferUtils.putUnsignedByte(b, MessageHeader.Version)
+    BufferUtils.putUnsignedByte(b, messageType)
     BufferUtils.putUnsignedByte(b, hopLimit)
     BufferUtils.putUnsignedByte(b, hopCount)
 

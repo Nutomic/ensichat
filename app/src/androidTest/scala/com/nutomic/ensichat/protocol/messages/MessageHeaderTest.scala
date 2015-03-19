@@ -14,7 +14,7 @@ object MessageHeaderTest {
 
   val h3 = new MessageHeader(Text.Type, 0xff, AddressTest.a4, AddressTest.a2, 250, 0, 56)
 
-  val h4 = new MessageHeader(0xfff, 0, Address.Null, Address.Broadcast, MessageHeader.SeqNumRange.last, 0, 0xff)
+  val h4 = new MessageHeader(0xff, 0, Address.Null, Address.Broadcast, MessageHeader.SeqNumRange.last, 0, 0xff)
 
   val h5 = new MessageHeader(ConnectionInfo.Type, 0xff, Address.Broadcast, Address.Null, 0, 0xffff, 0)
 
