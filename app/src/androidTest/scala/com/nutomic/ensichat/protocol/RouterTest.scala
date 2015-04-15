@@ -1,7 +1,6 @@
 package com.nutomic.ensichat.protocol
 
 import android.test.AndroidTestCase
-import android.util.Log
 import com.nutomic.ensichat.protocol.messages._
 import junit.framework.Assert._
 
@@ -68,14 +67,14 @@ class RouterTest extends AndroidTestCase {
       assertEquals(neighbors(), sentTo)
     }
 
-    test(1, MessageHeader.SeqNumRange.last)
-    test(MessageHeader.SeqNumRange.last / 2, MessageHeader.SeqNumRange.last)
-    test(MessageHeader.SeqNumRange.last / 2, 1)
+    test(1, ContentHeader.SeqNumRange.last)
+    test(ContentHeader.SeqNumRange.last / 2, ContentHeader.SeqNumRange.last)
+    test(ContentHeader.SeqNumRange.last / 2, 1)
   }
 
   private def generateMessage(sender: Address, receiver: Address, seqNum: Int): Message = {
-    val header = new MessageHeader(0, MessageHeader.DefaultHopLimit, sender, receiver, seqNum)
-    new Message(header, new CryptoData(None, None), new UserName(""))
+    val header = new ContentHeader(sender, receiver, seqNum, UserName.Type, 5)
+    new Message(header, new UserName(""))
   }
 
 }

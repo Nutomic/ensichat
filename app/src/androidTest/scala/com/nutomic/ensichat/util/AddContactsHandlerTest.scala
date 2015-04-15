@@ -24,11 +24,11 @@ class AddContactsHandlerTest extends AndroidTestCase {
   private lazy val crypto = new Crypto(getContext)
 
   private lazy val header1 =
-    new MessageHeader(RequestAddContact.Type, 0, UserTest.u1.address, crypto.localAddress, 0)
+    new ContentHeader(UserTest.u1.address, crypto.localAddress, 0, RequestAddContact.Type, 0)
   private lazy val header2 =
-    new MessageHeader(ResultAddContact.Type, 0, UserTest.u1.address, crypto.localAddress, 0)
+    new ContentHeader(UserTest.u1.address, crypto.localAddress, 0, ResultAddContact.Type, 0)
   private lazy val header3 =
-    new MessageHeader(ResultAddContact.Type, 0, crypto.localAddress, UserTest.u1.address, 0)
+    new ContentHeader(crypto.localAddress, UserTest.u1.address, 0, ResultAddContact.Type, 0)
 
   override def tearDown(): Unit = {
     super.tearDown()

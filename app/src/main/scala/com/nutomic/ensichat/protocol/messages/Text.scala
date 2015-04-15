@@ -28,7 +28,9 @@ object Text {
  */
 case class Text(text: String, time: Date = new Date()) extends MessageBody {
 
-  override def messageType = Text.Type
+  override def protocolType = -1
+
+  override def contentType = Text.Type
 
   override def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)

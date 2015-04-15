@@ -183,7 +183,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * @param msg The message that was received.
    * @param device Device that sent the message.
    */
-  private def onReceiveMessage(msg: Message, device: Device.ID): Unit = msg.Body match {
+  private def onReceiveMessage(msg: Message, device: Device.ID): Unit = msg.body match {
     case info: ConnectionInfo =>
       val address = crypto.calculateAddress(info.key)
       // Service.onConnectionOpened sends message, so mapping already needs to be in place.

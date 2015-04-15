@@ -9,10 +9,13 @@ object Message {
    * Orders messages by date, oldest messages first.
    */
   val Ordering = new Ordering[Message] {
-    override def compare(m1: Message, m2: Message) =  (m1.Body, m2.Body) match {
+    override def compare(m1: Message, m2: Message) =  (m1.body, m2.body) match {
       case (t1: Text, t2: Text) => t1.time.compareTo(t2.time)
       case _ => 0
     }
+  }
+
+  class ParseMessageException(detailMessage: String) extends RuntimeException(detailMessage) {
   }
 
   val Charset = "UTF-8"
@@ -20,25 +23,29 @@ object Message {
   class ReadMessageException(throwable: Throwable)
     extends RuntimeException(throwable)
 
+  /**
+   * Reads the entire message (header, crypto and body) into an object.
+   */
   def read(stream: InputStream): Message = {
     try {
       val headerBytes = new Array[Byte](MessageHeader.Length)
       stream.read(headerBytes, 0, MessageHeader.Length)
-      val header = MessageHeader.read(headerBytes)
+      var (header: AbstractHeader, length) = MessageHeader.read(headerBytes)
 
-      val contentLength = (header.length - MessageHeader.Length).toInt
-      val contentBytes = new Array[Byte](contentLength)
-      var numRead = 0
-      do {
-        numRead += stream.read(contentBytes, numRead, contentLength - numRead)
-      } while (numRead < contentLength)
+      var contentBytes = readStream(stream, length - header.length)
+
+      if (header.isContentMessage) {
+        val ret: (ContentHeader, Array[Byte]) = ContentHeader.read(header, contentBytes)
+        header = ret._1
+        contentBytes = ret._2
+      }
 
       val (crypto, remaining) = CryptoData.read(contentBytes)
 
       val body =
-        header.messageType match {
+        header.protocolType match {
           case ConnectionInfo.Type => ConnectionInfo.read(remaining)
-          case _ => new EncryptedBody(remaining)
+          case _                   => new EncryptedBody(remaining)
         }
 
       new Message(header, crypto, body)
@@ -48,13 +55,26 @@ object Message {
     }
   }
 
+  /**
+   * Reads length bytes from stream and returns them.
+   */
+  private def readStream(stream: InputStream, length: Int): Array[Byte] = {
+    val contentBytes = new Array[Byte](length)
+
+    var numRead = 0
+    do {
+      numRead += stream.read(contentBytes, numRead, length - numRead)
+    } while (numRead < length)
+    contentBytes
+  }
+
 }
 
-case class Message(Header: MessageHeader, Crypto: CryptoData, Body: MessageBody) {
+case class Message(header: AbstractHeader, crypto: CryptoData, body: MessageBody) {
 
-  def this(header: MessageHeader, body: MessageBody) =
+  def this(header: AbstractHeader, body: MessageBody) =
     this(header, new CryptoData(None, None), body)
 
-  def write = Header.write(Body.length + Crypto.length) ++ Crypto.write ++ Body.write
+  def write = header.write(body.length + crypto.length) ++ crypto.write ++ body.write
 
 }

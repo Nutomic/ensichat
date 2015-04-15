@@ -44,8 +44,8 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
   override def run(): Unit = {
     Log.i(Tag, "Starting data transfer with " + device.toString)
 
-    send(Crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type, ConnectionInfo.HopLimit,
-      Address.Null, Address.Null, 0, 0), new ConnectionInfo(Crypto.getLocalPublicKey))))
+    send(Crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
+      Address.Null, Address.Null, 0), new ConnectionInfo(Crypto.getLocalPublicKey))))
 
     while (socket.isConnected) {
       try {

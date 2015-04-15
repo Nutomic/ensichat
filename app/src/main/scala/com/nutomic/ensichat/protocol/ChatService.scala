@@ -1,18 +1,17 @@
 package com.nutomic.ensichat.protocol
 
-import android.app.{Notification, NotificationManager, PendingIntent, Service}
+import android.app.Service
 import android.bluetooth.BluetoothAdapter
-import android.content.{Context, Intent}
+import android.content.Intent
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.{MainActivity, ConfirmAddContactActivity}
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
 import com.nutomic.ensichat.protocol.messages._
-import com.nutomic.ensichat.util.{AddContactsHandler, NotificationHandler, Database}
+import com.nutomic.ensichat.util.{AddContactsHandler, Database, NotificationHandler}
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -138,8 +137,11 @@ class ChatService extends Service {
     if (!btInterface.getConnections.contains(target))
       return
 
-    val header = new MessageHeader(body.messageType, MessageHeader.DefaultHopLimit,
-      crypto.localAddress, target, seqNumGenerator.next())
+    val sp = PreferenceManager.getDefaultSharedPreferences(this)
+    val messageId = sp.getLong("message_id", 0)
+    val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
+      body.contentType, messageId)
+    sp.edit().putLong("message_id", messageId + 1)
 
     val msg = new Message(header, body)
     val encrypted = crypto.encrypt(crypto.sign(msg))
@@ -154,10 +156,10 @@ class ChatService extends Service {
    * Decrypts and verifies incoming messages, forwards valid ones to [[onNewMessage()]].
    */
   def onMessageReceived(msg: Message): Unit = {
-    if (msg.Header.target == crypto.localAddress) {
+    if (msg.header.target == crypto.localAddress) {
       val decrypted = crypto.decrypt(msg)
       if (!crypto.verify(decrypted)) {
-        Log.i(Tag, "Ignoring message with invalid signature from " + msg.Header.origin)
+        Log.i(Tag, "Ignoring message with invalid signature from " + msg.header.origin)
         return
       }
       onNewMessage(decrypted)
@@ -169,11 +171,11 @@ class ChatService extends Service {
   /**
    * Handles all (locally and remotely sent) new messages.
    */
-  private def onNewMessage(msg: Message): Unit = msg.Body match {
+  private def onNewMessage(msg: Message): Unit = msg.body match {
     case name: UserName =>
-      val contact = new User(msg.Header.origin, name.name)
+      val contact = new User(msg.header.origin, name.name)
       knownUsers += contact
-      if (database.getContact(msg.Header.origin).nonEmpty)
+      if (database.getContact(msg.header.origin).nonEmpty)
         database.changeContactName(contact)
 
       callConnectionListeners()
@@ -204,7 +206,7 @@ class ChatService extends Service {
       false
     }
 
-    val info = msg.Body.asInstanceOf[ConnectionInfo]
+    val info = msg.body.asInstanceOf[ConnectionInfo]
     val sender = crypto.calculateAddress(info.key)
     if (sender == Address.Broadcast || sender == Address.Null) {
       Log.i(Tag, "Ignoring ConnectionInfo message with invalid sender " + sender)

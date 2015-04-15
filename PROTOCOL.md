@@ -29,15 +29,15 @@ either address.
 Messages
 --------
 
-All messages are signed using RSASSA-PKCS1-v1_5. All messages except
-ConnectionInfo are encrypted using AES/CBC/PKCS5Padding, after which
-the AES key is wrapped with the recipient's public RSA key.
+All messages are signed using RSASSA-PKCS1-v1_5. All Content Messages
+except are encrypted using AES/CBC/PKCS5Padding, after which the 
+AES key is wrapped with the recipient's public RSA key.
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /                                                               /
-    \                      Header (76 bytes)                        \
+    \                   Header (74 or 80 bytes)                     \
     /                                                               /
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /                                                               /
@@ -52,14 +52,15 @@ the AES key is wrapped with the recipient's public RSA key.
 
 ### Header
 
-Every message starts with one 76 byte header indicating the message
+Every message starts with one 74 byte header indicating the message
 version, type and ID, followed by the length of the message. The
-header is in network byte order, i.e. big endian.
+header is in network byte order, i.e. big endian. The header may have
+6 bytes of additional data.
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |    Version    |     Type      |   Hop Limit   |   Hop Count   |
+    |    Version    | Protocol-Type |   Hop Limit   |   Hop Count   |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                            Length                             |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -71,14 +72,17 @@ header is in network byte order, i.e. big endian.
     |                   Target Address (32 bytes)                   |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |         Sequence Number       |           Reserved            |
+    |         Sequence Number       |         Content-Type          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                           Message ID                          |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Version specifies the protocol version number. This is currently 0. A
 message with unknown version number MUST be ignored. The connection
 where such a packet came from MAY be closed.
 
-Type is one of the message types specified below.
+Protocol-Type is one of those specified in section Protocol Messages,
+or 255 for Content Messages.
 
 Hop Limit SHOULD be set to `MAX_HOP_COUNT` on message creation, and
 MUST NOT be changed by a forwarding node.
@@ -105,6 +109,13 @@ each new message sent (after 2^16-1 comes 0 again). It SHOULD
 be persistent during restarts. It is used by intermediate nodes
 to avoid forwarding the same message multiple times.
 
+Content-Type is one of those in section Content-Messages.
+
+Message ID is unique for each message by the same sender. A device MUST NOT
+ever send two messages with the same Message ID.
+
+Only Content Messages have the Content-Type and Message ID
+fields.
 
 ### Encryption Data
 
@@ -129,14 +140,22 @@ Signature is the cryptographic signature over the (unencrypted) message
 header and message body.
 
 
-ConnectionInfo (Type = 0)
----------
+Protocol Messages
+-----------------
+
+These messages are sent by the protocol, without any user interaction.
+They are not encrypted, and do not contain the Content-Type and 
+Message ID fields.
+
+
+### ConnectionInfo  (Protocol-Type = 1)
 
 After successfully connecting to a node via Bluetooth, public keys
 are exchanged. Each node MUST send this as the first message over
 the connection. Hop Limit MUST be 1 for this message type (i.e. it
-must never be forwarded). Origin Address and Target Address MUST be
-set to all zeros, and MUST be ignored by the receiving node.
+must never be forwarded). Origin Address, Target Address and Sequence
+Number MUST be set to all zeros, and MUST be ignored by the receiving 
+node.
 
 A receiving node SHOULD store the key in permanent storage if it
 hasn't already stored it earlier.  However, a node MAY decide to
@@ -167,7 +186,16 @@ After this message has been received, communication with normal messages
 may start.
 
 
-### RequestAddContact (Type = 4)
+Content Messages
+----------------
+
+These messages are initiated by user action. They are encrypted, and
+contain the Content-Type and Message ID fields. 
+
+These messages always have a Protocol-Type of 255.
+
+
+### RequestAddContact (Content-Type = 1)
 
 Sent when a user wants to add another node as a contact. After this,
 a ResultAddContact message should be returned.
@@ -179,7 +207,7 @@ a ResultAddContact message should be returned.
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 
-### ResultAddContact (Type = 5)
+### ResultAddContact (Content-Type = 2)
 
 Sent as response to a RequestAddContact message.
 
@@ -194,7 +222,7 @@ otherwise. Nodes should only add another node as a contact if both
 users agreed.
 
 
-### Text (Type = 6)
+### Text (Content-Type = 3)
 
 A simple chat message.
 
@@ -214,7 +242,7 @@ Time is the unix timestamp of message sending.
 
 Text the string to be transferred, encoded as UTF-8.
 
-### UserName (Type = 7)
+### UserName (Content-Type = 4)
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1

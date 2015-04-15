@@ -114,7 +114,7 @@ class Crypto(context: Context) {
   /**
    * Adds a new public key for a remote device.
    *
-   * @throws RuntimeException If a this key
+   * @throws RuntimeException If a key already exists for this address.
    */
   @throws[RuntimeException]
   def addPublicKey(address: Address, key: PublicKey): Unit = {
@@ -128,18 +128,18 @@ class Crypto(context: Context) {
     val sig = Signature.getInstance(SignAlgorithm)
     val key = loadKey(PrivateKeyAlias, classOf[PrivateKey])
     sig.initSign(key)
-    sig.update(msg.Body.write)
-    new Message(msg.Header, new CryptoData(Option(sig.sign), None), msg.Body)
+    sig.update(msg.body.write)
+    new Message(msg.header, new CryptoData(Option(sig.sign), None), msg.body)
   }
 
   def verify(msg: Message, key: PublicKey = null): Boolean = {
     val publicKey =
       if (key != null) key
-      else loadKey(msg.Header.origin.toString, classOf[PublicKey])
+      else loadKey(msg.header.origin.toString, classOf[PublicKey])
     val sig = Signature.getInstance(SignAlgorithm)
     sig.initVerify(publicKey)
-    sig.update(msg.Body.write)
-    sig.verify(msg.Crypto.signature.get)
+    sig.update(msg.body.write)
+    sig.verify(msg.crypto.signature.get)
   }
 
   /**
@@ -223,42 +223,42 @@ class Crypto(context: Context) {
   private def keyFolder = new File(context.getFilesDir, "keys")
 
   def encrypt(msg: Message, key: PublicKey = null): Message = {
-    assert(msg.Crypto.signature.isDefined, "Message must be signed before encryption")
+    assert(msg.crypto.signature.isDefined, "Message must be signed before encryption")
 
     // Symmetric encryption of data
     val secretKey = makeSecretKey()
     val symmetricCipher = Cipher.getInstance(SymmetricCipherAlgorithm)
     symmetricCipher.init(Cipher.ENCRYPT_MODE, secretKey)
-    val encrypted = new EncryptedBody(copyThroughCipher(symmetricCipher, msg.Body.write))
+    val encrypted = new EncryptedBody(copyThroughCipher(symmetricCipher, msg.body.write))
 
     // Asymmetric encryption of secret key
     val publicKey =
       if (key != null) key
-      else loadKey(msg.Header.target.toString, classOf[PublicKey])
+      else loadKey(msg.header.target.toString, classOf[PublicKey])
     val asymmetricCipher = Cipher.getInstance(KeyAlgorithm)
     asymmetricCipher.init(Cipher.WRAP_MODE, publicKey)
 
-    new Message(msg.Header,
-      new CryptoData(msg.Crypto.signature, Option(asymmetricCipher.wrap(secretKey))), encrypted)
+    new Message(msg.header,
+      new CryptoData(msg.crypto.signature, Option(asymmetricCipher.wrap(secretKey))), encrypted)
   }
 
   def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
     val asymmetricCipher = Cipher.getInstance(KeyAlgorithm)
     asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))
-    val key = asymmetricCipher.unwrap(msg.Crypto.key.get, SymmetricKeyAlgorithm, Cipher.SECRET_KEY)
+    val key = asymmetricCipher.unwrap(msg.crypto.key.get, SymmetricKeyAlgorithm, Cipher.SECRET_KEY)
 
     // Symmetric decryption of data
     val symmetricCipher = Cipher.getInstance(SymmetricCipherAlgorithm)
     symmetricCipher.init(Cipher.DECRYPT_MODE, key)
-    val decrypted = copyThroughCipher(symmetricCipher, msg.Body.asInstanceOf[EncryptedBody].data)
-    val body = msg.Header.messageType match {
+    val decrypted = copyThroughCipher(symmetricCipher, msg.body.asInstanceOf[EncryptedBody].data)
+    val body = msg.header.asInstanceOf[ContentHeader].contentType match {
       case RequestAddContact.Type => RequestAddContact.read(decrypted)
       case ResultAddContact.Type  => ResultAddContact.read(decrypted)
       case Text.Type              => Text.read(decrypted)
       case UserName.Type          => UserName.read(decrypted)
     }
-    new Message(msg.Header, msg.Crypto, body)
+    new Message(msg.header, msg.crypto, body)
   }
 
   /**

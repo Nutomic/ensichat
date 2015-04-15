@@ -7,7 +7,7 @@ import android.view._
 import android.widget.AdapterView.OnItemClickListener
 import android.widget._
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.protocol.{User, ChatService}
+import com.nutomic.ensichat.protocol.ChatService
 import com.nutomic.ensichat.protocol.messages.RequestAddContact
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import com.nutomic.ensichat.util.{Database, UsersAdapter}

@@ -111,10 +111,10 @@ class ChatFragment extends ListFragment with OnClickListener
    * Displays new messages in UI.
    */
   override def onMessageReceived(msg: Message): Unit = {
-    if (!Set(msg.Header.origin, msg.Header.target).contains(address))
+    if (!Set(msg.header.origin, msg.header.target).contains(address))
       return
 
-    msg.Body match {
+    msg.body match {
       case _: Text => adapter.add(msg)
       case _ =>
     }

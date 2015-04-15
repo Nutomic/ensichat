@@ -2,31 +2,25 @@ package com.nutomic.ensichat.protocol.messages
 
 import java.nio.ByteBuffer
 
+import com.nutomic.ensichat.protocol.messages.Message.ParseMessageException
 import com.nutomic.ensichat.protocol.{Address, BufferUtils}
 
 object MessageHeader {
 
-  val Length = 12 + 2 * Address.Length
-
-  val DefaultHopLimit = 20
-
-  val Version = 0
-  
-  val SeqNumRange = 0 until ((2 << 16) - 1)
-
-  class ParseMessageException(detailMessage: String) extends RuntimeException(detailMessage) {
-  }
+  val Length = AbstractHeader.Length
 
   /**
-   * Constructs [[MessageHeader]] from byte array.
+   * Constructs header from byte array.
+   *
+   * @return The header and the message length in bytes.
    */
-  def read(bytes: Array[Byte]): MessageHeader = {
-    val b = ByteBuffer.wrap(bytes, 0, Length)
+  def read(bytes: Array[Byte]): (MessageHeader, Int) = {
+    val b = ByteBuffer.wrap(bytes, 0, MessageHeader.Length)
 
     val version = BufferUtils.getUnsignedByte(b)
-    if (version != Version)
+    if (version != AbstractHeader.Version)
       throw new ParseMessageException("Failed to parse message with unsupported version " + version)
-    val messageType = BufferUtils.getUnsignedByte(b)
+    val protocolType = BufferUtils.getUnsignedByte(b)
     val hopLimit = BufferUtils.getUnsignedByte(b)
     val hopCount = BufferUtils.getUnsignedByte(b)
 
@@ -36,52 +30,24 @@ object MessageHeader {
 
     val seqNum = BufferUtils.getUnsignedShort(b)
 
-    new MessageHeader(messageType, hopLimit, origin, target, seqNum, length, hopCount)
+    (new MessageHeader(protocolType, origin, target, seqNum, hopCount, hopLimit), length.toInt)
   }
 
 }
 
 /**
  * First part of any message, used for routing.
+ *
+ * This is the same as [[AbstractHeader]].
  */
-case class MessageHeader(messageType: Int,
-                    hopLimit: Int,
-                    origin: Address,
-                    target: Address,
-                    seqNum: Int,
-                    length: Long = -1,
-                    hopCount: Int = 0) {
+case class MessageHeader(override val protocolType: Int,
+                    override val origin: Address,
+                    override val target: Address,
+                    override val seqNum: Int,
+                    override val hopCount: Int = 0,
+                    override val hopLimit: Int = AbstractHeader.DefaultHopLimit)
+  extends AbstractHeader {
 
-  /**
-   * Writes the header to byte array.
-   */
-  def write(contentLength: Int): Array[Byte] = {
-    val b = ByteBuffer.allocate(MessageHeader.Length)
-
-    BufferUtils.putUnsignedByte(b, MessageHeader.Version)
-    BufferUtils.putUnsignedByte(b, messageType)
-    BufferUtils.putUnsignedByte(b, hopLimit)
-    BufferUtils.putUnsignedByte(b, hopCount)
-
-    BufferUtils.putUnsignedInt(b, MessageHeader.Length + contentLength)
-    b.put(origin.bytes)
-    b.put(target.bytes)
-
-    BufferUtils.putUnsignedShort(b, seqNum)
-    BufferUtils.putUnsignedShort(b, 0)
-
-    b.array()
-  }
-
-  override def equals(a: Any): Boolean = a match {
-    case o: MessageHeader =>
-      messageType == o.messageType &&
-        hopLimit == o.hopLimit &&
-        origin == o.origin &&
-        target == o.target &&
-        hopCount == o.hopCount
-        // Don't compare length as it may be unknown (when header was just created without a body).
-    case _ => false
-  }
+  def length: Int = MessageHeader.Length
 
 }

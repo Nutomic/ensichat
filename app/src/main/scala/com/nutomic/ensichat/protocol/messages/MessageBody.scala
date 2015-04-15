@@ -5,7 +5,9 @@ package com.nutomic.ensichat.protocol.messages
  */
 abstract class MessageBody {
 
-  def messageType: Int
+  def protocolType: Int
+
+  def contentType: Int
 
   /**
    * Writes the message contents to a byte array.

@@ -9,8 +9,8 @@ import com.nutomic.ensichat.protocol._
 import com.nutomic.ensichat.protocol.messages._
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 
-import scala.collection.{mutable, SortedSet}
 import scala.collection.immutable.TreeSet
+import scala.collection.{SortedSet, mutable}
 
 object Database {
 
@@ -22,8 +22,9 @@ object Database {
     "_id INTEGER PRIMARY KEY," +
     "origin TEXT NOT NULL," +
     "target TEXT NOT NULL," +
+    "message_id INT NOT NULL," +
     "text TEXT NOT NULL," +
-    "date INT NOT NULL);" // Unix timestamp of message.
+    "date INT NOT NULL);" // Unix timestamp
 
   private val CreateContactsTable = "CREATE TABLE contacts(" +
     "_id INTEGER PRIMARY KEY," +
@@ -56,18 +57,14 @@ class Database(context: Context)
    */
   def getMessages(address: Address, count: Int): SortedSet[Message] = {
     val c = getReadableDatabase.query(true,
-      "messages", Array("origin", "target", "text", "date"),
+      "messages", Array("origin", "target", "message_id", "text", "date"),
       "origin = ? OR target = ?", Array(address.toString, address.toString),
       null, null, "date DESC", count.toString)
     var messages = new TreeSet[Message]()(Message.Ordering)
     while (c.moveToNext()) {
-      val header = new MessageHeader(
-        Text.Type,
-        -1,
-        new Address(c.getString(c.getColumnIndex("origin"))),
-        new Address(c.getString(c.getColumnIndex("target"))),
-        -1,
-        -1)
+      val header = new ContentHeader(new Address(c.getString(c.getColumnIndex("origin"))),
+        new Address(c.getString(c.getColumnIndex("target"))), -1, Text.Type,
+        c.getLong(c.getColumnIndex("message_id")))
       val body = new Text(new String(c.getString(c.getColumnIndex ("text"))),
         new Date(c.getLong(c.getColumnIndex("date"))))
       messages += new Message(header, body)
@@ -79,12 +76,13 @@ class Database(context: Context)
   /**
    * Inserts the given new message into the database.
    */
-  override def onMessageReceived(msg: Message): Unit = msg.Body match {
+  override def onMessageReceived(msg: Message): Unit = msg.body match {
     case text: Text =>
       val cv =  new ContentValues()
-      cv.put("origin", msg.Header.origin.toString)
-      cv.put("target", msg.Header.target.toString)
-      // toString used as workaround for compile error with Long.
+      cv.put("origin", msg.header.origin.toString)
+      cv.put("target", msg.header.target.toString)
+      // Need to use [[Long#toString]] because of https://issues.scala-lang.org/browse/SI-2991
+      cv.put("message_id", msg.header.asInstanceOf[ContentHeader].messageId.toString)
       cv.put("date", text.time.getTime.toString)
       cv.put("text", text.text)
       getWritableDatabase.insert("messages", null, cv)

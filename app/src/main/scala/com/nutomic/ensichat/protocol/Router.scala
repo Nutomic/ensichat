@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.protocol
 
-import com.nutomic.ensichat.protocol.messages.{Message, MessageHeader}
+import com.nutomic.ensichat.protocol.messages.{ContentHeader, Message}
 
 /**
  * Forwards messages to all connected devices.
@@ -10,7 +10,7 @@ class Router(activeConnections: () => Set[Address], send: (Address, Message) => 
   private var messageSeen = Set[(Address, Int)]()
 
   def onReceive(msg: Message): Unit = {
-    val info = (msg.Header.origin, msg.Header.seqNum)
+    val info = (msg.header.origin, msg.header.seqNum)
     if (messageSeen.contains(info))
       return
 
@@ -34,12 +34,12 @@ class Router(activeConnections: () => Set[Address], send: (Address, Message) => 
 
       // True if [[s2]] is between {{{MessageHeader.SeqNumRange.size / 2}}} and
       // [[MessageHeader.SeqNumRange.size]].
-      if (s1 > MessageHeader.SeqNumRange.size / 2) {
+      if (s1 > ContentHeader.SeqNumRange.size / 2) {
         // True if [[s2]] is between {{{s1 - MessageHeader.SeqNumRange.size / 2}}} and [[s1]].
-        s1 - MessageHeader.SeqNumRange.size / 2 < s2 && s2 < s1
+        s1 - ContentHeader.SeqNumRange.size / 2 < s2 && s2 < s1
       } else {
         // True if [[s2]] is *not* between [[s1]] and {{{s1 + MessageHeader.SeqNumRange.size / 2}}}.
-        s2 < s1 || s2 > s1 + MessageHeader.SeqNumRange.size / 2
+        s2 < s1 || s2 > s1 + ContentHeader.SeqNumRange.size / 2
       }
     }
   }

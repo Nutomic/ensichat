@@ -4,14 +4,12 @@ import android.app.AlertDialog
 import android.content.DialogInterface.OnClickListener
 import android.content.{Context, DialogInterface}
 import android.os.Bundle
-import android.util.Log
 import android.view.{ContextThemeWrapper, LayoutInflater}
-import android.widget.{ImageView, TextView, Toast}
+import android.widget.{ImageView, TextView}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.protocol.messages.{Message, RequestAddContact, ResultAddContact}
+import com.nutomic.ensichat.protocol.messages.ResultAddContact
 import com.nutomic.ensichat.protocol.{Address, Crypto}
-import com.nutomic.ensichat.util.{Database, IdenticonGenerator}
+import com.nutomic.ensichat.util.IdenticonGenerator
 
 object ConfirmAddContactActivity {
 

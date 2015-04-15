@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream
 import java.util.GregorianCalendar
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.protocol.messages.MessageHeaderTest._
+import com.nutomic.ensichat.protocol.messages.ContentHeaderTest._
 import com.nutomic.ensichat.protocol.messages.MessageTest._
 import com.nutomic.ensichat.protocol.{AddressTest, Crypto}
 import junit.framework.Assert._
@@ -47,7 +47,7 @@ class MessageTest extends AndroidTestCase {
   }
 
   def testSerializeSigned(): Unit = {
-    val header = new MessageHeader(ConnectionInfo.Type, 0xff, AddressTest.a4, AddressTest.a2, 0, 56)
+    val header = new MessageHeader(ConnectionInfo.Type, AddressTest.a4, AddressTest.a2, 0)
     val m = new Message(header, ConnectionInfoTest.generateCi(getContext))
 
     val signed = crypto.sign(m)
@@ -65,10 +65,10 @@ class MessageTest extends AndroidTestCase {
       val bytes = encrypted.write
 
       val read = Message.read(new ByteArrayInputStream(bytes))
-      assertEquals(encrypted.Crypto, read.Crypto)
+      assertEquals(encrypted.crypto, read.crypto)
       val decrypted = crypto.decrypt(read)
-      assertEquals(m.Header, decrypted.Header)
-      assertEquals(m.Body, decrypted.Body)
+      assertEquals(m.header, decrypted.header)
+      assertEquals(m.body, decrypted.body)
       assertTrue(crypto.verify(decrypted, crypto.getLocalPublicKey))
     }
   }

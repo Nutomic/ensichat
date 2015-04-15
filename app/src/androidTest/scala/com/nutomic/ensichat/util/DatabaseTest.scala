@@ -5,10 +5,11 @@ import java.util.concurrent.CountDownLatch
 import android.content.Context
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
-import android.test.AndroidTestCase
-import android.test.mock
+import android.test.{AndroidTestCase, mock}
 import com.nutomic.ensichat.protocol.UserTest
+import com.nutomic.ensichat.protocol.messages.ContentHeaderTest._
 import com.nutomic.ensichat.protocol.messages.MessageTest._
+import com.nutomic.ensichat.protocol.messages.{ContentHeader, CryptoData}
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import junit.framework.Assert._
 
@@ -50,22 +51,35 @@ class DatabaseTest extends AndroidTestCase {
   }
 
   def testMessageCount(): Unit = {
-    val msg1 = database.getMessages(m1.Header.origin, 1)
+    val msg1 = database.getMessages(m1.header.origin, 1)
     assertEquals(1, msg1.size)
 
-    val msg2 = database.getMessages(m1.Header.origin, 3)
+    val msg2 = database.getMessages(m1.header.origin, 3)
     assertEquals(2, msg2.size)
   }
 
   def testMessageOrder(): Unit = {
-    val msg = database.getMessages(m1.Header.target, 1)
+    val msg = database.getMessages(m1.header.target, 1)
     assertTrue(msg.contains(m3))
   }
 
   def testMessageSelect(): Unit = {
-    val msg = database.getMessages(m1.Header.target, 2)
+    val msg = database.getMessages(m1.header.target, 2)
     assertTrue(msg.contains(m1))
     assertTrue(msg.contains(m3))
+  }
+
+  def testMessageFields(): Unit = {
+    val msg = database.getMessages(m3.header.target, 1).firstKey
+    val header = msg.header.asInstanceOf[ContentHeader]
+
+    assertEquals(h3.origin, header.origin)
+    assertEquals(h3.target, header.target)
+    assertEquals(-1, msg.header.seqNum)
+    assertEquals(h3.contentType, header.contentType)
+    assertEquals(h3.messageId, header.messageId)
+    assertEquals(new CryptoData(None, None), msg.crypto)
+    assertEquals(m3.body, msg.body)
   }
 
   def testAddContact(): Unit = {

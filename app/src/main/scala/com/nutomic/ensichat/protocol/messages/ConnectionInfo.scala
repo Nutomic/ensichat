@@ -33,7 +33,9 @@ object ConnectionInfo {
  */
 case class ConnectionInfo(key: PublicKey) extends MessageBody {
 
-  override def messageType = ConnectionInfo.Type
+  override def protocolType = ConnectionInfo.Type
+
+  override def contentType = -1
 
   override def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)

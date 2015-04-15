@@ -22,11 +22,11 @@ class MessagesAdapter(context: Context, remoteAddress: Address) extends
     val view = super.getView(position, convertView, parent).asInstanceOf[RelativeLayout]
     val tv = view.findViewById(android.R.id.text1).asInstanceOf[TextView]
 
-    tv.setText(getItem(position).Body.asInstanceOf[Text].text)
+    tv.setText(getItem(position).body.asInstanceOf[Text].text)
 
     val lp = new RelativeLayout.LayoutParams(tv.getLayoutParams)
     val margin = (MessageMargin * context.getResources.getDisplayMetrics.density).toInt
-    if (getItem(position).Header.origin != remoteAddress) {
+    if (getItem(position).header.origin != remoteAddress) {
       view.setGravity(Gravity.RIGHT)
       lp.setMargins(margin, 0, 0, 0)
     } else {

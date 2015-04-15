@@ -28,7 +28,6 @@ object CryptoData {
     val remaining = new Array[Byte](b.remaining())
     b.get(remaining, 0, b.remaining())
     (new CryptoData(Some(signature), key), remaining)
-
   }
 
 }

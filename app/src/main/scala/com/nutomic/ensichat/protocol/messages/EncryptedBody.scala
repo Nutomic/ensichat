@@ -5,7 +5,9 @@ package com.nutomic.ensichat.protocol.messages
  */
 case class EncryptedBody(data: Array[Byte]) extends MessageBody {
 
-  override def messageType = -1
+  override def protocolType = -1
+
+  override def contentType = -1
 
   def write = data
 

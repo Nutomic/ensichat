@@ -7,7 +7,7 @@ import android.widget.Toast
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.ConfirmAddContactActivity
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.protocol.messages.{RequestAddContact, Message, ResultAddContact}
+import com.nutomic.ensichat.protocol.messages.{Message, RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.protocol.{Address, User}
 
 /**
@@ -31,22 +31,22 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
 
   def onMessageReceived(msg: Message): Unit = {
     val remote =
-      if (msg.Header.origin == localAddress)
-        msg.Header.target
+      if (msg.header.origin == localAddress)
+        msg.header.target
       else
-        msg.Header.origin
+        msg.header.origin
 
-    msg.Body match {
+    msg.body match {
       case _: RequestAddContact =>
         Log.i(Tag, "Remote device " + remote + " wants to add us as a contact")
         currentlyAdding += (remote -> new AddContactInfo(false, false))
 
         // Don't show notification for requests coming from local device.
-        if (msg.Header.origin == localAddress)
+        if (msg.header.origin == localAddress)
           return
 
         val intent = new Intent(context, classOf[ConfirmAddContactActivity])
-        intent.putExtra(ConfirmAddContactActivity.ExtraContactAddress, msg.Header.origin.toString)
+        intent.putExtra(ConfirmAddContactActivity.ExtraContactAddress, msg.header.origin.toString)
         val pi = PendingIntent.getActivity(context, 0, intent,
           PendingIntent.FLAG_UPDATE_CURRENT)
 
@@ -66,10 +66,10 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
         }
 
         val newInfo =
-        if (msg.Header.origin == localAddress)
-          new AddContactInfo(res.accepted, currentlyAdding(remote).remoteConfirmed)
-        else
-          new AddContactInfo(currentlyAdding(remote).localConfirmed, res.accepted)
+          if (msg.header.origin == localAddress)
+            new AddContactInfo(res.accepted, currentlyAdding(remote).remoteConfirmed)
+          else
+            new AddContactInfo(currentlyAdding(remote).localConfirmed, res.accepted)
         currentlyAdding += (remote -> newInfo)
 
         if (res.accepted)
