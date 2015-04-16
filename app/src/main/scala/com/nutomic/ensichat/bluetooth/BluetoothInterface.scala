@@ -12,7 +12,7 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.InterfaceHandler
 import com.nutomic.ensichat.protocol._
-import com.nutomic.ensichat.protocol.messages.{ConnectionInfo, Message}
+import com.nutomic.ensichat.protocol.body.ConnectionInfo
 
 import scala.collection.immutable.HashMap
 

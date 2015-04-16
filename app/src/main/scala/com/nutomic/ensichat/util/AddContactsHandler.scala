@@ -7,8 +7,8 @@ import android.widget.Toast
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.ConfirmAddContactActivity
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.protocol.messages.{Message, RequestAddContact, ResultAddContact}
-import com.nutomic.ensichat.protocol.{Address, User}
+import com.nutomic.ensichat.protocol.body.{ResultAddContact, RequestAddContact}
+import com.nutomic.ensichat.protocol.{Message, Address, User}
 
 /**
  * Handles [[RequestAddContact]] and [[ResultAddContact]] messages, adds new contacts.

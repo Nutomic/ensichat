@@ -1,6 +1,7 @@
-package com.nutomic.ensichat.protocol.messages
+package com.nutomic.ensichat.protocol.header
 
 import android.test.AndroidTestCase
+import com.nutomic.ensichat.protocol.body.Text
 import com.nutomic.ensichat.protocol.{Address, AddressTest}
 import junit.framework.Assert._
 

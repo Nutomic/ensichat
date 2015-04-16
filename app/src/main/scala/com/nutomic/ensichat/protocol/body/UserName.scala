@@ -1,8 +1,8 @@
-package com.nutomic.ensichat.protocol.messages
+package com.nutomic.ensichat.protocol.body
 
 import java.nio.ByteBuffer
-
-import com.nutomic.ensichat.protocol.BufferUtils
+import com.nutomic.ensichat.protocol.Message
+import com.nutomic.ensichat.util.BufferUtils
 
 object UserName {
 

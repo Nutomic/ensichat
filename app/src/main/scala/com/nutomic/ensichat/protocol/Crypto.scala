@@ -10,7 +10,8 @@ import android.content.Context
 import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.protocol.Crypto._
-import com.nutomic.ensichat.protocol.messages._
+import com.nutomic.ensichat.protocol.body._
+import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.util.PRNGFixes
 
 object Crypto {

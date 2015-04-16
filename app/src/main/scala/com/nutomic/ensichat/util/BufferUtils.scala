@@ -1,4 +1,4 @@
-package com.nutomic.ensichat.protocol
+package com.nutomic.ensichat.util
 
 import java.nio.ByteBuffer
 

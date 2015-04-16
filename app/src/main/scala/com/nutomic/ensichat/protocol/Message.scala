@@ -1,7 +1,10 @@
-package com.nutomic.ensichat.protocol.messages
+package com.nutomic.ensichat.protocol
 
 import java.io.InputStream
 import java.security.spec.InvalidKeySpecException
+
+import com.nutomic.ensichat.protocol.body._
+import com.nutomic.ensichat.protocol.header.{AbstractHeader, ContentHeader, MessageHeader}
 
 object Message {
 

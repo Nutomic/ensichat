@@ -10,8 +10,8 @@ import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsiChatActivity
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.protocol.messages.{Message, Text}
-import com.nutomic.ensichat.protocol.{Address, ChatService}
+import com.nutomic.ensichat.protocol.body.Text
+import com.nutomic.ensichat.protocol.{Message, Address, ChatService}
 import com.nutomic.ensichat.util.{Database, MessagesAdapter}
 
 /**

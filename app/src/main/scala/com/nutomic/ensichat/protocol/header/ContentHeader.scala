@@ -1,8 +1,9 @@
-package com.nutomic.ensichat.protocol.messages
+package com.nutomic.ensichat.protocol.header
 
 import java.nio.ByteBuffer
 
-import com.nutomic.ensichat.protocol.{Address, BufferUtils}
+import com.nutomic.ensichat.protocol.Address
+import com.nutomic.ensichat.util.BufferUtils
 
 object ContentHeader {
 

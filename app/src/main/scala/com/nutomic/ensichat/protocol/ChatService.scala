@@ -10,7 +10,8 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
-import com.nutomic.ensichat.protocol.messages._
+import com.nutomic.ensichat.protocol.body.{UserName, MessageBody, ConnectionInfo}
+import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.util.{AddContactsHandler, Database, NotificationHandler}
 
 import scala.collection.mutable

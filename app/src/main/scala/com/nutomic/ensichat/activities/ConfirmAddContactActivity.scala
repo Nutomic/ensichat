@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.view.{ContextThemeWrapper, LayoutInflater}
 import android.widget.{ImageView, TextView}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.protocol.messages.ResultAddContact
+import com.nutomic.ensichat.protocol.body.ResultAddContact
 import com.nutomic.ensichat.protocol.{Address, Crypto}
 import com.nutomic.ensichat.util.IdenticonGenerator
 

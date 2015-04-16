@@ -6,7 +6,8 @@ import android.content.{ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol._
-import com.nutomic.ensichat.protocol.messages._
+import com.nutomic.ensichat.protocol.body.{Text, ResultAddContact, RequestAddContact}
+import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 
 import scala.collection.immutable.TreeSet

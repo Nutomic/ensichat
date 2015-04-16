@@ -5,8 +5,9 @@ import java.io._
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.nutomic.ensichat.protocol._
-import com.nutomic.ensichat.protocol.messages.Message.ReadMessageException
-import com.nutomic.ensichat.protocol.messages.{ConnectionInfo, Message, MessageHeader}
+import com.nutomic.ensichat.protocol.body.ConnectionInfo
+import com.nutomic.ensichat.protocol.header.MessageHeader
+import Message.ReadMessageException
 
 /**
  * Transfers data between connnected devices.

@@ -1,8 +1,9 @@
-package com.nutomic.ensichat.protocol.messages
+package com.nutomic.ensichat.protocol.header
 
 import java.nio.ByteBuffer
 
-import com.nutomic.ensichat.protocol.{Address, BufferUtils}
+import com.nutomic.ensichat.protocol.Address
+import com.nutomic.ensichat.util.BufferUtils
 
 object AbstractHeader {
 
@@ -10,7 +11,7 @@ object AbstractHeader {
 
   val Version = 0
 
-  private[messages] val Length = 10 + 2 * Address.Length
+  private[header] val Length = 10 + 2 * Address.Length
 
 }
 

@@ -6,10 +6,12 @@ import android.content.Context
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.test.{AndroidTestCase, mock}
-import com.nutomic.ensichat.protocol.UserTest
-import com.nutomic.ensichat.protocol.messages.ContentHeaderTest._
-import com.nutomic.ensichat.protocol.messages.MessageTest._
-import com.nutomic.ensichat.protocol.messages.{ContentHeader, CryptoData}
+import com.nutomic.ensichat.protocol.{MessageTest, UserTest}
+import com.nutomic.ensichat.protocol.body.CryptoData
+import com.nutomic.ensichat.protocol.header.ContentHeaderTest
+import com.nutomic.ensichat.protocol.header.ContentHeader
+import ContentHeaderTest._
+import MessageTest._
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import junit.framework.Assert._
 

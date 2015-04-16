@@ -1,4 +1,4 @@
-package com.nutomic.ensichat.protocol.messages
+package com.nutomic.ensichat.protocol.body
 
 import android.content.Context
 import android.test.AndroidTestCase

@@ -5,8 +5,8 @@ import android.content.{Context, Intent}
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.protocol.Crypto
-import com.nutomic.ensichat.protocol.messages.{Message, Text}
+import com.nutomic.ensichat.protocol.{Message, Crypto}
+import com.nutomic.ensichat.protocol.body.Text
 
 /**
  * Displays notifications for new messages.

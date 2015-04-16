@@ -1,10 +1,11 @@
-package com.nutomic.ensichat.protocol.messages
+package com.nutomic.ensichat.protocol.body
 
 import java.nio.ByteBuffer
 import java.security.spec.X509EncodedKeySpec
 import java.security.{KeyFactory, PublicKey}
 
-import com.nutomic.ensichat.protocol.{BufferUtils, Crypto}
+import com.nutomic.ensichat.protocol.Crypto
+import com.nutomic.ensichat.util.BufferUtils
 
 object ConnectionInfo {
 

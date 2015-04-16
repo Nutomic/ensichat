@@ -1,7 +1,8 @@
 package com.nutomic.ensichat.protocol
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.protocol.messages._
+import com.nutomic.ensichat.protocol.body.UserName
+import com.nutomic.ensichat.protocol.header.ContentHeader
 import junit.framework.Assert._
 
 class RouterTest extends AndroidTestCase {

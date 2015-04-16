@@ -1,12 +1,13 @@
-package com.nutomic.ensichat.protocol.messages
+package com.nutomic.ensichat.protocol
 
 import java.io.ByteArrayInputStream
 import java.util.GregorianCalendar
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.protocol.messages.ContentHeaderTest._
-import com.nutomic.ensichat.protocol.messages.MessageTest._
-import com.nutomic.ensichat.protocol.{AddressTest, Crypto}
+import com.nutomic.ensichat.protocol.body.{ConnectionInfo, ConnectionInfoTest, Text}
+import com.nutomic.ensichat.protocol.header.ContentHeaderTest._
+import com.nutomic.ensichat.protocol.MessageTest._
+import com.nutomic.ensichat.protocol.header.MessageHeader
 import junit.framework.Assert._
 
 import scala.collection.immutable.TreeSet

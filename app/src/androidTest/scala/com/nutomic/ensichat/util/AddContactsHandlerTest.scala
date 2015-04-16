@@ -2,8 +2,9 @@ package com.nutomic.ensichat.util
 
 import android.content.Context
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.protocol.messages._
-import com.nutomic.ensichat.protocol.{Address, Crypto, UserTest}
+import com.nutomic.ensichat.protocol.body.{RequestAddContact, ResultAddContact}
+import com.nutomic.ensichat.protocol.header.ContentHeader
+import com.nutomic.ensichat.protocol.{Address, Crypto, Message, UserTest}
 import junit.framework.Assert._
 
 class AddContactsHandlerTest extends AndroidTestCase {

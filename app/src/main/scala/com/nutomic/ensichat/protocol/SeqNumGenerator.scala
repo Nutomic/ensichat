@@ -2,7 +2,7 @@ package com.nutomic.ensichat.protocol
 
 import android.content.Context
 import android.preference.PreferenceManager
-import com.nutomic.ensichat.protocol.messages.ContentHeader
+import com.nutomic.ensichat.protocol.header.ContentHeader
 
 /**
  * Generates sequence numbers acorrding to protocol, which are stored persistently.

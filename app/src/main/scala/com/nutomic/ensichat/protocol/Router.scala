@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.protocol
 
-import com.nutomic.ensichat.protocol.messages.{ContentHeader, Message}
+import com.nutomic.ensichat.protocol.header.ContentHeader
 
 /**
  * Forwards messages to all connected devices.
