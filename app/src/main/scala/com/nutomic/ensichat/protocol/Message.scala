@@ -12,8 +12,9 @@ object Message {
    * Orders messages by date, oldest messages first.
    */
   val Ordering = new Ordering[Message] {
-    override def compare(m1: Message, m2: Message) =  (m1.body, m2.body) match {
-      case (t1: Text, t2: Text) => t1.time.compareTo(t2.time)
+    override def compare(m1: Message, m2: Message) =  (m1.header, m2.header) match {
+      case (h1: ContentHeader, h2: ContentHeader) =>
+        h1.time.compareTo(h2.time)
       case _ => 0
     }
   }

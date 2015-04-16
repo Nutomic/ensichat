@@ -1,7 +1,7 @@
 package com.nutomic.ensichat.protocol.body
 
 import java.nio.ByteBuffer
-import java.util.Date
+
 import com.nutomic.ensichat.protocol.Message
 import com.nutomic.ensichat.util.BufferUtils
 
@@ -14,11 +14,10 @@ object Text {
    */
   def read(array: Array[Byte]): Text = {
     val b = ByteBuffer.wrap(array)
-    val time = new Date(BufferUtils.getUnsignedInt(b) * 1000)
     val length = BufferUtils.getUnsignedInt(b).toInt
     val bytes = new Array[Byte](length)
     b.get(bytes, 0, length)
-    new Text(new String(bytes, Message.Charset), time)
+    new Text(new String(bytes, Message.Charset))
   }
 
 }
@@ -26,7 +25,7 @@ object Text {
 /**
  * Holds a plain text message.
  */
-case class Text(text: String, time: Date = new Date()) extends MessageBody {
+case class Text(text: String) extends MessageBody {
 
   override def protocolType = -1
 
@@ -34,17 +33,16 @@ case class Text(text: String, time: Date = new Date()) extends MessageBody {
 
   override def write: Array[Byte] = {
     val b = ByteBuffer.allocate(length)
-    BufferUtils.putUnsignedInt(b, time.getTime / 1000)
     val bytes = text.getBytes(Message.Charset)
     BufferUtils.putUnsignedInt(b, bytes.length)
     b.put(bytes)
     b.array()
   }
 
-  override def length = 8 + text.getBytes(Message.Charset).length
+  override def length = 4 + text.getBytes(Message.Charset).length
 
   override def equals(a: Any): Boolean = a match {
-    case o: Text => text == text && time.getTime / 1000 == o.time.getTime / 1000
+    case o: Text => text == text
     case _ => false
   }
 

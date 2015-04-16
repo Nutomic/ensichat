@@ -1,5 +1,7 @@
 package com.nutomic.ensichat.util
 
+import java.util.GregorianCalendar
+
 import android.content.Context
 import android.test.AndroidTestCase
 import com.nutomic.ensichat.protocol.body.{RequestAddContact, ResultAddContact}
@@ -24,12 +26,12 @@ class AddContactsHandlerTest extends AndroidTestCase {
 
   private lazy val crypto = new Crypto(getContext)
 
-  private lazy val header1 =
-    new ContentHeader(UserTest.u1.address, crypto.localAddress, 0, RequestAddContact.Type, 0)
-  private lazy val header2 =
-    new ContentHeader(UserTest.u1.address, crypto.localAddress, 0, ResultAddContact.Type, 0)
-  private lazy val header3 =
-    new ContentHeader(crypto.localAddress, UserTest.u1.address, 0, ResultAddContact.Type, 0)
+  private lazy val header1 = new ContentHeader(UserTest.u1.address, crypto.localAddress, 0,
+    RequestAddContact.Type, 0, new GregorianCalendar(1970, 1, 1).getTime)
+  private lazy val header2 = new ContentHeader(UserTest.u1.address, crypto.localAddress, 0,
+    ResultAddContact.Type, 0, new GregorianCalendar(2014, 6, 10).getTime)
+  private lazy val header3 = new ContentHeader(crypto.localAddress, UserTest.u1.address, 0,
+    ResultAddContact.Type, 0, new GregorianCalendar(2020, 11, 11).getTime)
 
   override def tearDown(): Unit = {
     super.tearDown()

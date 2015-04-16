@@ -37,7 +37,7 @@ AES key is wrapped with the recipient's public RSA key.
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /                                                               /
-    \                   Header (74 or 80 bytes)                     \
+    \                   Header (74 or 84 bytes)                     \
     /                                                               /
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /                                                               /
@@ -75,6 +75,8 @@ header is in network byte order, i.e. big endian. The header may have
     |         Sequence Number       |         Content-Type          |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                           Message ID                          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                             Time                              |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Version specifies the protocol version number. This is currently 0. A
@@ -114,7 +116,9 @@ Content-Type is one of those in section Content-Messages.
 Message ID is unique for each message by the same sender. A device MUST NOT
 ever send two messages with the same Message ID.
 
-Only Content Messages have the Content-Type and Message ID
+Time is the unix timestamp of message sending.
+
+Only Content Messages have the Content-Type Message ID and Time
 fields.
 
 ### Encryption Data
@@ -229,16 +233,12 @@ A simple chat message.
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                             Time                              |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                          Text Length                          |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     /                                                               /
     \                   Text (variable length)                      \
     /                                                               /
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Time is the unix timestamp of message sending.
 
 Text the string to be transferred, encoded as UTF-8.
 

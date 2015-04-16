@@ -1,5 +1,7 @@
 package com.nutomic.ensichat.protocol
 
+import java.util.Date
+
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
@@ -141,7 +143,7 @@ class ChatService extends Service {
     val sp = PreferenceManager.getDefaultSharedPreferences(this)
     val messageId = sp.getLong("message_id", 0)
     val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
-      body.contentType, messageId)
+      body.contentType, messageId, new Date())
     sp.edit().putLong("message_id", messageId + 1)
 
     val msg = new Message(header, body)

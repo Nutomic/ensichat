@@ -1,12 +1,11 @@
 package com.nutomic.ensichat.protocol
 
 import java.io.ByteArrayInputStream
-import java.util.GregorianCalendar
 
 import android.test.AndroidTestCase
+import com.nutomic.ensichat.protocol.MessageTest._
 import com.nutomic.ensichat.protocol.body.{ConnectionInfo, ConnectionInfoTest, Text}
 import com.nutomic.ensichat.protocol.header.ContentHeaderTest._
-import com.nutomic.ensichat.protocol.MessageTest._
 import com.nutomic.ensichat.protocol.header.MessageHeader
 import junit.framework.Assert._
 
@@ -14,11 +13,11 @@ import scala.collection.immutable.TreeSet
 
 object MessageTest {
 
-  val m1 = new Message(h1, new Text("first", new GregorianCalendar(1970, 1, 1).getTime))
+  val m1 = new Message(h1, new Text("first"))
 
-  val m2 = new Message(h2, new Text("second", new GregorianCalendar(2014, 6, 10).getTime))
+  val m2 = new Message(h2, new Text("second"))
 
-  val m3 = new Message(h3, new Text("third", new GregorianCalendar(2020, 11, 11).getTime))
+  val m3 = new Message(h3, new Text("third"))
 
   val messages = Set(m1, m2, m3)
 

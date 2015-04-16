@@ -63,11 +63,14 @@ class Database(context: Context)
       null, null, "date DESC", count.toString)
     var messages = new TreeSet[Message]()(Message.Ordering)
     while (c.moveToNext()) {
-      val header = new ContentHeader(new Address(c.getString(c.getColumnIndex("origin"))),
-        new Address(c.getString(c.getColumnIndex("target"))), -1, Text.Type,
-        c.getLong(c.getColumnIndex("message_id")))
-      val body = new Text(new String(c.getString(c.getColumnIndex ("text"))),
+      val header = new ContentHeader(new Address(
+        c.getString(c.getColumnIndex("origin"))),
+        new Address(c.getString(c.getColumnIndex("target"))),
+        -1,
+        Text.Type,
+        c.getLong(c.getColumnIndex("message_id")),
         new Date(c.getLong(c.getColumnIndex("date"))))
+      val body = new Text(new String(c.getString(c.getColumnIndex ("text"))))
       messages += new Message(header, body)
     }
     c.close()
@@ -80,11 +83,12 @@ class Database(context: Context)
   override def onMessageReceived(msg: Message): Unit = msg.body match {
     case text: Text =>
       val cv =  new ContentValues()
-      cv.put("origin", msg.header.origin.toString)
-      cv.put("target", msg.header.target.toString)
+      val ch = msg.header.asInstanceOf[ContentHeader]
+      cv.put("origin", ch.origin.toString)
+      cv.put("target", ch.target.toString)
       // Need to use [[Long#toString]] because of https://issues.scala-lang.org/browse/SI-2991
-      cv.put("message_id", msg.header.asInstanceOf[ContentHeader].messageId.toString)
-      cv.put("date", text.time.getTime.toString)
+      cv.put("message_id", ch.messageId.toString)
+      cv.put("date", ch.time.getTime.toString)
       cv.put("text", text.text)
       getWritableDatabase.insert("messages", null, cv)
     case _: RequestAddContact | _: ResultAddContact =>

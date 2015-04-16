@@ -80,6 +80,7 @@ class DatabaseTest extends AndroidTestCase {
     assertEquals(-1, msg.header.seqNum)
     assertEquals(h3.contentType, header.contentType)
     assertEquals(h3.messageId, header.messageId)
+    assertEquals(h3.time, header.time)
     assertEquals(new CryptoData(None, None), msg.crypto)
     assertEquals(m3.body, msg.body)
   }
