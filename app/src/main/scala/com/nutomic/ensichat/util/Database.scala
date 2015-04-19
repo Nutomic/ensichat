@@ -19,6 +19,9 @@ object Database {
 
   private val DatabaseVersion = 1
 
+  // NOTE: We could make origin/target foreign keys to contacts, but:
+  // - they don't change anyway
+  // - we'd have to insert the local user into contacts
   private val CreateMessagesTable = "CREATE TABLE messages(" +
     "_id INTEGER PRIMARY KEY," +
     "origin TEXT NOT NULL," +
