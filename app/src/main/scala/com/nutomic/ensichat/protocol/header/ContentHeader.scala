@@ -45,12 +45,11 @@ case class ContentHeader(override val origin: Address,
                     contentType: Int,
                     messageId: Long,
                     time: Date,
-                    override val hopCount: Int = 0)
+                    override val hopCount: Int = 0,
+                    override val hopLimit: Int = AbstractHeader.DefaultHopLimit)
   extends AbstractHeader {
 
   override val protocolType = ContentHeader.ContentMessageType
-
-  override val hopLimit = AbstractHeader.DefaultHopLimit
 
   /**
    * Writes the header to byte array.

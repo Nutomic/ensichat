@@ -1,9 +1,9 @@
 package com.nutomic.ensichat.protocol
 
-import java.util.GregorianCalendar
+import java.util.{Date, GregorianCalendar}
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.protocol.body.UserName
+import com.nutomic.ensichat.protocol.body.{Text, UserName}
 import com.nutomic.ensichat.protocol.header.ContentHeader
 import junit.framework.Assert._
 
@@ -20,12 +20,26 @@ class RouterTest extends AndroidTestCase {
     var sentTo = Set[Address]()
     val router: Router = new Router(neighbors,
       (a, m) => {
-        assertEquals(msg, m)
         sentTo += a
       })
 
     router.onReceive(msg)
     assertEquals(neighbors(), sentTo)
+  }
+
+  def testMessageSame(): Unit = {
+    val router: Router = new Router(neighbors,
+      (a, m) => {
+        assertEquals(msg.header.origin,       m.header.origin)
+        assertEquals(msg.header.target,       m.header.target)
+        assertEquals(msg.header.seqNum,       m.header.seqNum)
+        assertEquals(msg.header.protocolType, m.header.protocolType)
+        assertEquals(msg.header.hopCount + 1, m.header.hopCount)
+        assertEquals(msg.header.hopLimit,     m.header.hopLimit)
+        assertEquals(msg.body, m.body)
+        assertEquals(msg.crypto, m.crypto)
+      })
+    router.onReceive(msg)
   }
 
   /**
@@ -73,6 +87,13 @@ class RouterTest extends AndroidTestCase {
     test(1, ContentHeader.SeqNumRange.last)
     test(ContentHeader.SeqNumRange.last / 2, ContentHeader.SeqNumRange.last)
     test(ContentHeader.SeqNumRange.last / 2, 1)
+  }
+
+  def testHopLimit(): Unit = Range(19, 22).foreach { i =>
+    val msg = new Message(
+      new ContentHeader(AddressTest.a1, AddressTest.a2, 1, 1, 1, new Date(), i), new Text(""))
+    val router: Router = new Router(neighbors, (a, m) => fail())
+    router.onReceive(msg)
   }
 
   private def generateMessage(sender: Address, receiver: Address, seqNum: Int): Message = {

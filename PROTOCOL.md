@@ -91,9 +91,9 @@ MUST NOT be changed by a forwarding node.
 
 Hop Count specifies the number of nodes a message may pass. When
 creating a package, it is initialized to 0. Whenever a node forwards
-a package, it MUST increment the hop limit by one. If the hop limit
-BEFORE/AFTER? incrementing equals Hop Limit, the package MUST be
-ignored.
+a package, it MUST increment the hop limit by one. If the hop count
+after incrementing equals or is greater than Hop Limit, the package
+MUST NOT be forwarded.
 
 Length is the message size in bytes, including the header.
 
