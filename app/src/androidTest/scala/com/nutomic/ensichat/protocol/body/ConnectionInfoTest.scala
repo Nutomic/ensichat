@@ -22,7 +22,7 @@ class ConnectionInfoTest extends AndroidTestCase {
     val ci = ConnectionInfoTest.generateCi(getContext)
     val bytes = ci.write
     val body = ConnectionInfo.read(bytes)
-    Assert.assertEquals(ci.key, body.asInstanceOf[ConnectionInfo].key)
+    Assert.assertEquals(ci, body)
   }
 
 }

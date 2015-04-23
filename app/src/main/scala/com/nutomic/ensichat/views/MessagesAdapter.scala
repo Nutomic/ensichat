@@ -52,6 +52,6 @@ class MessagesAdapter(context: Context, cursor: Cursor, remoteAddress: Address) 
     }
   })
 
-  override def getInstance (cursor: Cursor) = Database.messageFromCursor(cursor)
+  override def getInstance (cursor: Cursor) = Database.textMessageFromCursor(cursor)
 
 }

@@ -16,6 +16,7 @@ object SettingsFragment {
   val KeyUserName     = "user_name"
   val KeyUserStatus   = "user_status"
   val KeyScanInterval = "scan_interval_seconds"
+  val KeyBitcoinWallet = "bitcoin_wallet"
   val MaxConnections  = "max_connections"
   val Version         = "version"
 
@@ -31,6 +32,7 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
   private lazy val name           = findPreference(KeyUserName)
   private lazy val status         = findPreference(KeyUserStatus)
   private lazy val scanInterval   = findPreference(KeyScanInterval)
+  private lazy val bitcoinWallet  = findPreference(KeyBitcoinWallet)
   private lazy val maxConnections = findPreference(MaxConnections)
   private lazy val version        = findPreference(Version)
 
@@ -49,6 +51,10 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
     scanInterval.setOnPreferenceChangeListener(this)
     scanInterval.setSummary(prefs.getString(
       KeyScanInterval, getResources.getString(R.string.default_scan_interval)))
+
+    bitcoinWallet.setOnPreferenceChangeListener(this)
+    bitcoinWallet.setSummary(prefs.getString(KeyBitcoinWallet,
+      getResources.getString(R.string.default_bitcoin_wallet)))
 
     if (BuildConfig.DEBUG) {
       maxConnections.setOnPreferenceChangeListener(this)
@@ -70,6 +76,7 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
         val service = getActivity.asInstanceOf[EnsichatActivity].service
         val ui = new UserInfo(prefs.getString(KeyUserName, ""), prefs.getString(KeyUserStatus, ""))
         database.getContacts.foreach(c => service.sendTo(c.address, ui))
+      case _ => // TODO: this correct? (check before rebase)
     }
     preference.setSummary(newValue.toString)
     true

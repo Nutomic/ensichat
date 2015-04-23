@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.protocol
 
-import com.nutomic.ensichat.protocol.header.{MessageHeader, ContentHeader}
+import com.nutomic.ensichat.protocol.header.{ContentHeader, MessageHeader}
 
 /**
  * Forwards messages to all connected devices.
@@ -30,7 +30,7 @@ class Router(activeConnections: () => Set[Address], send: (Address, Message) => 
   private def incHopCount(msg: Message): Message = {
     val updatedHeader = msg.header match {
       case ch: ContentHeader => new ContentHeader(ch.origin, ch.target, ch.seqNum, ch.contentType,
-                                    ch.messageId, ch.time, ch.hopCount + 1, ch.hopLimit)
+                                    ch.messageId, ch.time, ch.read, ch.hopCount + 1, ch.hopLimit)
       case mh: MessageHeader => new MessageHeader(mh.protocolType, mh.origin, mh.target, mh.seqNum,
                                     mh.hopCount + 1, mh.hopLimit)
     }

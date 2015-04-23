@@ -7,6 +7,7 @@ import android.support.v4.app.NotificationCompat
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.protocol.body.Text
+import com.nutomic.ensichat.protocol.body.{InitiatePayment, PaymentInformation, Text}
 import com.nutomic.ensichat.protocol.{Crypto, Message}
 
 object NotificationHandler {
@@ -22,25 +23,32 @@ object NotificationHandler {
  */
 class NotificationHandler(context: Context) {
 
-  def onMessageReceived(msg: Message): Unit = msg.body match {
-    case text: Text =>
-      if (msg.header.origin == new Crypto(context).localAddress)
-        return
+  def onMessageReceived(msg: Message): Unit = {
+    if (msg.header.origin == new Crypto(context).localAddress)
+      return
 
-      val pi = PendingIntent.getActivity(context, 0, new Intent(context, classOf[MainActivity]), 0)
-      val notification = new NotificationCompat.Builder(context)
-        .setSmallIcon(R.drawable.ic_launcher)
-        .setContentTitle(context.getString(R.string.notification_message))
-        .setContentText(text.text)
-        .setDefaults(defaults())
-        .setContentIntent(pi)
-        .setAutoCancel(true)
-        .build()
+    showNotification(msg.body match {
+      case t: Text               => t.text
+      case _: InitiatePayment    => "InitiatePayment"
+      case _: PaymentInformation => "PaymentInformation"
+      case _ => return
+    })
+  }
 
-      val nm = context.getSystemService(Context.NOTIFICATION_SERVICE)
-        .asInstanceOf[NotificationManager]
-      nm.notify(NotificationHandler.NotificationIdNewMessage, notification)
-    case _ =>
+  private def showNotification(text: String): Unit = {
+    val pi = PendingIntent.getActivity(context, 0, new Intent(context, classOf[MainActivity]), 0)
+    val notification = new NotificationCompat.Builder(context)
+      .setSmallIcon(R.drawable.ic_launcher)
+      .setContentTitle(context.getString(R.string.notification_message))
+      .setContentText(text)
+      .setDefaults(defaults())
+      .setDefaults(defaults())
+      .setContentIntent(pi)
+      .setAutoCancel(true)
+      .build()
+    val nm = context.getSystemService(Context.NOTIFICATION_SERVICE)
+      .asInstanceOf[NotificationManager]
+    nm.notify(NotificationHandler.NotificationIdNewMessage, notification)
   }
 
   /**

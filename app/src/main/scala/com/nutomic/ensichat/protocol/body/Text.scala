@@ -7,7 +7,7 @@ import com.nutomic.ensichat.util.BufferUtils
 
 object Text {
 
-  val Type = 6
+  val Type = 3
 
   /**
    * Constructs [[Text]] instance from byte array.

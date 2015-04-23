@@ -25,7 +25,7 @@ object ContentHeader {
     val time        = BufferUtils.getUnsignedInt(b)
 
     val ch = new ContentHeader(mh.origin, mh.target, mh.seqNum, contentType, Some(messageId),
-      Some(new Date(time * 1000)), mh.hopCount)
+      Some(new Date(time * 1000)), false, mh.hopCount)
 
     val remaining = new Array[Byte](b.remaining())
     b.get(remaining, 0, b.remaining())
@@ -38,6 +38,8 @@ object ContentHeader {
  * Header for user-sent messages.
  *
  * This is [[AbstractHeader]] with messageId and time fields set.
+ *
+ * @param read Specifies if the message was read by the local user. Never transmitted.
  */
 case class ContentHeader(override val origin: Address,
                     override val target: Address,
@@ -45,6 +47,7 @@ case class ContentHeader(override val origin: Address,
                     contentType: Int,
                     override val messageId: Some[Long],
                     override val time: Some[Date],
+                    read: Boolean,
                     override val hopCount: Int = 0,
                     override val hopLimit: Int = AbstractHeader.DefaultHopLimit)
   extends AbstractHeader {
@@ -73,7 +76,8 @@ case class ContentHeader(override val origin: Address,
       super.equals(a) &&
         contentType         == o.contentType &&
         messageId           == o.messageId &&
-        time.get.getTime / 1000 == o.time.get.getTime / 1000
+        time.get.getTime / 1000 == o.time.get.getTime / 1000 &&
+        read                == o.read
     case _ => false
   }
 

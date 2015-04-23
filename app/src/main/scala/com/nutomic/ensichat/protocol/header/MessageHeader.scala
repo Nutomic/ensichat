@@ -2,8 +2,8 @@ package com.nutomic.ensichat.protocol.header
 
 import java.nio.ByteBuffer
 
-import com.nutomic.ensichat.protocol.{Message, Address}
-import Message.ParseMessageException
+import com.nutomic.ensichat.protocol.Message.ParseMessageException
+import com.nutomic.ensichat.protocol.{Address, Message}
 import com.nutomic.ensichat.util.BufferUtils
 
 object MessageHeader {

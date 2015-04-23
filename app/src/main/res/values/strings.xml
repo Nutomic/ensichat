@@ -52,6 +52,11 @@
     <string name="toast_contact_added">Contact added</string>
 
 
+    <!-- ChatFragment -->
+
+    <string name="bitcoin_wallet_not_found">Bitcoin wallet not found. Please install wallet app or select another wallet in the app settings.</string>
+
+
     <!-- SettingsActivity -->
 
     <!-- Activity title -->
@@ -71,6 +76,14 @@
 
     <!-- Preference title -->
     <string name="notification_sounds">Notification Sounds</string>
+
+    <string name="bitcoin_wallet">Bitcoin Wallet Application</string>
+
+    <!-- List of supported wallet apps -->
+    <string-array name="bitcoin_wallet_values">
+        <item>Bitcoin Wallet</item>
+        <item>Bitcoin Wallet for Testnet</item>
+    </string-array>
 
     <!-- Preference title (debug only)-->
     <string name="max_connections" translatable="false">Maximum Number of Connections</string>

@@ -1,11 +1,11 @@
 package com.nutomic.ensichat.util
 
-import android.os.{Looper, Handler}
+import android.os.{Handler, Looper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * Wraps [[Future]], so that exceptions are always thrown.
+ * Use this instead of [[Future]], to make sure exceptions are logged.
  *
  * @see https://github.com/saturday06/gradle-android-scala-plugin/issues/56
  */

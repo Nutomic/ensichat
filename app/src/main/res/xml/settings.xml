@@ -22,6 +22,13 @@
         android:inputType="number"
         android:numeric="integer" />
 
+    <ListPreference
+        android:title="@string/bitcoin_wallet"
+        android:key="bitcoin_wallet"
+        android:entries="@array/bitcoin_wallet_values"
+        android:entryValues="@array/bitcoin_wallets"
+        android:defaultValue="@string/default_bitcoin_wallet" />
+
     <EditTextPreference
         android:title="@string/max_connections"
         android:key="max_connections"
@@ -39,6 +46,7 @@
 
     <Preference
         android:title="@string/version"
-        android:key="version" />
+        android:key="version"
+        style="?android:preferenceInformationStyle" />
 
 </PreferenceScreen>

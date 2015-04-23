@@ -8,10 +8,10 @@ import android.database.sqlite.SQLiteDatabase
 import android.support.v4.content.LocalBroadcastManager
 import android.test.AndroidTestCase
 import com.nutomic.ensichat.protocol.MessageTest._
-import com.nutomic.ensichat.protocol.body.CryptoData
-import com.nutomic.ensichat.protocol.header.{ContentHeader, ContentHeaderTest}
+import com.nutomic.ensichat.protocol.body.{CryptoData, PaymentInformation}
+import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.protocol.header.ContentHeaderTest._
-import com.nutomic.ensichat.protocol.{MessageTest, UserTest}
+import com.nutomic.ensichat.protocol.{AddressTest, Message, MessageTest, UserTest}
 import junit.framework.Assert._
 
 object DatabaseTest {
@@ -68,18 +68,33 @@ class DatabaseTest extends AndroidTestCase {
     assertTrue(msg.contains(m3))
   }
 
-  def testMessageFields(): Unit = {
-    val msg = database.getMessages(m2.header.target, 1).firstKey
+  def testTextMessage(): Unit = {
+    val msg = database.getMessages(m3.header.target, 1).firstKey
     val header = msg.header.asInstanceOf[ContentHeader]
 
     assertEquals(h2.origin, header.origin)
     assertEquals(h2.target, header.target)
     assertEquals(-1, msg.header.seqNum)
-    assertEquals(h2.contentType, header.contentType)
-    assertEquals(h2.messageId, header.messageId)
-    assertEquals(h2.time, header.time)
+    assertEquals(h3.contentType, header.contentType)
+    assertEquals(h3.messageId, header.messageId)
+    assertEquals(h3.time, header.time)
+    assertEquals(h3.read, header.read)
     assertEquals(new CryptoData(None, None), msg.crypto)
-    assertEquals(m2.body, msg.body)
+    assertEquals(m3.body, msg.body)
+  }
+
+  def testPaymentRequestMessage(): Unit = {
+    val pr = new PaymentInformation("teststring".getBytes)
+    val msg = new Message(h6, pr)
+    database.onMessageReceived(msg)
+    val retrieved = database.getMessages(h6.origin, 1).firstKey
+    assertEquals(pr, retrieved.body)
+  }
+
+  def testMessageRead(): Unit = {
+    database.setMessageRead(h3)
+    val header = database.getMessages(AddressTest.a4, 1).firstKey.header.asInstanceOf[ContentHeader]
+    assertTrue(header.read)
   }
 
   def testAddContact(): Unit = {

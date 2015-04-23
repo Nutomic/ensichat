@@ -36,6 +36,13 @@
         android:id="@+id/linearLayout"
         android:orientation="horizontal">
 
+        <ImageButton
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:id="@+id/send_bitcoin"
+            android:src="@drawable/ic_bitcoin"
+            android:background="@android:color/transparent"/>
+
         <EditText
             android:id="@+id/message"
             android:layout_width="0dp"

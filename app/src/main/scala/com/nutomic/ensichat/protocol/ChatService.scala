@@ -13,7 +13,7 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
-import com.nutomic.ensichat.protocol.body.{ConnectionInfo, MessageBody, UserInfo}
+import com.nutomic.ensichat.protocol.body.{ConnectionInfo, MessageBody, UserInfo, _}
 import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.util.{Database, FutureHelper, NotificationHandler}
 
@@ -119,7 +119,7 @@ class ChatService extends Service {
     FutureHelper {
       val messageId = preferences.getLong("message_id", 0)
       val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
-        body.contentType, Some(messageId), Some(new Date()))
+        body.contentType, Some(messageId), Some(new Date()), true)
       preferences.edit().putLong("message_id", messageId + 1)
 
       val msg = new Message(header, body)
@@ -151,25 +151,28 @@ class ChatService extends Service {
   /**
    * Handles all (locally and remotely sent) new messages.
    */
-  private def onNewMessage(msg: Message): Unit = msg.body match {
-    case ui: UserInfo =>
-      val contact = new User(msg.header.origin, ui.name, ui.status)
-      knownUsers += contact
-      if (database.getContact(msg.header.origin).nonEmpty)
-        database.updateContact(contact)
+  private def onNewMessage(msg: Message): Unit = {
 
-      callConnectionListeners()
-    case _ =>
-      val origin = msg.header.origin
-      if (origin != crypto.localAddress && database.getContact(origin).isEmpty)
-        database.addContact(getUser(origin))
+    // FIXME: looks like we completely broke message sending
 
-      database.onMessageReceived(msg)
-      notificationHandler.onMessageReceived(msg)
-      val i = new Intent(ChatService.ActionMessageReceived)
-      i.putExtra(ChatService.ExtraMessage, msg)
-      LocalBroadcastManager.getInstance(this)
-        .sendBroadcast(i)
+    msg.body match {
+      case ui: UserInfo =>
+        val contact = new User(msg.header.origin, ui.name, ui.status)
+        knownUsers += contact
+        if (database.getContact(msg.header.origin).nonEmpty)
+          database.updateContact(contact)
+      case _: InitiatePayment | _: PaymentInformation | _: Text =>
+        val origin = msg.header.origin
+        if (origin != crypto.localAddress && database.getContact(origin).isEmpty)
+          database.addContact(getUser(origin))
+
+        val i = new Intent(ChatService.ActionMessageReceived)
+        i.putExtra(ChatService.ExtraMessage, msg)
+        LocalBroadcastManager.getInstance(this)
+          .sendBroadcast(i)
+      case _: ConnectionInfo =>
+        callConnectionListeners()
+    }
   }
 
   /**
