@@ -2,6 +2,7 @@ package com.nutomic.ensichat.util
 
 import android.app.{Notification, NotificationManager, PendingIntent}
 import android.content.{Context, Intent}
+import android.support.v4.app.NotificationCompat
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
@@ -21,7 +22,7 @@ class NotificationHandler(context: Context) extends OnMessageReceivedListener {
         return
 
       val pi = PendingIntent.getActivity(context, 0, new Intent(context, classOf[MainActivity]), 0)
-      val notification = new Notification.Builder(context)
+      val notification = new NotificationCompat.Builder(context)
         .setSmallIcon(R.drawable.ic_launcher)
         .setContentTitle(context.getString(R.string.notification_message))
         .setContentText(text.text)

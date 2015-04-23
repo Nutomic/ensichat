@@ -1,14 +1,15 @@
 package com.nutomic.ensichat.util
 
-import android.app.{Notification, NotificationManager, PendingIntent}
+import android.app.{NotificationManager, PendingIntent}
 import android.content.{Context, Intent}
+import android.support.v4.app.NotificationCompat
 import android.util.Log
 import android.widget.Toast
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.ConfirmAddContactActivity
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
-import com.nutomic.ensichat.protocol.body.{ResultAddContact, RequestAddContact}
-import com.nutomic.ensichat.protocol.{Message, Address, User}
+import com.nutomic.ensichat.protocol.body.{RequestAddContact, ResultAddContact}
+import com.nutomic.ensichat.protocol.{Address, Message, User}
 
 /**
  * Handles [[RequestAddContact]] and [[ResultAddContact]] messages, adds new contacts.
@@ -50,7 +51,7 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
         val pi = PendingIntent.getActivity(context, 0, intent,
           PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val notification = new Notification.Builder(context)
+        val notification = new NotificationCompat.Builder(context)
           .setContentTitle(context.getString(R.string.notification_friend_request, getUser(remote)))
           .setSmallIcon(R.drawable.ic_launcher)
           .setContentIntent(pi)
