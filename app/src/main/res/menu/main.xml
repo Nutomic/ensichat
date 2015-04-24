@@ -10,9 +10,7 @@
 
     <item
         android:id="@+id/settings"
-        android:icon="@drawable/ic_action_settings"
-        android:title="@string/settings"
-        android:showAsAction="ifRoom" />
+        android:title="@string/settings" />
 
     <item
         android:id="@+id/exit"
