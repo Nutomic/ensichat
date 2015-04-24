@@ -11,7 +11,7 @@ buildscript {
 }
 
 dependencies {
-    compile "com.android.support:support-v4:22.0.0"
+    compile "com.android.support:appcompat-v7:22.0.0"
     compile 'com.android.support:multidex:1.0.1'
     androidTestCompile "com.android.support:multidex-instrumentation:1.0.1", { exclude module: "multidex" }
     compile "org.scala-lang:scala-library:2.11.6"

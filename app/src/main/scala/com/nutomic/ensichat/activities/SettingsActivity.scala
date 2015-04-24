@@ -15,7 +15,7 @@ class SettingsActivity extends EnsiChatActivity {
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
-    getActionBar.setDisplayHomeAsUpEnabled(true)
+    getSupportActionBar.setDisplayHomeAsUpEnabled(true)
 
     val fm = getFragmentManager
     fragment =

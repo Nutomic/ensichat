@@ -37,7 +37,7 @@
 
         <activity
             android:name=".activities.ConfirmAddContactActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:theme="@style/Translucent"
             android:excludeFromRecents="true" />
 
         <activity

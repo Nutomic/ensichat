@@ -29,7 +29,7 @@ class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnection
    */
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
-    getActionBar.setDisplayHomeAsUpEnabled(true)
+    getSupportActionBar.setDisplayHomeAsUpEnabled(true)
 
     setContentView(R.layout.activity_add_contacts)
     val list = findViewById(android.R.id.list).asInstanceOf[ListView]

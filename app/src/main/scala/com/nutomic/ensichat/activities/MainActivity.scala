@@ -90,7 +90,7 @@ class MainActivity extends EnsiChatActivity {
       .detach(contactsFragment)
       .add(android.R.id.content, new ChatFragment(address))
       .commit()
-    getActionBar.setDisplayHomeAsUpEnabled(true)
+    getSupportActionBar.setDisplayHomeAsUpEnabled(true)
   }
 
   /**
@@ -104,7 +104,7 @@ class MainActivity extends EnsiChatActivity {
         .attach(contactsFragment)
         .commit()
       currentChat = None
-      getActionBar.setDisplayHomeAsUpEnabled(false)
+      getSupportActionBar.setDisplayHomeAsUpEnabled(false)
       setTitle(R.string.app_name)
     } else
       super.onBackPressed()
