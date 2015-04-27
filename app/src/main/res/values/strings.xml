@@ -18,6 +18,9 @@
     <!-- Empty text for contacts list -->
     <string name="no_contacts_found">You haven\'t added any contacts yet</string>
 
+    <!-- Menu item to share this app's apk -->
+    <string name="share_app">Share App</string>
+
     <!-- Menu item to close app and stop service -->
     <string name="exit">Exit</string>
 

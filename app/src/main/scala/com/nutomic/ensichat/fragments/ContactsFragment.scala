@@ -1,7 +1,10 @@
 package com.nutomic.ensichat.fragments
 
+import java.io.File
+
 import android.app.ListFragment
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view._
 import android.widget.ListView
@@ -10,6 +13,7 @@ import com.nutomic.ensichat.activities.{AddContactsActivity, EnsiChatActivity, M
 import com.nutomic.ensichat.protocol.ChatService
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import com.nutomic.ensichat.util.{Database, UsersAdapter}
+import scala.collection.JavaConversions._
 
 /**
  * Lists all nearby, connected devices.
@@ -45,6 +49,15 @@ class ContactsFragment extends ListFragment with OnContactsUpdatedListener {
     case R.id.add_contact =>
       startActivity(new Intent(getActivity, classOf[AddContactsActivity]))
       true
+    case R.id.share_app =>
+      val pm = getActivity.getPackageManager
+      val ai = pm.getInstalledApplications(0).find(_.sourceDir.contains(getActivity.getPackageName))
+      val intent = new Intent()
+      intent.setAction(Intent.ACTION_SEND)
+      intent.setType("*/*")
+      intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(ai.get.sourceDir)))
+      startActivity(intent)
+      true
     case R.id.settings =>
       startActivity(new Intent(getActivity, classOf[SettingsActivity]))
       true
@@ -70,4 +83,5 @@ class ContactsFragment extends ListFragment with OnContactsUpdatedListener {
       }
     })
   }
+
 }

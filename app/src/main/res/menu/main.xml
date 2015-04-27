@@ -10,6 +10,10 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/share_app"
+        android:title="@string/share_app" />
+
+    <item
         android:id="@+id/settings"
         android:title="@string/settings" />
 
