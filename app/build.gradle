@@ -43,8 +43,9 @@ android {
         }
     }
 
+    // Increasing minSdkVersion reduces compilation time for MultiDex.
     productFlavors {
-        dev.minSdkVersion 19 // TODO: Change to 21 to reduce compilation time
+        dev.minSdkVersion 21
         rel.minSdkVersion 15
     }
 
