@@ -1,15 +1,14 @@
 package com.nutomic.ensichat.activities
 
-import android.app.Activity
 import android.content.{ComponentName, Context, Intent, ServiceConnection}
 import android.os.{Bundle, IBinder}
-import android.support.v7.app.ActionBarActivity
+import android.support.v7.app.AppCompatActivity
 import com.nutomic.ensichat.protocol.{ChatService, ChatServiceBinder}
 
 /**
  * Connects to [[ChatService]] and provides access to it.
  */
-class EnsiChatActivity extends ActionBarActivity with ServiceConnection {
+class EnsiChatActivity extends AppCompatActivity with ServiceConnection {
 
   private var chatService: Option[ChatService] = None
 
