@@ -13,6 +13,11 @@
         android:inputType="number"
         android:numeric="integer" />
 
+    <CheckBoxPreference
+        android:title="@string/notification_sounds"
+        android:key="notification_sounds"
+        android:defaultValue="@bool/default_notification_sounds" />
+
     <EditTextPreference
         android:title="@string/max_connections"
         android:key="max_connections"
