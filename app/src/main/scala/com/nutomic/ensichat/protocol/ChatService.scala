@@ -3,7 +3,6 @@ package com.nutomic.ensichat.protocol
 import java.util.Date
 
 import android.app.Service
-import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Handler
 import android.preference.PreferenceManager
@@ -12,7 +11,7 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
-import com.nutomic.ensichat.protocol.body.{UserName, MessageBody, ConnectionInfo}
+import com.nutomic.ensichat.protocol.body.{ConnectionInfo, MessageBody, UserName}
 import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.util.{AddContactsHandler, Database, NotificationHandler}
 
@@ -55,6 +54,8 @@ class ChatService extends Service {
 
   private lazy val database = new Database(this)
 
+  private lazy val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+
   private val mainHandler = new Handler()
 
   private lazy val binder = new ChatServiceBinder(this)
@@ -93,11 +94,6 @@ class ChatService extends Service {
    */
   override def onCreate(): Unit = {
     super.onCreate()
-
-    val pm = PreferenceManager.getDefaultSharedPreferences(this)
-    if (pm.getString(SettingsFragment.KeyUserName, null) == null)
-      pm.edit().putString(SettingsFragment.KeyUserName,
-        BluetoothAdapter.getDefaultAdapter.getName).apply()
 
     Future {
       crypto.generateLocalKeys()
@@ -140,11 +136,10 @@ class ChatService extends Service {
     if (!btInterface.getConnections.contains(target))
       return
 
-    val sp = PreferenceManager.getDefaultSharedPreferences(this)
-    val messageId = sp.getLong("message_id", 0)
+    val messageId = preferences.getLong("message_id", 0)
     val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
       body.contentType, messageId, new Date())
-    sp.edit().putLong("message_id", messageId + 1)
+    preferences.edit().putLong("message_id", messageId + 1)
 
     val msg = new Message(header, body)
     val encrypted = crypto.encrypt(crypto.sign(msg))
@@ -201,8 +196,7 @@ class ChatService extends Service {
    * @return True if the connection is valid
    */
   def onConnectionOpened(msg: Message): Boolean = {
-    val pm = PreferenceManager.getDefaultSharedPreferences(this)
-    val maxConnections = pm.getString(SettingsFragment.MaxConnections,
+    val maxConnections = preferences.getString(SettingsFragment.MaxConnections,
       getResources.getString(R.string.default_max_connections)).toInt
     if (connections().size == maxConnections) {
       Log.i(Tag, "Maximum number of connections reached")
@@ -227,7 +221,7 @@ class ChatService extends Service {
     }
 
     Log.i(Tag, "Node " + sender + " connected")
-    val name = PreferenceManager.getDefaultSharedPreferences(this).getString("user_name", null)
+    val name = preferences.getString(SettingsFragment.KeyUserName, "")
     sendTo(sender, new UserName(name))
     callConnectionListeners()
     true

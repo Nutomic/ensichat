@@ -7,6 +7,18 @@
     <string name="app_name">EnsiChat</string>
 
 
+    <!-- FirstStartActivity -->
+
+    <!-- Activity title -->
+    <string name="welcome">Welcome!</string>
+
+    <!-- Label for name field -->
+    <string name="enter_name">Enter your Name:</string>
+
+    <!-- Label for button to finish activity -->
+    <string name="done">Done</string>
+
+
     <!-- MainActivity -->
 
     <!-- Toast shown if user denies request to enable bluetooth -->
