@@ -8,7 +8,7 @@ import com.nutomic.ensichat.protocol.{ChatService, ChatServiceBinder}
 /**
  * Connects to [[ChatService]] and provides access to it.
  */
-class EnsiChatActivity extends AppCompatActivity with ServiceConnection {
+class EnsichatActivity extends AppCompatActivity with ServiceConnection {
 
   private var chatService: Option[ChatService] = None
 

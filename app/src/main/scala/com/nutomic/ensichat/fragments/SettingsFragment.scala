@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.preference.Preference.OnPreferenceChangeListener
 import android.preference.{Preference, PreferenceFragment, PreferenceManager}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.EnsiChatActivity
+import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.fragments.SettingsFragment._
 import com.nutomic.ensichat.protocol.body.UserName
 import com.nutomic.ensichat.util.Database
@@ -55,7 +55,7 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
    */
   override def onPreferenceChange(preference: Preference, newValue: AnyRef): Boolean = {
     if (preference.getKey == KeyUserName) {
-      val service = getActivity.asInstanceOf[EnsiChatActivity].service
+      val service = getActivity.asInstanceOf[EnsichatActivity].service
       database.getContacts.foreach(c => service.sendTo(c.address, new UserName(newValue.toString)))
     }
     preference.setSummary(newValue.toString)

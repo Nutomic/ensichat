@@ -9,7 +9,7 @@ import android.os.Bundle
 import android.view._
 import android.widget.ListView
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.{AddContactsActivity, EnsiChatActivity, MainActivity, SettingsActivity}
+import com.nutomic.ensichat.activities.{AddContactsActivity, EnsichatActivity, MainActivity, SettingsActivity}
 import com.nutomic.ensichat.protocol.ChatService
 import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import com.nutomic.ensichat.util.{Database, UsersAdapter}
@@ -30,7 +30,7 @@ class ContactsFragment extends ListFragment with OnContactsUpdatedListener {
     setListAdapter(adapter)
     setHasOptionsMenu(true)
 
-    getActivity.asInstanceOf[EnsiChatActivity].runOnServiceConnected(() => {
+    getActivity.asInstanceOf[EnsichatActivity].runOnServiceConnected(() => {
       database.getContacts.foreach(adapter.add)
       database.runOnContactsUpdated(this)
     })

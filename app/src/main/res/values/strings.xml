@@ -4,7 +4,7 @@
 
     <!-- Global -->
 
-    <string name="app_name">EnsiChat</string>
+    <string name="app_name">Ensichat</string>
 
 
     <!-- FirstStartActivity -->
@@ -88,7 +88,7 @@
     <string name="report_issue">Report Issue</string>
 
     <!-- Preference summary -->
-    <string name="report_issue_summary">Open the EnsiChat issue tracker</string>
+    <string name="report_issue_summary">Open the Ensichat issue tracker</string>
 
     <string name="issue_tracker_url" translatable="false">https://github.com/Nutomic/ensichat/issues</string>
 

@@ -20,7 +20,7 @@ object MainActivity {
 /**
  * Main activity, entry point for app start.
  */
-class MainActivity extends EnsiChatActivity {
+class MainActivity extends EnsichatActivity {
 
   private val RequestSetDiscoverable = 1
 

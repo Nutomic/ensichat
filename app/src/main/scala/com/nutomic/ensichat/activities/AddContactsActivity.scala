@@ -15,7 +15,7 @@ import com.nutomic.ensichat.util.{Database, UsersAdapter}
 /**
  * Lists all nearby, connected devices and allows adding them to be added as contacts.
  */
-class AddContactsActivity extends EnsiChatActivity with ChatService.OnConnectionsChangedListener
+class AddContactsActivity extends EnsichatActivity with ChatService.OnConnectionsChangedListener
   with OnItemClickListener with OnContactsUpdatedListener {
 
   private val Tag = "AddContactsActivity"

@@ -20,7 +20,7 @@ object ConfirmAddContactActivity {
 /**
  * Shows a dialog for adding a new contact (including key fingerprints).
  */
-class ConfirmAddContactActivity extends EnsiChatActivity with OnClickListener {
+class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener {
 
   private lazy val user = service.getUser(
     new Address(getIntent.getStringExtra(ConfirmAddContactActivity.ExtraContactAddress)))

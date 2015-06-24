@@ -9,7 +9,7 @@ import com.nutomic.ensichat.fragments.SettingsFragment
 /**
  * Holder for [[SettingsFragment]].
  */
-class SettingsActivity extends EnsiChatActivity {
+class SettingsActivity extends EnsichatActivity {
 
   private var fragment: Fragment = _
 

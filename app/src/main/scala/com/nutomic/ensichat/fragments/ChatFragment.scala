@@ -8,7 +8,7 @@ import android.view.{KeyEvent, LayoutInflater, View, ViewGroup}
 import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.EnsiChatActivity
+import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.body.Text
 import com.nutomic.ensichat.protocol.{Message, Address, ChatService}
@@ -45,7 +45,7 @@ class ChatFragment extends ListFragment with OnClickListener
   override def onActivityCreated(savedInstanceState: Bundle): Unit = {
     super.onActivityCreated(savedInstanceState)
 
-    val activity = getActivity.asInstanceOf[EnsiChatActivity]
+    val activity = getActivity.asInstanceOf[EnsichatActivity]
     activity.runOnServiceConnected(() => {
       chatService = activity.service
 
