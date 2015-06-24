@@ -31,7 +31,7 @@
     <string name="add_contacts">Add Contacts</string>
 
     <!-- Empty text for devices list -->
-    <string name="no_devices_nearby">No nearby devices found</string>
+    <string name="devices_empty">Searching for Users\nRange: ~10m</string>
 
 
     <!-- ConfirmAddContactDialog -->

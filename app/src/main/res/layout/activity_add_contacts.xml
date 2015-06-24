@@ -9,12 +9,26 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" />
 
-    <TextView
+    <LinearLayout
         android:id="@android:id/empty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/no_devices_nearby"
         android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true" />
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:orientation="vertical" >
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/devices_empty"
+            android:gravity="center" />
+
+    </LinearLayout>
 
 </RelativeLayout>
