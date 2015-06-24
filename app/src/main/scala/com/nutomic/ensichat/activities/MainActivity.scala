@@ -35,8 +35,7 @@ class MainActivity extends EnsiChatActivity {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
 
-    val intent: Intent = new
-        Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+    val intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
     intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0)
     startActivityForResult(intent, RequestSetDiscoverable)
 
@@ -97,7 +96,7 @@ class MainActivity extends EnsiChatActivity {
    * If in a ChatFragment, goes back up to contactsFragment.
    */
   override def onBackPressed(): Unit = {
-    if (currentChat != None) {
+    if (currentChat.isDefined) {
       getFragmentManager
         .beginTransaction()
         .remove(getFragmentManager.findFragmentById(android.R.id.content))
