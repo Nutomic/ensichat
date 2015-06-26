@@ -16,11 +16,9 @@ message propagation.
 Building
 --------
 
-To create a debug apk, run `./gradlew assembleDebug`. Alternatively, you can use
-`.gradlew thinDebug` for a faster compile, but this requires Scala libraries installed
-with [Android-Scala-Installer](https://github.com/Arneball/Android-Scala-Installer) on your device.
+To create a debug apk, run `./gradlew assembleDevDebug`. This requires at least Android Lollipop on your development device. If you don't have Lollipop, you can alternatively use `./gradlew assembleRelDebug`. However, this results in considerably slower incremental builds
 
-To create a release apk, run `./gradlew assembleRelease`.
+To create a release apk, run `./gradlew assembleRelRelease`.
 
 License
 -------
