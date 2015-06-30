@@ -41,16 +41,4 @@ android {
         dev.minSdkVersion 21
         rel.minSdkVersion 15
     }
-
-    // Avoid duplicate file errors during packaging.
-    packagingOptions {
-        exclude 'decoder.properties'
-        exclude 'rootdoc.txt'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/NOTICE'
-    }
-}
-
-tasks.withType(ScalaCompile) {
-    scalaCompileOptions.useCompileDaemon = true
 }
