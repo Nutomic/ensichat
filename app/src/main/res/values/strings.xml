@@ -82,7 +82,7 @@
     <string name="notification_sounds">Notification Sounds</string>
 
     <!-- Preference title (debug only)-->
-    <string name="max_connections">Maximum Number of Connections</string>
+    <string name="max_connections" translatable="false">Maximum Number of Connections</string>
 
     <!-- Preference title -->
     <string name="report_issue">Report Issue</string>

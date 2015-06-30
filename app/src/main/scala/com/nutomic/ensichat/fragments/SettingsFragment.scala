@@ -1,9 +1,9 @@
 package com.nutomic.ensichat.fragments
 
-import android.os.Bundle
+import android.os.{Build, Bundle}
 import android.preference.Preference.OnPreferenceChangeListener
 import android.preference.{Preference, PreferenceFragment, PreferenceManager}
-import com.nutomic.ensichat.R
+import com.nutomic.ensichat.{BuildConfig, R}
 import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.fragments.SettingsFragment._
 import com.nutomic.ensichat.protocol.body.UserName
@@ -48,6 +48,8 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
       getResources.getString(R.string.default_scan_interval)))
     maxConnections.setSummary(pm.getString(MaxConnections,
       getResources.getString(R.string.default_max_connections)))
+    if (!BuildConfig.DEBUG)
+      getPreferenceScreen.removePreference(maxConnections)
   }
 
   /**
