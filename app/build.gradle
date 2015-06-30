@@ -11,12 +11,10 @@ buildscript {
 }
 
 dependencies {
-    // Downgraded to work around compiler error
-    // https://github.com/saturday06/gradle-android-scala-plugin/issues/64
-    compile "com.android.support:appcompat-v7:22.1.0"
+    compile "com.android.support:appcompat-v7:22.2.0"
     compile 'com.android.support:multidex:1.0.1'
     androidTestCompile "com.android.support:multidex-instrumentation:1.0.1", { exclude module: "multidex" }
-    compile "org.scala-lang:scala-library:2.11.6"
+    compile "org.scala-lang:scala-library:2.11.7"
     compile 'com.google.guava:guava:18.0'
 }
 
