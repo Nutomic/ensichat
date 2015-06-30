@@ -31,16 +31,9 @@ android {
         testInstrumentationRunner "com.android.test.runner.MultiDexTestRunner"
     }
 
-    buildTypes {
-        debug {
-            applicationIdSuffix ".debug"
-            minifyEnabled false
-            testCoverageEnabled true
-        }
-        release {
-            minifyEnabled true
-            proguardFile file("proguard-rules.pro")
-        }
+    buildTypes.debug {
+        applicationIdSuffix ".debug"
+        testCoverageEnabled true
     }
 
     // Increasing minSdkVersion reduces compilation time for MultiDex.
