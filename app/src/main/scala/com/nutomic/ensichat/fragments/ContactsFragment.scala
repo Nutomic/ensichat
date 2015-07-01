@@ -3,22 +3,22 @@ package com.nutomic.ensichat.fragments
 import java.io.File
 
 import android.app.ListFragment
-import android.content.Intent
+import android.content.{IntentFilter, Context, BroadcastReceiver, Intent}
 import android.net.Uri
 import android.os.Bundle
+import android.support.v4.content.LocalBroadcastManager
 import android.view._
 import android.widget.ListView
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.{AddContactsActivity, EnsichatActivity, MainActivity, SettingsActivity}
 import com.nutomic.ensichat.protocol.ChatService
-import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 import com.nutomic.ensichat.util.{Database, UsersAdapter}
 import scala.collection.JavaConversions._
 
 /**
  * Lists all nearby, connected devices.
  */
-class ContactsFragment extends ListFragment with OnContactsUpdatedListener {
+class ContactsFragment extends ListFragment {
 
   private lazy val adapter = new UsersAdapter(getActivity)
 
@@ -32,8 +32,14 @@ class ContactsFragment extends ListFragment with OnContactsUpdatedListener {
 
     getActivity.asInstanceOf[EnsichatActivity].runOnServiceConnected(() => {
       database.getContacts.foreach(adapter.add)
-      database.runOnContactsUpdated(this)
     })
+    LocalBroadcastManager.getInstance(getActivity)
+      .registerReceiver(onContactsUpdatedListener, new IntentFilter(Database.ActionContactsUpdated))
+  }
+
+  override def onDestroy(): Unit = {
+    super.onDestroy()
+    LocalBroadcastManager.getInstance(getActivity).unregisterReceiver(onContactsUpdatedListener)
   }
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
@@ -75,13 +81,15 @@ class ContactsFragment extends ListFragment with OnContactsUpdatedListener {
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long): Unit =
     getActivity.asInstanceOf[MainActivity].openChat(adapter.getItem(position).address)
 
-  override def onContactsUpdated(): Unit = {
-    getActivity.runOnUiThread(new Runnable {
-      override def run(): Unit = {
-        adapter.clear()
-        database.getContacts.foreach(adapter.add)
-      }
-    })
+  private val onContactsUpdatedListener = new BroadcastReceiver() {
+    override def onReceive(context: Context, intent: Intent): Unit = {
+      getActivity.runOnUiThread(new Runnable {
+        override def run(): Unit = {
+          adapter.clear()
+          database.getContacts.foreach(adapter.add)
+        }
+      })
+    }
   }
 
 }

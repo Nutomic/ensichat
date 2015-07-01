@@ -2,18 +2,20 @@ package com.nutomic.ensichat.util
 
 import java.util.Date
 
-import android.content.{ContentValues, Context}
+import android.content.{Intent, ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
+import android.support.v4.content.LocalBroadcastManager
 import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol._
 import com.nutomic.ensichat.protocol.body.{Text, ResultAddContact, RequestAddContact}
 import com.nutomic.ensichat.protocol.header.ContentHeader
-import com.nutomic.ensichat.util.Database.OnContactsUpdatedListener
 
 import scala.collection.immutable.TreeSet
 import scala.collection.{SortedSet, mutable}
 
 object Database {
+
+  val ActionContactsUpdated = "Contacts_Updated"
 
   private val DatabaseName = "message_store.db"
 
@@ -34,13 +36,6 @@ object Database {
     "_id INTEGER PRIMARY KEY," +
     "address TEXT NOT NULL," +
     "name TEXT NOT NULL)"
-
-  trait OnContactsUpdatedListener {
-    def onContactsUpdated()
-  }
-
-  private var contactsUpdatedListeners =
-    new mutable.WeakHashMap[OnContactsUpdatedListener, Unit].keySet
 
 }
 
@@ -139,21 +134,20 @@ class Database(context: Context)
     cv.put("address", contact.address.toString)
     cv.put("name", contact.name.toString)
     getWritableDatabase.insert("contacts", null, cv)
-    Database.contactsUpdatedListeners.foreach(_.onContactsUpdated()    )
+    contactsUpdated()
   }
   
   def changeContactName(contact: User): Unit = {
     val cv = new ContentValues()
     cv.put("name", contact.name.toString)
     getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.address.toString))
-    Database.contactsUpdatedListeners.foreach(_.onContactsUpdated())
+    contactsUpdated()
   }
 
-  /**
-   * Pass a callback that is called whenever a new contact is added.
-   */
-  def runOnContactsUpdated(listener: OnContactsUpdatedListener) =
-    Database.contactsUpdatedListeners += listener
+  private def contactsUpdated(): Unit = {
+    LocalBroadcastManager.getInstance(context)
+      .sendBroadcast(new Intent(Database.ActionContactsUpdated))
+  }
 
   override def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int): Unit = {
   }
