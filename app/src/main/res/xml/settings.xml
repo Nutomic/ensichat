@@ -6,17 +6,17 @@
         android:title="@string/user_name"
         android:key="user_name" />
 
+    <CheckBoxPreference
+        android:title="@string/notification_sounds"
+        android:key="notification_sounds"
+        android:defaultValue="@bool/default_notification_sounds" />
+
     <EditTextPreference
         android:title="@string/scan_interval_seconds"
         android:key="scan_interval_seconds"
         android:defaultValue="@string/default_scan_interval"
         android:inputType="number"
         android:numeric="integer" />
-
-    <CheckBoxPreference
-        android:title="@string/notification_sounds"
-        android:key="notification_sounds"
-        android:defaultValue="@bool/default_notification_sounds" />
 
     <EditTextPreference
         android:title="@string/max_connections"

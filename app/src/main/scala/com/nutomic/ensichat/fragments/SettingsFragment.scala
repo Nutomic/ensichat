@@ -11,13 +11,10 @@ import com.nutomic.ensichat.util.Database
 
 object SettingsFragment {
 
-  val KeyUserName = "user_name"
-  
+  val KeyUserName     = "user_name"
   val KeyScanInterval = "scan_interval_seconds"
-
-  val MaxConnections = "max_connections"
-
-  val Version = "version"
+  val MaxConnections  = "max_connections"
+  val Version         = "version"
 
 }
 
@@ -28,28 +25,34 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
 
   private lazy val database = new Database(getActivity)
 
+  private lazy val name           = findPreference(KeyUserName)
+  private lazy val scanInterval   = findPreference(KeyScanInterval)
+  private lazy val maxConnections = findPreference(MaxConnections)
+  private lazy val version        = findPreference(Version)
+
   override def onCreate(savedInstanceState: Bundle): Unit =  {
     super.onCreate(savedInstanceState)
 
     addPreferencesFromResource(R.xml.settings)
-    val name           = findPreference(KeyUserName)
-    val scanInterval   = findPreference(KeyScanInterval)
-    val maxConnections = findPreference(MaxConnections)
-    val version        = findPreference(Version)
+
+    val prefs = PreferenceManager.getDefaultSharedPreferences(getActivity)
+
+    name.setSummary(prefs.getString(KeyUserName, ""))
     name.setOnPreferenceChangeListener(this)
+
     scanInterval.setOnPreferenceChangeListener(this)
-    maxConnections.setOnPreferenceChangeListener(this)
-    version.setSummary(getActivity.getPackageManager.getPackageInfo(
-      getActivity.getPackageName, 0).versionName)
-    
-    val pm = PreferenceManager.getDefaultSharedPreferences(getActivity)
-    name.setSummary(pm.getString(KeyUserName, ""))
-    scanInterval.setSummary(pm.getString(KeyScanInterval,
-      getResources.getString(R.string.default_scan_interval)))
-    maxConnections.setSummary(pm.getString(MaxConnections,
-      getResources.getString(R.string.default_max_connections)))
-    if (!BuildConfig.DEBUG)
+    scanInterval.setSummary(prefs.getString(
+      KeyScanInterval, getResources.getString(R.string.default_scan_interval)))
+
+    if (!BuildConfig.DEBUG) {
+      maxConnections.setOnPreferenceChangeListener(this)
+      maxConnections.setSummary(prefs.getString(
+        MaxConnections, getResources.getString(R.string.default_max_connections)))
+    } else
       getPreferenceScreen.removePreference(maxConnections)
+
+    val packageInfo = getActivity.getPackageManager.getPackageInfo(getActivity.getPackageName, 0)
+    version.setSummary(packageInfo.versionName)
   }
 
   /**
