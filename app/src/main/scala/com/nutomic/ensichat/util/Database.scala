@@ -121,7 +121,7 @@ class Database(context: Context)
       Array(address.toString), null, null, null, null)
     if (c.getCount != 0) {
       c.moveToNext()
-      val s = Some(new User(new Address(c.getString(c.getColumnIndex("address"))),
+      val s = Option(new User(new Address(c.getString(c.getColumnIndex("address"))),
         c.getString(c.getColumnIndex("name"))))
       c.close()
       s

@@ -21,13 +21,13 @@ object CryptoData {
       if (keyLength != 0) {
         val key = new Array[Byte](keyLength)
         b.get(key, 0, keyLength)
-        Some(key)
+        Option(key)
       }
       else None
 
     val remaining = new Array[Byte](b.remaining())
     b.get(remaining, 0, b.remaining())
-    (new CryptoData(Some(signature), key), remaining)
+    (new CryptoData(Option(signature), key), remaining)
   }
 
 }

@@ -83,7 +83,7 @@ class MainActivity extends EnsichatActivity {
    * Opens a chat fragment for the given device, creating the fragment if needed.
    */
   def openChat(address: Address): Unit = {
-    currentChat = Some(address)
+    currentChat = Option(address)
     getFragmentManager
       .beginTransaction()
       .detach(contactsFragment)

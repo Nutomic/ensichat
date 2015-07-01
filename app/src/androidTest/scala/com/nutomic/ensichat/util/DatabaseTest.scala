@@ -89,7 +89,7 @@ class DatabaseTest extends AndroidTestCase {
     database.addContact(UserTest.u1)
     val contacts = database.getContacts
     assertEquals(1, contacts.size)
-    assertEquals(Some(UserTest.u1), database.getContact(UserTest.u1.address))
+    assertEquals(Option(UserTest.u1), database.getContact(UserTest.u1.address))
   }
 
   def testAddContactCallback(): Unit = {
@@ -106,7 +106,7 @@ class DatabaseTest extends AndroidTestCase {
     assertTrue(database.getContact(UserTest.u1.address).isEmpty)
     val c = database.getContact(UserTest.u2.address)
     assertTrue(c.nonEmpty)
-    assertEquals(Some(UserTest.u2), c)
+    assertEquals(Option(UserTest.u2), c)
   }
 
 }
