@@ -26,6 +26,17 @@ address as hash. Additionally, nodes MUST NOT connect to a node with
 either address.
 
 
+Routing
+-------
+A simple flood routing protocol is currently used. Every node forwards all messages, unless a message with the same Origin and Sequence Number has already been received.
+
+Nodes MUST store pairs of (Origin, Sequence Number) for all received messages. After receiving a new message, entries with the same Origin and Sequence Number between _received_ + 1 and _received_ + 32767 MUST be removed (with a wrap around at the maximum value). The entries MUST NOT be cleared while the program is running. They MAY be cleared when the program is exited.
+
+There is currently no support for offline messages. If sender and receiver are not in the same mesh, the message will not arrive.
+
+Nodes are free implement different routing algorithms.
+
+
 Messages
 --------
 
