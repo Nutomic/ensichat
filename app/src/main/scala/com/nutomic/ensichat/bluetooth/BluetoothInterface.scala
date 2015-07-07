@@ -143,7 +143,8 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
     override def onReceive(context: Context, intent: Intent): Unit = {
       intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) match {
         case BluetoothAdapter.STATE_ON =>
-          startBluetoothConnections()
+          if (!listenThread.isAlive)
+            startBluetoothConnections()
         case BluetoothAdapter.STATE_TURNING_OFF =>
           Log.i(Tag, "Bluetooth disabled, stopping connectivity")
           listenThread.cancel()
