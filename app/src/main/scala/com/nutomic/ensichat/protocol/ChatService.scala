@@ -2,12 +2,14 @@ package com.nutomic.ensichat.protocol
 
 import java.util.Date
 
-import android.app.Service
-import android.content.Intent
+import android.app.Notification.Builder
+import android.app.{Notification, NotificationManager, PendingIntent, Service}
+import android.content.{Context, Intent}
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.R
+import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
@@ -20,6 +22,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object ChatService {
+
+  val ActionStopService = "stop_service"
 
   abstract class InterfaceHandler {
 
@@ -82,6 +86,9 @@ class ChatService extends Service {
 
   private var messageListeners = new mutable.WeakHashMap[OnMessageReceivedListener, Unit].keySet
 
+  private lazy val notificationManager =
+    getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
+
   /**
    * Holds all known users.
    *
@@ -95,6 +102,8 @@ class ChatService extends Service {
   override def onCreate(): Unit = {
     super.onCreate()
 
+    showPersistentNotification()
+
     Future {
       crypto.generateLocalKeys()
       registerMessageListener(database)
@@ -106,7 +115,20 @@ class ChatService extends Service {
     }
   }
 
+  def showPersistentNotification(): Unit = {
+    val openIntent = PendingIntent.getActivity(this, 0, new Intent(this, classOf[MainActivity]), 0)
+    val notification = new Builder(this)
+      .setSmallIcon(R.drawable.ic_launcher)
+      .setContentTitle(getString(R.string.app_name))
+      .setContentIntent(openIntent)
+      .setOngoing(true)
+      .setPriority(Notification.PRIORITY_MIN)
+      .build()
+    notificationManager.notify(NotificationHandler.NotificationIdRunning, notification)
+  }
+
   override def onDestroy(): Unit = {
+    notificationManager.cancel(NotificationHandler.NotificationIdRunning)
     btInterface.destroy()
   }
 

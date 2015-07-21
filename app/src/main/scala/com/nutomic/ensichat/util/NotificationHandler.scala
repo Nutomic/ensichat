@@ -10,12 +10,18 @@ import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.body.Text
 import com.nutomic.ensichat.protocol.{Crypto, Message}
 
+object NotificationHandler {
+
+  val NotificationIdRunning = 1
+
+  val NotificationIdNewMessage = 2
+
+}
+
 /**
  * Displays notifications for new messages.
  */
 class NotificationHandler(context: Context) extends OnMessageReceivedListener {
-
-  private val notificationIdNewMessage = 1
 
   def onMessageReceived(msg: Message): Unit = msg.body match {
     case text: Text =>
@@ -34,7 +40,7 @@ class NotificationHandler(context: Context) extends OnMessageReceivedListener {
 
       val nm = context.getSystemService(Context.NOTIFICATION_SERVICE)
         .asInstanceOf[NotificationManager]
-      nm.notify(notificationIdNewMessage, notification)
+      nm.notify(NotificationHandler.NotificationIdNewMessage, notification)
     case _ =>
   }
 
