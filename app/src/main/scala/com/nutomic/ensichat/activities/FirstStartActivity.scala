@@ -69,6 +69,7 @@ class FirstStartActivity extends AppCompatActivity with OnEditorActionListener w
       .edit()
       .putBoolean(KeyIsFirstStart, false)
       .putString(SettingsFragment.KeyUserName, username.getText.toString.trim)
+      .putString(SettingsFragment.KeyUserStatus, getString(R.string.default_user_status))
       .apply()
 
     startMainActivity()

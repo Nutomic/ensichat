@@ -13,7 +13,7 @@ import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
-import com.nutomic.ensichat.protocol.body.{ConnectionInfo, MessageBody, UserName}
+import com.nutomic.ensichat.protocol.body.{ConnectionInfo, MessageBody, UserInfo}
 import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.util.{AddContactsHandler, Database, NotificationHandler}
 
@@ -192,11 +192,11 @@ class ChatService extends Service {
    * Handles all (locally and remotely sent) new messages.
    */
   private def onNewMessage(msg: Message): Unit = msg.body match {
-    case name: UserName =>
-      val contact = new User(msg.header.origin, name.name)
+    case ui: UserInfo =>
+      val contact = new User(msg.header.origin, ui.name, ui.status)
       knownUsers += contact
       if (database.getContact(msg.header.origin).nonEmpty)
-        database.changeContactName(contact)
+        database.updateContact(contact)
 
       callConnectionListeners()
     case _ =>
@@ -243,8 +243,8 @@ class ChatService extends Service {
     }
 
     Log.i(Tag, "Node " + sender + " connected")
-    val name = preferences.getString(SettingsFragment.KeyUserName, "")
-    sendTo(sender, new UserName(name))
+    sendTo(sender, new UserInfo(preferences.getString(SettingsFragment.KeyUserName, ""),
+                                preferences.getString(SettingsFragment.KeyUserStatus, "")))
     callConnectionListeners()
     true
   }
@@ -263,6 +263,6 @@ class ChatService extends Service {
     btInterface.getConnections
 
   def getUser(address: Address) =
-    knownUsers.find(_.address == address).getOrElse(new User(address, address.toString))
+    knownUsers.find(_.address == address).getOrElse(new User(address, address.toString, ""))
 
 }

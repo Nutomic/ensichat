@@ -19,7 +19,7 @@ object Database {
 
   private val DatabaseName = "message_store.db"
 
-  private val DatabaseVersion = 1
+  private val DatabaseVersion = 2
 
   // NOTE: We could make origin/target foreign keys to contacts, but:
   // - they don't change anyway
@@ -35,7 +35,8 @@ object Database {
   private val CreateContactsTable = "CREATE TABLE contacts(" +
     "_id INTEGER PRIMARY KEY," +
     "address TEXT NOT NULL," +
-    "name TEXT NOT NULL)"
+    "name TEXT NOT NULL," +
+    "status TEXT NOT NULL)"
 
 }
 
@@ -97,12 +98,13 @@ class Database(context: Context)
    * Returns all contacts of this user.
    */
   def getContacts: Set[User] = {
-    val c = getReadableDatabase.query(true, "contacts", Array("address", "name"), "", Array(),
+    val c = getReadableDatabase.query(true, "contacts", Array("address", "name", "status"), "", Array(),
       null, null, null, null)
     var contacts = Set[User]()
     while (c.moveToNext()) {
       contacts += new User(new Address(c.getString(c.getColumnIndex("address"))),
-                              c.getString(c.getColumnIndex("name")))
+                           c.getString(c.getColumnIndex("name")),
+                           c.getString(c.getColumnIndex("status")))
     }
     c.close()
     contacts
@@ -112,12 +114,13 @@ class Database(context: Context)
    * Returns the contact with the given address if it exists.
    */
   def getContact(address: Address): Option[User] = {
-    val c = getReadableDatabase.query(true, "contacts", Array("address", "name"), "address = ?",
+    val c = getReadableDatabase.query(true, "contacts", Array("address", "name", "status"), "address = ?",
       Array(address.toString), null, null, null, null)
     if (c.getCount != 0) {
       c.moveToNext()
       val s = Option(new User(new Address(c.getString(c.getColumnIndex("address"))),
-        c.getString(c.getColumnIndex("name"))))
+                              c.getString(c.getColumnIndex("name")),
+                              c.getString(c.getColumnIndex("status"))))
       c.close()
       s
     } else {
@@ -132,14 +135,16 @@ class Database(context: Context)
   def addContact(contact: User): Unit = {
     val cv = new ContentValues()
     cv.put("address", contact.address.toString)
-    cv.put("name", contact.name.toString)
+    cv.put("name", contact.name)
+    cv.put("status", contact.status)
     getWritableDatabase.insert("contacts", null, cv)
     contactsUpdated()
   }
   
-  def changeContactName(contact: User): Unit = {
+  def updateContact(contact: User): Unit = {
     val cv = new ContentValues()
-    cv.put("name", contact.name.toString)
+    cv.put("name", contact.name)
+    cv.put("status", contact.status)
     getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.address.toString))
     contactsUpdated()
   }
@@ -150,6 +155,12 @@ class Database(context: Context)
   }
 
   override def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int): Unit = {
+    if (oldVersion < 2) {
+      db.execSQL("ALTER TABLE contacts ADD COLUMN status TEXT")
+      val cv = new ContentValues()
+      cv.put("status", "")
+      db.update("contacts", cv, null, null)
+    }
   }
 
 }

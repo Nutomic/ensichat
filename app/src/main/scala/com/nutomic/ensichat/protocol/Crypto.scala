@@ -257,7 +257,7 @@ class Crypto(context: Context) {
       case RequestAddContact.Type => RequestAddContact.read(decrypted)
       case ResultAddContact.Type  => ResultAddContact.read(decrypted)
       case Text.Type              => Text.read(decrypted)
-      case UserName.Type          => UserName.read(decrypted)
+      case UserInfo.Type          => UserInfo.read(decrypted)
     }
     new Message(msg.header, msg.crypto, body)
   }

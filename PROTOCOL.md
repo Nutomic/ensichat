@@ -8,7 +8,8 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 document are to be interpreted as described in RFC 2119.
 
 A _node_ is a single device implementing this protocol. Each node has
-exactly one node address based on its RSA key pair.
+a 4096 bit RSA key pair. This key pair is used for message signing
+and encryption. Every node has exactly one node address.
 
 A _node address_ consists of 32 bytes and is the SHA-256 hash of the
 node's public key.
@@ -29,17 +30,12 @@ either address.
 Crypto
 ------
 
-Every node has a 4096 RSA key pair that is used for message signing
-and encryption.
+The message body is always are signed with 'SHA256withRSA'. The
+signature is written to the 'Encryption Data' part.
 
-All messages are signed with 'SHA256withRSA'. The signature is written
-to the 'Encryption Data' part.
-
-Content messages are encrypted using a random 256 bit AES key. The
-key is then wrapped using RSA with the sender's private key, and
-written to the 'Encryption Data' part.
-
-The node address is the output of 'SHA-256' on the private key.
+The body of content messages is encrypted using a random 256 bit
+AES key. The key is then wrapped using RSA with the sender's
+private key, and the result written to the 'Encryption Data' part.
 
 
 Routing
@@ -148,13 +144,12 @@ to avoid forwarding the same message multiple times.
 
 Content-Type is one of those in section Content-Messages.
 
-Message ID is unique for each message by the same sender. A device MUST NOT
-ever send two messages with the same Message ID.
+Message ID is unique for each message by the same sender. A device
+MUST NOT ever send two messages with the same Message ID.
 
 Time is the unix timestamp of message sending.
 
-Only Content Messages have the Content-Type Message ID and Time
-fields.
+Only Content Messages have the Message ID and Time fields.
 
 ### Encryption Data
 
@@ -277,7 +272,7 @@ A simple chat message.
 
 Text the string to be transferred, encoded as UTF-8.
 
-### UserName (Content-Type = 4)
+### UserInfo (Content-Type = 4)
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -288,5 +283,12 @@ Text the string to be transferred, encoded as UTF-8.
     \                   Name (variable length)                      \
     /                                                               /
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                         Status Length                         |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    /                                                               /
+    \                  Status (variable length)                     \
+    /                                                               /
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Contains the sender's name, which should be used for display to users.
+Contains the sender's name and status, which should be used for
+display to users.

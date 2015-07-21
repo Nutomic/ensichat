@@ -86,12 +86,12 @@ class ChatFragment extends ListFragment with OnClickListener
     super.onCreate(savedInstanceState)
 
     if (savedInstanceState != null)
-      address = new Address(savedInstanceState.getByteArray("device"))
+      address = new Address(savedInstanceState.getByteArray("address"))
   }
 
   override def onSaveInstanceState(outState: Bundle): Unit = {
     super.onSaveInstanceState(outState)
-    outState.putByteArray("device", address.bytes)
+    outState.putByteArray("address", address.bytes)
   }
 
   /**

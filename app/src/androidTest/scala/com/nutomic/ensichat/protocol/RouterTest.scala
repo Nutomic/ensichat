@@ -3,7 +3,7 @@ package com.nutomic.ensichat.protocol
 import java.util.{Date, GregorianCalendar}
 
 import android.test.AndroidTestCase
-import com.nutomic.ensichat.protocol.body.{Text, UserName}
+import com.nutomic.ensichat.protocol.body.{Text, UserInfo}
 import com.nutomic.ensichat.protocol.header.ContentHeader
 import junit.framework.Assert._
 
@@ -97,9 +97,9 @@ class RouterTest extends AndroidTestCase {
   }
 
   private def generateMessage(sender: Address, receiver: Address, seqNum: Int): Message = {
-    val header = new ContentHeader(sender, receiver, seqNum, UserName.Type, 5,
+    val header = new ContentHeader(sender, receiver, seqNum, UserInfo.Type, 5,
       new GregorianCalendar(2014, 6, 10).getTime)
-    new Message(header, new UserName(""))
+    new Message(header, new UserInfo("", ""))
   }
 
 }

@@ -6,6 +6,10 @@
         android:title="@string/user_name"
         android:key="user_name" />
 
+    <EditTextPreference
+        android:title="@string/user_status"
+        android:key="user_status" />
+
     <CheckBoxPreference
         android:title="@string/notification_sounds"
         android:key="notification_sounds"
