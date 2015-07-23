@@ -6,7 +6,6 @@ import android.preference.PreferenceManager
 import android.support.v4.app.NotificationCompat
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
-import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.body.Text
 import com.nutomic.ensichat.protocol.{Crypto, Message}
 
@@ -21,7 +20,7 @@ object NotificationHandler {
 /**
  * Displays notifications for new messages.
  */
-class NotificationHandler(context: Context) extends OnMessageReceivedListener {
+class NotificationHandler(context: Context) {
 
   def onMessageReceived(msg: Message): Unit = msg.body match {
     case text: Text =>

@@ -5,7 +5,6 @@ import java.util.Date
 import android.content.{Intent, ContentValues, Context}
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import android.support.v4.content.LocalBroadcastManager
-import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol._
 import com.nutomic.ensichat.protocol.body.{Text, ResultAddContact, RequestAddContact}
 import com.nutomic.ensichat.protocol.header.ContentHeader
@@ -15,7 +14,7 @@ import scala.collection.{SortedSet, mutable}
 
 object Database {
 
-  val ActionContactsUpdated = "Contacts_Updated"
+  val ActionContactsUpdated = "contacts_updated"
 
   private val DatabaseName = "message_store.db"
 
@@ -44,8 +43,7 @@ object Database {
  * Stores all messages and contacts in SQL database.
  */
 class Database(context: Context)
-  extends SQLiteOpenHelper(context, Database.DatabaseName, null, Database.DatabaseVersion)
-  with OnMessageReceivedListener {
+  extends SQLiteOpenHelper(context, Database.DatabaseName, null, Database.DatabaseVersion) {
 
   override def onCreate(db: SQLiteDatabase): Unit = {
     db.execSQL(Database.CreateContactsTable)
@@ -79,7 +77,7 @@ class Database(context: Context)
   /**
    * Inserts the given new message into the database.
    */
-  override def onMessageReceived(msg: Message): Unit = msg.body match {
+  def onMessageReceived(msg: Message): Unit = msg.body match {
     case text: Text =>
       val cv =  new ContentValues()
       val ch = msg.header.asInstanceOf[ContentHeader]

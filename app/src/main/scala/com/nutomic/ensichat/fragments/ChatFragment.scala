@@ -1,7 +1,9 @@
 package com.nutomic.ensichat.fragments
 
 import android.app.ListFragment
+import android.content.{IntentFilter, Intent, Context, BroadcastReceiver}
 import android.os.Bundle
+import android.support.v4.content.LocalBroadcastManager
 import android.view.View.OnClickListener
 import android.view.inputmethod.EditorInfo
 import android.view.{KeyEvent, LayoutInflater, View, ViewGroup}
@@ -9,7 +11,6 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsichatActivity
-import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.body.Text
 import com.nutomic.ensichat.protocol.{Message, Address, ChatService}
 import com.nutomic.ensichat.util.{Database, MessagesAdapter}
@@ -17,8 +18,7 @@ import com.nutomic.ensichat.util.{Database, MessagesAdapter}
 /**
  * Represents a single chat with another specific device.
  */
-class ChatFragment extends ListFragment with OnClickListener
-    with OnMessageReceivedListener {
+class ChatFragment extends ListFragment with OnClickListener {
 
   /**
    * Fragments need to have a default constructor, so this is optional.
@@ -40,7 +40,7 @@ class ChatFragment extends ListFragment with OnClickListener
 
   private var listView: ListView = _
 
-  private var adapter: ArrayAdapter[Message] = _
+  private var adapter: MessagesAdapter = _
 
   override def onActivityCreated(savedInstanceState: Bundle): Unit = {
     super.onActivityCreated(savedInstanceState)
@@ -53,7 +53,6 @@ class ChatFragment extends ListFragment with OnClickListener
 
       // Read local device ID from service,
       adapter = new MessagesAdapter(getActivity, address)
-      chatService.registerMessageListener(ChatFragment.this)
       database.getMessages(address, 15).foreach(adapter.add)
 
       if (listView != null) {
@@ -87,11 +86,19 @@ class ChatFragment extends ListFragment with OnClickListener
 
     if (savedInstanceState != null)
       address = new Address(savedInstanceState.getByteArray("address"))
+
+    LocalBroadcastManager.getInstance(getActivity)
+      .registerReceiver(onMessageReceivedReceiver, new IntentFilter(ChatService.ActionMessageReceived))
   }
 
   override def onSaveInstanceState(outState: Bundle): Unit = {
     super.onSaveInstanceState(outState)
     outState.putByteArray("address", address.bytes)
+  }
+
+  override def onDestroy(): Unit = {
+    super.onDestroy()
+    LocalBroadcastManager.getInstance(getActivity).unregisterReceiver(onMessageReceivedReceiver)
   }
 
   /**
@@ -110,13 +117,16 @@ class ChatFragment extends ListFragment with OnClickListener
   /**
    * Displays new messages in UI.
    */
-  override def onMessageReceived(msg: Message): Unit = {
-    if (!Set(msg.header.origin, msg.header.target).contains(address))
-      return
+  private val onMessageReceivedReceiver = new BroadcastReceiver {
+    override def onReceive(context: Context, intent: Intent): Unit = {
+      val msg = intent.getSerializableExtra(ChatService.ExtraMessage).asInstanceOf[Message]
+      if (!Set(msg.header.origin, msg.header.target).contains(address))
+        return
 
-    msg.body match {
-      case _: Text => adapter.add(msg)
-      case _ =>
+      msg.body match {
+        case _: Text => adapter.add(msg)
+        case _ =>
+      }
     }
   }
 

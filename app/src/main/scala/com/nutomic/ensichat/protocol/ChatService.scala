@@ -7,23 +7,26 @@ import android.app.{Notification, NotificationManager, PendingIntent, Service}
 import android.content.{Context, Intent}
 import android.os.Handler
 import android.preference.PreferenceManager
+import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
-import com.nutomic.ensichat.protocol.ChatService.{OnConnectionsChangedListener, OnMessageReceivedListener}
 import com.nutomic.ensichat.protocol.body.{ConnectionInfo, MessageBody, UserInfo}
 import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.util.{AddContactsHandler, Database, NotificationHandler}
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object ChatService {
 
-  val ActionStopService = "stop_service"
+  val ActionStopService        = "stop_service"
+  val ActionMessageReceived    = "message_received"
+  val ActionConnectionsChanged = "connections_changed"
+
+  val ExtraMessage             = "extra_message"
 
   abstract class InterfaceHandler {
 
@@ -33,18 +36,6 @@ object ChatService {
 
     def send(nextHop: Address, msg: Message): Unit
 
-  }
-
-  trait OnMessageReceivedListener {
-    def onMessageReceived(messages: Message): Unit
-  }
-
-  /**
-   * Used with [[ChatService.registerConnectionListener]], called when a Bluetooth device
-   * connects or disconnects
-   */
-  trait OnConnectionsChangedListener {
-    def onConnectionsChanged(): Unit
   }
 
 }
@@ -77,15 +68,6 @@ class ChatService extends Service {
 
   private lazy val seqNumGenerator = new SeqNumGenerator(this)
 
-  /**
-   * For this (and [[messageListeners]], functions would be useful instead of instances,
-   * but on a Nexus S (Android 4.1.2), these functions are garbage collected even when
-   * referenced.
-   */
-  private var connectionListeners = new mutable.WeakHashMap[OnConnectionsChangedListener, Unit].keySet
-
-  private var messageListeners = new mutable.WeakHashMap[OnMessageReceivedListener, Unit].keySet
-
   private lazy val notificationManager =
     getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
 
@@ -106,9 +88,6 @@ class ChatService extends Service {
 
     Future {
       crypto.generateLocalKeys()
-      registerMessageListener(database)
-      registerMessageListener(notificationHandler)
-      registerMessageListener(addContactsHandler)
 
       btInterface.create()
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
@@ -135,21 +114,6 @@ class ChatService extends Service {
   override def onStartCommand(intent: Intent, flags: Int, startId: Int) = Service.START_STICKY
 
   override def onBind(intent: Intent) =  binder
-
-  /**
-   * Registers a listener that is called whenever a new message is sent or received.
-   */
-  def registerMessageListener(listener: OnMessageReceivedListener): Unit = {
-    messageListeners += listener
-  }
-
-  /**
-   * Registers a listener that is called whenever a new device is connected.
-   */
-  def registerConnectionListener(listener: OnConnectionsChangedListener): Unit = {
-    connectionListeners += listener
-    listener.onConnectionsChanged()
-  }
 
   /**
    * Sends a new message to the given target address.
@@ -200,10 +164,13 @@ class ChatService extends Service {
 
       callConnectionListeners()
     case _ =>
-      mainHandler.post(new Runnable {
-        override def run(): Unit =
-          messageListeners.foreach(_.onMessageReceived(msg))
-    })
+      database.onMessageReceived(msg)
+      notificationHandler.onMessageReceived(msg)
+      addContactsHandler.onMessageReceived(msg)
+      val i = new Intent(ChatService.ActionMessageReceived)
+      i.putExtra(ChatService.ExtraMessage, msg)
+      LocalBroadcastManager.getInstance(this)
+        .sendBroadcast(i)
   }
 
   /**
@@ -249,14 +216,9 @@ class ChatService extends Service {
     true
   }
 
-  /**
-   * Calls all [[connectionListeners]] with the currently active connections.
-   *
-   * Should be called whenever a neighbor connects or disconnects.
-   */
   def callConnectionListeners(): Unit = {
-    connectionListeners
-      .foreach(_.onConnectionsChanged())
+    LocalBroadcastManager.getInstance(this)
+      .sendBroadcast(new Intent(ChatService.ActionConnectionsChanged))
   }
 
   def connections() =

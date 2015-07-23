@@ -15,8 +15,7 @@ import com.nutomic.ensichat.util.{Database, UsersAdapter}
 /**
  * Lists all nearby, connected devices and allows adding them to be added as contacts.
  */
-class AddContactsActivity extends EnsichatActivity with ChatService.OnConnectionsChangedListener
-  with OnItemClickListener {
+class AddContactsActivity extends EnsichatActivity with OnItemClickListener {
 
   private val Tag = "AddContactsActivity"
 
@@ -37,19 +36,17 @@ class AddContactsActivity extends EnsichatActivity with ChatService.OnConnection
     list.setOnItemClickListener(this)
     list.setEmptyView(findViewById(android.R.id.empty))
 
-    runOnServiceConnected(() => {
-      service.registerConnectionListener(AddContactsActivity.this)
-    })
+    val filter = new IntentFilter()
+    filter.addAction(ChatService.ActionConnectionsChanged)
+    filter.addAction(Database.ActionContactsUpdated)
     LocalBroadcastManager.getInstance(this)
-      .registerReceiver(onContactsUpdatedListener, new IntentFilter(Database.ActionContactsUpdated))
+      .registerReceiver(onContactsUpdatedReceiver, filter)
   }
 
   override def onDestroy(): Unit = {
     super.onDestroy()
-    LocalBroadcastManager.getInstance(this).unregisterReceiver(onContactsUpdatedListener)
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(onContactsUpdatedReceiver)
   }
-
-  override def onConnectionsChanged() = onContactsUpdatedListener.onReceive(null, null)
 
   /**
    * Initiates adding the device as contact if it hasn't been added yet.
@@ -73,7 +70,7 @@ class AddContactsActivity extends EnsichatActivity with ChatService.OnConnection
   /**
    * Fetches connections and displays them (excluding contacts).
    */
-  private val onContactsUpdatedListener = new BroadcastReceiver() {
+  private val onContactsUpdatedReceiver = new BroadcastReceiver() {
     override def onReceive(context: Context, intent: Intent): Unit = {
       runOnUiThread(new Runnable {
         override def run(): Unit  = {

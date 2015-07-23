@@ -2,12 +2,13 @@ package com.nutomic.ensichat.util
 
 import android.app.{NotificationManager, PendingIntent}
 import android.content.{Context, Intent}
+import android.os
+import android.os.{Handler, Looper}
 import android.support.v4.app.NotificationCompat
 import android.util.Log
 import android.widget.Toast
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.ConfirmAddContactActivity
-import com.nutomic.ensichat.protocol.ChatService.OnMessageReceivedListener
 import com.nutomic.ensichat.protocol.body.{RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.protocol.{Address, Message, User}
 
@@ -17,8 +18,7 @@ import com.nutomic.ensichat.protocol.{Address, Message, User}
  * @param getUser Returns info about a given address.
  * @param localAddress Address of the local device.
  */
-class AddContactsHandler(context: Context, getUser: (Address) => User, localAddress: Address)
-  extends OnMessageReceivedListener {
+class AddContactsHandler(context: Context, getUser: (Address) => User, localAddress: Address) {
 
   private val Tag = "AddContactsHandler"
 
@@ -93,9 +93,14 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
     if (info.localConfirmed && info.remoteConfirmed) {
       Log.i(Tag, "Adding new contact " + user.toString)
       database.addContact(user)
-      Toast
-        .makeText(context, context.getString(R.string.contact_added, user.name), Toast.LENGTH_SHORT)
-        .show()
+      new Handler(Looper.getMainLooper).post(new Runnable {
+        override def run(): Unit = {
+          Toast
+            .makeText(context,
+              context.getString(R.string.contact_added, user.name), Toast.LENGTH_SHORT)
+            .show()
+        }
+      })
       currentlyAdding -= address
     }
   }
