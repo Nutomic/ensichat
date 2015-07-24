@@ -2,8 +2,6 @@ package com.nutomic.ensichat.protocol
 
 import java.util
 
-import com.google.common.io.BaseEncoding
-
 object Address {
 
   val Length = 32
@@ -27,8 +25,8 @@ case class Address(bytes: Array[Byte]) {
 
   require(bytes.length == Address.Length, "Invalid address length (was " + bytes.length + ")")
 
-  def this(base16: String) {
-    this(BaseEncoding.base16().decode(base16))
+  def this(hex: String) {
+    this(hex.sliding(2, 2).map(Integer.parseInt(_, 16).toByte).toArray)
   }
 
   override def hashCode = util.Arrays.hashCode(bytes)
@@ -38,6 +36,6 @@ case class Address(bytes: Array[Byte]) {
     case _ => false
   }
 
-  override def toString = BaseEncoding.base16().encode(bytes)
+  override def toString = bytes.map("%02X".format(_)).mkString
 
 }
