@@ -30,6 +30,7 @@ object Message {
   /**
    * Reads the entire message (header, crypto and body) into an object.
    */
+  @throws(classOf[ReadMessageException])
   def read(stream: InputStream): Message = {
     try {
       val headerBytes = new Array[Byte](MessageHeader.Length)
