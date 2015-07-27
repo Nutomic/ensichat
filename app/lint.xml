@@ -7,4 +7,7 @@
 	<!-- Random number generator fix is applied -->
 	<issue id="TrulyRandom" severity="ignore" />
 
+	<!-- Lint doesn't seem to detect resources used from Scala -->
+	<issue id="UnusedResources" severity="ignore" />
+
 </lint>
