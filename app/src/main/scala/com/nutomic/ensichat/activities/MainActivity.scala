@@ -66,9 +66,11 @@ class MainActivity extends EnsichatActivity {
         .add(android.R.id.content, contactsFragment)
         .commit()
     }
+  }
 
-    if (getIntent.getAction == MainActivity.ActionOpenChat)
-      openChat(new Address(getIntent.getStringExtra(MainActivity.ExtraAddress)))
+  override def onNewIntent(intent: Intent): Unit = {
+    if (intent.getAction == MainActivity.ActionOpenChat)
+      openChat(new Address(intent.getStringExtra(MainActivity.ExtraAddress)))
   }
 
   /**

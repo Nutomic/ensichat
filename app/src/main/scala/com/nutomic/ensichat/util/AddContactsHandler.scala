@@ -7,7 +7,7 @@ import android.support.v4.app.NotificationCompat
 import android.util.Log
 import android.widget.Toast
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.ConfirmAddContactActivity
+import com.nutomic.ensichat.activities.{MainActivity, ConfirmAddContactActivity}
 import com.nutomic.ensichat.protocol.body.{RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.protocol.{Address, Message, User}
 
@@ -93,6 +93,12 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
       Log.i(Tag, "Adding new contact " + user.toString)
       database.addContact(user)
       showToast(context.getString(R.string.contact_added, user.name), Toast.LENGTH_SHORT)
+      val intent = new Intent(context, classOf[MainActivity])
+      intent.setAction(MainActivity.ActionOpenChat)
+      intent.putExtra(MainActivity.ExtraAddress, address.toString)
+      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                      Intent.FLAG_ACTIVITY_SINGLE_TOP)
+      context.startActivity(intent)
       currentlyAdding -= address
     }
   }
