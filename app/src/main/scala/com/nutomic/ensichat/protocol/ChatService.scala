@@ -2,11 +2,11 @@ package com.nutomic.ensichat.protocol
 
 import java.util.Date
 
-import android.app.Notification.Builder
 import android.app.{Notification, NotificationManager, PendingIntent, Service}
 import android.content.{Context, Intent}
 import android.os.Handler
 import android.preference.PreferenceManager
+import android.support.v4.app.NotificationCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
 import com.nutomic.ensichat.R
@@ -98,7 +98,7 @@ class ChatService extends Service {
 
   def showPersistentNotification(): Unit = {
     val openIntent = PendingIntent.getActivity(this, 0, new Intent(this, classOf[MainActivity]), 0)
-    val notification = new Builder(this)
+    val notification = new NotificationCompat.Builder(this)
       .setSmallIcon(R.drawable.ic_launcher)
       .setContentTitle(getString(R.string.app_name))
       .setContentIntent(openIntent)
