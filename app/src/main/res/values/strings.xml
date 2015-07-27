@@ -79,6 +79,9 @@
     <string name="user_status">Status</string>
 
     <!-- Preference title -->
+    <string name="my_address">My Address</string>
+
+    <!-- Preference title -->
     <string name="scan_interval_seconds">Scan Interval (seconds)</string>
 
     <!-- Preference title -->
@@ -97,6 +100,11 @@
 
     <!-- Preference title -->
     <string name="version">Version</string>
+
+    <!-- IdenticonFragment -->
+
+    <!-- Device address label and value -->
+    <string name="address_colon">Address: %1$s</string>
 
 
     <!-- ChatService -->

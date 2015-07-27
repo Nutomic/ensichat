@@ -12,7 +12,8 @@ import android.widget.ListView
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.{AddContactsActivity, EnsichatActivity, MainActivity, SettingsActivity}
 import com.nutomic.ensichat.protocol.ChatService
-import com.nutomic.ensichat.util.{Database, UsersAdapter}
+import com.nutomic.ensichat.util.Database
+import com.nutomic.ensichat.views.UsersAdapter
 import scala.collection.JavaConversions._
 
 /**

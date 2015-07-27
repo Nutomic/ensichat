@@ -20,9 +20,9 @@ object IdenticonGenerator {
   /**
    * Generates an identicon for the key.
    *
-   * The identicon size is fixed to [[Height]]x[[Width]].
+   * The identicon size is fixed to [[Width]]x[[Height]].
    *
-   * @param size The size of the bitmap returned.
+   * @param size The size of the bitmap returned in pixels (widthxheight).
    */
   def generate(address: Address, size: (Int, Int), context: Context): Bitmap = {
     val hash = address.bytes

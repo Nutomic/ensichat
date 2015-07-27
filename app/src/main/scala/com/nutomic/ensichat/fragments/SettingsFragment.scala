@@ -1,8 +1,10 @@
 package com.nutomic.ensichat.fragments
 
+import android.content.Intent
 import android.os.{Build, Bundle}
-import android.preference.Preference.OnPreferenceChangeListener
+import android.preference.Preference.{OnPreferenceClickListener, OnPreferenceChangeListener}
 import android.preference.{Preference, PreferenceFragment, PreferenceManager}
+import com.nutomic.ensichat.protocol.Crypto
 import com.nutomic.ensichat.{BuildConfig, R}
 import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.fragments.SettingsFragment._
@@ -13,6 +15,7 @@ object SettingsFragment {
 
   val KeyUserName     = "user_name"
   val KeyUserStatus   = "user_status"
+  val KeyMyAddress    = "my_address"
   val KeyScanInterval = "scan_interval_seconds"
   val MaxConnections  = "max_connections"
   val Version         = "version"
@@ -22,12 +25,14 @@ object SettingsFragment {
 /**
  * Settings screen.
  */
-class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListener {
+class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListener
+  with OnPreferenceClickListener {
 
   private lazy val database = new Database(getActivity)
 
   private lazy val name           = findPreference(KeyUserName)
   private lazy val status         = findPreference(KeyUserStatus)
+  private lazy val myAddress      = findPreference(KeyMyAddress)
   private lazy val scanInterval   = findPreference(KeyScanInterval)
   private lazy val maxConnections = findPreference(MaxConnections)
   private lazy val version        = findPreference(Version)
@@ -43,6 +48,7 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
     name.setOnPreferenceChangeListener(this)
     status.setSummary(prefs.getString(KeyUserStatus, ""))
     status.setOnPreferenceChangeListener(this)
+    myAddress.setOnPreferenceClickListener(this)
 
     scanInterval.setOnPreferenceChangeListener(this)
     scanInterval.setSummary(prefs.getString(
@@ -71,6 +77,18 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
     }
     preference.setSummary(newValue.toString)
     true
+  }
+
+  override def onPreferenceClick (preference: Preference): Boolean = {
+    preference.getKey match {
+      case KeyMyAddress =>
+        val fragment = IdenticonFragment.getInstance(new Crypto(getActivity).localAddress,
+                                                     prefs.getString(KeyUserName, ""))
+        fragment.show(getFragmentManager, "dialog")
+        true
+      case _ =>
+        false
+    }
   }
 
 }

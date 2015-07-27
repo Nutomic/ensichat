@@ -13,7 +13,8 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.protocol.body.Text
 import com.nutomic.ensichat.protocol.{Message, Address, ChatService}
-import com.nutomic.ensichat.util.{Database, MessagesAdapter}
+import com.nutomic.ensichat.util.Database
+import com.nutomic.ensichat.views.MessagesAdapter
 
 /**
  * Represents a single chat with another specific device.

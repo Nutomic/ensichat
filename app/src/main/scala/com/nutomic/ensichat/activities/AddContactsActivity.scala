@@ -10,7 +10,8 @@ import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.protocol.ChatService
 import com.nutomic.ensichat.protocol.body.RequestAddContact
-import com.nutomic.ensichat.util.{Database, UsersAdapter}
+import com.nutomic.ensichat.util.Database
+import com.nutomic.ensichat.views.UsersAdapter
 
 /**
  * Lists all nearby, connected devices and allows adding them to be added as contacts.
