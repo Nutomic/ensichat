@@ -6,6 +6,11 @@ object Address {
 
   val Length = 32
 
+  /**
+   * Number of characters between each pair of dashes in [[Address.toString]].
+   */
+  val GroupLength = 8
+
   // 32 bytes, all ones
   // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   val Broadcast = new Address("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
@@ -25,8 +30,15 @@ case class Address(bytes: Array[Byte]) {
 
   require(bytes.length == Address.Length, "Invalid address length (was " + bytes.length + ")")
 
+  /**
+   * Parses address from string. Dash characters ("-") are ignored.
+   */
   def this(hex: String) {
-    this(hex.sliding(2, 2).map(Integer.parseInt(_, 16).toByte).toArray)
+    this(hex
+      .replace("-", "")
+      .sliding(2, 2)
+      .map(Integer.parseInt(_, 16).toByte)
+      .toArray)
   }
 
   override def hashCode = util.Arrays.hashCode(bytes)
@@ -36,6 +48,14 @@ case class Address(bytes: Array[Byte]) {
     case _ => false
   }
 
-  override def toString = bytes.map("%02X".format(_)).mkString
+  /**
+   * Converts address to a string, with groups seperated by dashes.
+   */
+  override def toString =
+    bytes
+      .map("%02X".format(_))
+      .mkString
+      .grouped(Address.GroupLength)
+      .reduce(_ + "-" + _)
 
 }
