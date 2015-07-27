@@ -91,6 +91,8 @@ class ChatService extends Service {
 
       btInterface.create()
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
+    }.onFailure { case e =>
+      Log.w(Tag, "Error in future", e)
     }
   }
 
@@ -119,18 +121,22 @@ class ChatService extends Service {
    * Sends a new message to the given target address.
    */
   def sendTo(target: Address, body: MessageBody): Unit = {
-    if (!btInterface.getConnections.contains(target))
-      return
+    Future {
+      if (!btInterface.getConnections.contains(target))
+        return
 
-    val messageId = preferences.getLong("message_id", 0)
-    val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
-      body.contentType, messageId, new Date())
-    preferences.edit().putLong("message_id", messageId + 1)
+      val messageId = preferences.getLong("message_id", 0)
+      val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
+        body.contentType, messageId, new Date())
+      preferences.edit().putLong("message_id", messageId + 1)
 
-    val msg = new Message(header, body)
-    val encrypted = crypto.encrypt(crypto.sign(msg))
-    router.onReceive(encrypted)
-    onNewMessage(msg)
+      val msg = new Message(header, body)
+      val encrypted = crypto.encrypt(crypto.sign(msg))
+      router.onReceive(encrypted)
+      onNewMessage(msg)
+    }.onFailure { case e =>
+      Log.w(Tag, "Error in future", e)
+    }
   }
 
   private def sendVia(nextHop: Address, msg: Message) =
