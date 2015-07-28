@@ -17,6 +17,7 @@ dependencies {
                        { exclude module: "multidex" }
     compile "org.scala-lang:scala-library:2.11.7"
     compile 'com.google.guava:guava:18.0'
+    compile 'com.mobsandgeeks:adapter-kit:0.5.3'
 }
 
 // RtlHardcoded behaviour differs between target API versions. We only care about API 15.

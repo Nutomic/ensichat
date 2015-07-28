@@ -1,7 +1,7 @@
 package com.nutomic.ensichat.fragments
 
 import android.app.ListFragment
-import android.content.{IntentFilter, Intent, Context, BroadcastReceiver}
+import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.Bundle
 import android.support.v4.content.LocalBroadcastManager
 import android.view.View.OnClickListener
@@ -12,9 +12,9 @@ import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.protocol.body.Text
-import com.nutomic.ensichat.protocol.{Message, Address, ChatService}
+import com.nutomic.ensichat.protocol.{Address, ChatService, Message}
 import com.nutomic.ensichat.util.Database
-import com.nutomic.ensichat.views.MessagesAdapter
+import com.nutomic.ensichat.views.{DatesAdapter, MessagesAdapter}
 
 /**
  * Represents a single chat with another specific device.
@@ -41,7 +41,7 @@ class ChatFragment extends ListFragment with OnClickListener {
 
   private var listView: ListView = _
 
-  private var adapter: MessagesAdapter = _
+  private var adapter: DatesAdapter = _
 
   override def onActivityCreated(savedInstanceState: Bundle): Unit = {
     super.onActivityCreated(savedInstanceState)
@@ -52,8 +52,7 @@ class ChatFragment extends ListFragment with OnClickListener {
 
       database.getContact(address).foreach(c => getActivity.setTitle(c.name))
 
-      // Read local device ID from service,
-      adapter = new MessagesAdapter(getActivity, address)
+      adapter = new DatesAdapter(getActivity, new MessagesAdapter(getActivity, address))
       database.getMessages(address, 15).foreach(adapter.add)
 
       if (listView != null) {
