@@ -2,7 +2,6 @@ package com.nutomic.ensichat.util
 
 import android.app.{NotificationManager, PendingIntent}
 import android.content.{Context, Intent}
-import android.os
 import android.os.{Handler, Looper}
 import android.support.v4.app.NotificationCompat
 import android.util.Log
@@ -76,7 +75,7 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
         if (res.accepted)
           addContactIfBothConfirmed(remote)
         else {
-          Toast.makeText(context, R.string.contact_not_added, Toast.LENGTH_LONG).show()
+          showToast(context.getString(R.string.contact_not_added), Toast.LENGTH_LONG)
           currentlyAdding -= remote
         }
       case _ =>
@@ -93,16 +92,20 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
     if (info.localConfirmed && info.remoteConfirmed) {
       Log.i(Tag, "Adding new contact " + user.toString)
       database.addContact(user)
-      new Handler(Looper.getMainLooper).post(new Runnable {
-        override def run(): Unit = {
-          Toast
-            .makeText(context,
-              context.getString(R.string.contact_added, user.name), Toast.LENGTH_SHORT)
-            .show()
-        }
-      })
+      showToast(context.getString(R.string.contact_added, user.name), Toast.LENGTH_SHORT)
       currentlyAdding -= address
     }
+  }
+
+  /**
+   * Creates and shows toast on main thread.
+   */
+  private def showToast(message: String, length: Integer): Unit = {
+    new Handler(Looper.getMainLooper).post(new Runnable {
+      override def run(): Unit = {
+        Toast.makeText(context, message, length).show()
+      }
+    })
   }
 
 }
