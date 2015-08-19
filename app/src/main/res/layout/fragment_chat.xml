@@ -10,10 +10,7 @@
     <FrameLayout
         android:layout_height="0dp"
         android:layout_width="match_parent"
-        android:layout_weight="11"
-        android:layout_marginLeft="10dip"
-        android:layout_marginRight="10dip"
-        android:layout_marginBottom="2dip">
+        android:layout_weight="11">
 
         <ListView
             android:id="@android:id/list"
@@ -22,7 +19,8 @@
             android:stackFromBottom="true"
             android:transcriptMode="normal"
             android:divider="@android:color/transparent"
-            android:dividerHeight="5dp"/>
+            android:dividerHeight="5dp"
+            android:layout_marginBottom="2dip"/>
 
     </FrameLayout>
 
