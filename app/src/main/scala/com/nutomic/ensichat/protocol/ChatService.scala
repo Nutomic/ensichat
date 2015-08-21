@@ -91,9 +91,7 @@ class ChatService extends Service {
 
       btInterface.create()
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
-    }.onFailure { case e =>
-      Log.w(Tag, "Error in future", e)
-    }
+    }.onFailure {case e => throw e}
   }
 
   def showPersistentNotification(): Unit = {
@@ -134,9 +132,7 @@ class ChatService extends Service {
       val encrypted = crypto.encrypt(crypto.sign(msg))
       router.onReceive(encrypted)
       onNewMessage(msg)
-    }.onFailure { case e =>
-      Log.w(Tag, "Error in future", e)
-    }
+    }.onFailure {case e => throw e}
   }
 
   private def sendVia(nextHop: Address, msg: Message) =
