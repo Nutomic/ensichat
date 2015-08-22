@@ -76,7 +76,9 @@ class FirstStartActivity extends AppCompatActivity with OnEditorActionListener w
   }
 
   def startMainActivity(): Unit = {
-    startActivity(new Intent(this, classOf[MainActivity]))
+    val intent = new Intent(this, classOf[MainActivity])
+    intent.setAction(MainActivity.ActionRequestBluetooth)
+    startActivity(intent)
     finish()
   }
 

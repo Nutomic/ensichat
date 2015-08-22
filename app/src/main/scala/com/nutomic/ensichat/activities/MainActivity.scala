@@ -12,9 +12,18 @@ import com.nutomic.ensichat.protocol.Address
 
 object MainActivity {
 
+  /**
+   * If this action is set, a dialog will be shown to request the device to be discoverable.
+   *
+   * This should only be used when the app is started from a launcher
+   * (eg from [[FirstStartActivity]]).
+   */
+  val ActionRequestBluetooth = "request_bluetooth"
+
   val ActionOpenChat = "open_chat"
 
   val ExtraAddress = "address"
+
 }
 
 /**
@@ -35,9 +44,13 @@ class MainActivity extends EnsichatActivity {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
 
-    val intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
-    intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0)
-    startActivityForResult(intent, RequestSetDiscoverable)
+    if (getIntent.getAction == MainActivity.ActionRequestBluetooth) {
+      val intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+      intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0)
+      startActivityForResult(intent, RequestSetDiscoverable)
+      // Make sure this code isn't executed after screen rotate etc.
+      getIntent.setAction(null)
+    }
 
     val fm = getFragmentManager
     if (savedInstanceState != null) {
