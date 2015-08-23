@@ -54,7 +54,7 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
     scanInterval.setSummary(prefs.getString(
       KeyScanInterval, getResources.getString(R.string.default_scan_interval)))
 
-    if (!BuildConfig.DEBUG) {
+    if (BuildConfig.DEBUG) {
       maxConnections.setOnPreferenceChangeListener(this)
       maxConnections.setSummary(prefs.getString(
         MaxConnections, getResources.getString(R.string.default_max_connections)))
