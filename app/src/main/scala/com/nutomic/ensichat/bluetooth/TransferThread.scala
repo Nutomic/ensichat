@@ -12,17 +12,14 @@ import Message.ReadMessageException
 /**
  * Transfers data between connnected devices.
  *
- * Messages must not be longer than [[TransferThread#MaxMessageLength]] bytes.
- *
  * @param device The bluetooth device to interact with.
  * @param socket An open socket to the given device.
  * @param onReceive Called when a message was received from the other device.
  */
-class TransferThread(device: Device, socket: BluetoothSocket, Handler: BluetoothInterface,
-                     Crypto: Crypto, onReceive: (Message, Device.ID) => Unit)
-  extends Thread {
+class TransferThread(device: Device, socket: BluetoothSocket, handler: BluetoothInterface,
+                     crypto: Crypto, onReceive: (Message, Device.ID) => Unit) extends Thread {
 
-  private val Tag: String = "TransferThread"
+  private val Tag = "TransferThread"
 
   val inStream: InputStream =
     try {
@@ -45,8 +42,8 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
   override def run(): Unit = {
     Log.i(Tag, "Starting data transfer with " + device.toString)
 
-    send(Crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
-      Address.Null, Address.Null, 0), new ConnectionInfo(Crypto.getLocalPublicKey))))
+    send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
+      Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 
     while (socket.isConnected) {
       try {
@@ -81,7 +78,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, Handler: Bluetooth
     } catch {
       case e: IOException => Log.e(Tag, "Failed to close socket", e);
     } finally {
-      Handler.onConnectionClosed(new Device(device.bluetoothDevice, false), null)
+      handler.onConnectionClosed(new Device(device.bluetoothDevice, false), null)
     }
   }
 

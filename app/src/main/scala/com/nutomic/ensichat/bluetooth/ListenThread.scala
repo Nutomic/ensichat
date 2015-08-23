@@ -13,9 +13,9 @@ import android.util.Log
 class ListenThread(name: String, adapter: BluetoothAdapter,
                    onConnected: (Device, BluetoothSocket) => Unit) extends Thread {
 
-  private val Tag: String = "ListenThread"
+  private val Tag = "ListenThread"
 
-  private val serverSocket: BluetoothServerSocket =
+  private val serverSocket =
     try {
       adapter.listenUsingInsecureRfcommWithServiceRecord(name, BluetoothInterface.AppUuid)
     } catch {

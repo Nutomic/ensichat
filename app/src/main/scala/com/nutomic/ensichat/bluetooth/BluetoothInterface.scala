@@ -21,7 +21,7 @@ object BluetoothInterface {
   /**
    * Bluetooth service UUID version 5, created with namespace URL and "ensichat.nutomic.com".
    */
-  val AppUuid: UUID = UUID.fromString("8ed52b7a-4501-5348-b054-3d94d004656e")
+  val AppUuid = UUID.fromString("8ed52b7a-4501-5348-b054-3d94d004656e")
 
 }
 

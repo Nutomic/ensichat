@@ -8,12 +8,11 @@ import android.util.Log
 /**
  * Attempts to connect to another device and calls [[onConnected]] on success.
  */
-class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Unit)
-    extends Thread {
+class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Unit) extends Thread {
 
   private val Tag = "ConnectThread"
 
-  private val socket: BluetoothSocket =
+  private val socket =
       device.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(BluetoothInterface.AppUuid)
 
   override def run(): Unit = {
