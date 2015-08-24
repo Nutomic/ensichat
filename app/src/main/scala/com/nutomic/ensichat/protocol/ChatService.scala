@@ -9,6 +9,7 @@ import android.preference.PreferenceManager
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
+import android.widget.Toast
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
@@ -118,11 +119,13 @@ class ChatService extends Service {
   /**
    * Sends a new message to the given target address.
    */
-  def sendTo(target: Address, body: MessageBody): Unit = {
-    Future {
-      if (!btInterface.getConnections.contains(target))
-        return
+  def sendTo(target: Address, body: MessageBody): Boolean = {
+    if (!btInterface.getConnections.contains(target)) {
+      Toast.makeText(this, R.string.toast_user_not_connected, Toast.LENGTH_SHORT).show()
+      return false
+    }
 
+    Future {
       val messageId = preferences.getLong("message_id", 0)
       val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
         body.contentType, Some(messageId), Some(new Date()))
@@ -133,6 +136,7 @@ class ChatService extends Service {
       router.onReceive(encrypted)
       onNewMessage(msg)
     }.onFailure {case e => throw e}
+    true
   }
 
   private def sendVia(nextHop: Address, msg: Message) =

@@ -109,8 +109,9 @@ class ChatFragment extends ListFragment with OnClickListener {
       val text = messageText.getText.toString.trim
       if (!text.isEmpty) {
         val message = new Text(text.toString)
-        chatService.sendTo(address, message)
-        messageText.getText.clear()
+        val success = chatService.sendTo(address, message)
+        if (success)
+          messageText.getText.clear()
       }
   }
 
