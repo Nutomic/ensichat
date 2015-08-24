@@ -3,6 +3,7 @@ package com.nutomic.ensichat.util
 import java.util.Date
 
 import android.content.{Intent, ContentValues, Context}
+import android.database.Cursor
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import android.support.v4.content.LocalBroadcastManager
 import com.nutomic.ensichat.protocol._
@@ -37,6 +38,18 @@ object Database {
     "name TEXT NOT NULL," +
     "status TEXT NOT NULL)"
 
+  def messageFromCursor(c: Cursor): Message = {
+    val header = new ContentHeader(new Address(
+      c.getString(c.getColumnIndex("origin"))),
+      new Address(c.getString(c.getColumnIndex("target"))),
+      -1,
+      Text.Type,
+      c.getLong(c.getColumnIndex("message_id")),
+      new Date(c.getLong(c.getColumnIndex("date"))))
+    val body = new Text(new String(c.getString(c.getColumnIndex ("text"))))
+    new Message(header, body)
+  }
+
 }
 
 /**
@@ -50,25 +63,21 @@ class Database(context: Context)
     db.execSQL(Database.CreateMessagesTable)
   }
 
+  def getMessagesCursor(address: Address, count: Option[Int]): Cursor = {
+    getReadableDatabase.query(true,
+      "messages", Array("_id", "origin", "target", "message_id", "text", "date"),
+      "origin = ? OR target = ?", Array(address.toString, address.toString),
+      null, null, "date ASC", count.map(_.toString).orNull)
+  }
+
   /**
    * Returns the count last messages for device.
    */
   def getMessages(address: Address, count: Int): SortedSet[Message] = {
-    val c = getReadableDatabase.query(true,
-      "messages", Array("origin", "target", "message_id", "text", "date"),
-      "origin = ? OR target = ?", Array(address.toString, address.toString),
-      null, null, "date DESC", count.toString)
+    val c = getMessagesCursor(address, Option(count))
     var messages = new TreeSet[Message]()(Message.Ordering)
     while (c.moveToNext()) {
-      val header = new ContentHeader(new Address(
-        c.getString(c.getColumnIndex("origin"))),
-        new Address(c.getString(c.getColumnIndex("target"))),
-        -1,
-        Text.Type,
-        c.getLong(c.getColumnIndex("message_id")),
-        new Date(c.getLong(c.getColumnIndex("date"))))
-      val body = new Text(new String(c.getString(c.getColumnIndex ("text"))))
-      messages += new Message(header, body)
+      messages += Database.messageFromCursor(c)
     }
     c.close()
     messages

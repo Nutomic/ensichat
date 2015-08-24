@@ -52,8 +52,8 @@ class ChatFragment extends ListFragment with OnClickListener {
 
       database.getContact(address).foreach(c => getActivity.setTitle(c.name))
 
-      adapter = new DatesAdapter(getActivity, new MessagesAdapter(getActivity, address))
-      database.getMessages(address, 15).foreach(adapter.add)
+      adapter = new DatesAdapter(getActivity,
+        new MessagesAdapter(getActivity, database.getMessagesCursor(address, None), address))
 
       if (listView != null) {
         listView.setAdapter(adapter)
@@ -124,7 +124,8 @@ class ChatFragment extends ListFragment with OnClickListener {
         return
 
       msg.body match {
-        case _: Text => adapter.add(msg)
+        case _: Text =>
+          adapter.changeCursor(database.getMessagesCursor(address, None))
         case _ =>
       }
     }
