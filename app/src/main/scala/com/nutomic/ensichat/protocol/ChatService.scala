@@ -125,7 +125,7 @@ class ChatService extends Service {
 
       val messageId = preferences.getLong("message_id", 0)
       val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
-        body.contentType, messageId, new Date())
+        body.contentType, Some(messageId), Some(new Date()))
       preferences.edit().putLong("message_id", messageId + 1)
 
       val msg = new Message(header, body)

@@ -1,6 +1,7 @@
 package com.nutomic.ensichat.protocol.header
 
 import java.nio.ByteBuffer
+import java.util.Date
 
 import com.nutomic.ensichat.protocol.Address
 import com.nutomic.ensichat.util.BufferUtils
@@ -18,6 +19,8 @@ object AbstractHeader {
 /**
  * Contains the header fields and functionality that are used both in [[MessageHeader]] and
  * [[ContentHeader]].
+ *
+ * The fields messageId and time are only set in [[ContentHeader]].
  */
 trait AbstractHeader {
 
@@ -27,6 +30,8 @@ trait AbstractHeader {
   def origin: Address
   def target: Address
   def seqNum: Int
+  def messageId: Option[Long] = None
+  def time: Option[Date] = None
 
   /**
    * Writes the header to byte array.

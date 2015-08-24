@@ -17,7 +17,7 @@ object DatesAdapter {
     override def getSectionTitleForItem(item: Cursor): String = {
       DateFormat
         .getDateInstance(DateFormat.MEDIUM)
-        .format(Database.messageFromCursor(item).header.asInstanceOf[ContentHeader].time)
+        .format(Database.messageFromCursor(item).header.time.get)
     }
   }
 

@@ -44,8 +44,8 @@ object Database {
       new Address(c.getString(c.getColumnIndex("target"))),
       -1,
       Text.Type,
-      c.getLong(c.getColumnIndex("message_id")),
-      new Date(c.getLong(c.getColumnIndex("date"))))
+      Some(c.getLong(c.getColumnIndex("message_id"))),
+      Some(new Date(c.getLong(c.getColumnIndex("date")))))
     val body = new Text(new String(c.getString(c.getColumnIndex ("text"))))
     new Message(header, body)
   }
@@ -89,12 +89,11 @@ class Database(context: Context)
   def onMessageReceived(msg: Message): Unit = msg.body match {
     case text: Text =>
       val cv =  new ContentValues()
-      val ch = msg.header.asInstanceOf[ContentHeader]
-      cv.put("origin", ch.origin.toString)
-      cv.put("target", ch.target.toString)
+      cv.put("origin",     msg.header.origin.toString)
+      cv.put("target",     msg.header.target.toString)
       // Need to use [[Long#toString]] because of https://issues.scala-lang.org/browse/SI-2991
-      cv.put("message_id", ch.messageId.toString)
-      cv.put("date", ch.time.getTime.toString)
+      cv.put("message_id", msg.header.messageId.get.toString)
+      cv.put("date",       msg.header.time.get.getTime.toString)
       cv.put("text", text.text)
       getWritableDatabase.insert("messages", null, cv)
     case _: RequestAddContact | _: ResultAddContact =>

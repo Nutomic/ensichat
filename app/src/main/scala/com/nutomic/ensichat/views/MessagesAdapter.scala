@@ -39,7 +39,7 @@ class MessagesAdapter(context: Context, cursor: Cursor, remoteAddress: Address) 
       text.setText(msg.body.asInstanceOf[Text].text)
       val formattedDate = DateFormat
         .getTimeInstance(DateFormat.SHORT)
-        .format(msg.header.asInstanceOf[ContentHeader].time)
+        .format(msg.header.time.get)
       time.setText(formattedDate)
 
       val lp = new LinearLayout.LayoutParams(view.getLayoutParams)

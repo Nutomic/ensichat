@@ -14,7 +14,7 @@ object Message {
   val Ordering = new Ordering[Message] {
     override def compare(m1: Message, m2: Message) =  (m1.header, m2.header) match {
       case (h1: ContentHeader, h2: ContentHeader) =>
-        h1.time.compareTo(h2.time)
+        h1.time.get.compareTo(h2.time.get)
       case _ => 0
     }
   }

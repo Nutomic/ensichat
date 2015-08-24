@@ -91,14 +91,14 @@ class RouterTest extends AndroidTestCase {
 
   def testHopLimit(): Unit = Range(19, 22).foreach { i =>
     val msg = new Message(
-      new ContentHeader(AddressTest.a1, AddressTest.a2, 1, 1, 1, new Date(), i), new Text(""))
+      new ContentHeader(AddressTest.a1, AddressTest.a2, 1, 1, Some(1), Some(new Date()), i), new Text(""))
     val router: Router = new Router(neighbors, (a, m) => fail())
     router.onReceive(msg)
   }
 
   private def generateMessage(sender: Address, receiver: Address, seqNum: Int): Message = {
-    val header = new ContentHeader(sender, receiver, seqNum, UserInfo.Type, 5,
-      new GregorianCalendar(2014, 6, 10).getTime)
+    val header = new ContentHeader(sender, receiver, seqNum, UserInfo.Type, Some(5),
+      Some(new GregorianCalendar(2014, 6, 10).getTime))
     new Message(header, new UserInfo("", ""))
   }
 
