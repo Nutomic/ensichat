@@ -45,6 +45,13 @@ class TransferThread(device: Device, socket: BluetoothSocket, handler: Bluetooth
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
       Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 
+    // TODO: on disconnect (disable bluetooth):
+    //       connection is never closed
+    //         - no exception thrown
+    //         - isConnected returning true
+    //       -> step through, find alternative method/callback etc
+    //       -> check source
+    //       -> otherwise, need timeout?
     while (socket.isConnected) {
       try {
         if (inStream.available() > 0) {
