@@ -56,6 +56,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, handler: Bluetooth
       } catch {
         case e @ (_: ReadMessageException | _: IOException) =>
           Log.w(Tag, "Failed to read incoming message", e)
+          close()
           return
       }
     }
