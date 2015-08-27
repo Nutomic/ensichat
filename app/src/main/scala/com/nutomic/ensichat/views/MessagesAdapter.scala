@@ -1,16 +1,14 @@
 package com.nutomic.ensichat.views
 
 import java.text.DateFormat
-import java.util.Date
 
 import android.content.Context
 import android.database.Cursor
 import android.view._
 import android.widget._
-import com.mobsandgeeks.adapters.{SimpleSectionAdapter, ViewHandler, InstantCursorAdapter}
+import com.mobsandgeeks.adapters.{InstantCursorAdapter, SimpleSectionAdapter, ViewHandler}
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.protocol.body.Text
-import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.protocol.{Address, Message}
 import com.nutomic.ensichat.util.Database
 
@@ -23,10 +21,8 @@ import com.nutomic.ensichat.util.Database
 class MessagesAdapter(context: Context, cursor: Cursor, remoteAddress: Address) extends
   InstantCursorAdapter[Message](context, R.layout.item_message, classOf[Message], cursor) {
 
-  /**
-   * Free space to the right/left to a message depending on who sent it, in dip.
-   */
-  private val MessageMargin = 50
+  private val MessagePaddingLarge = 50
+  private val MessagePaddingSmall = 10
 
   setViewHandler(R.id.root, new ViewHandler[Message] {
     override def handleView(adapter: ListAdapter, parent: View, view: View, msg: Message,
@@ -42,20 +38,17 @@ class MessagesAdapter(context: Context, cursor: Cursor, remoteAddress: Address) 
         .format(msg.header.time.get)
       time.setText(formattedDate)
 
-      val lp = new LinearLayout.LayoutParams(view.getLayoutParams)
-      val margin = (MessageMargin * context.getResources.getDisplayMetrics.density).toInt
+      val paddingLarge = (MessagePaddingLarge * context.getResources.getDisplayMetrics.density).toInt
+      val paddingSmall = (MessagePaddingSmall * context.getResources.getDisplayMetrics.density).toInt
       if (msg.header.origin != remoteAddress) {
         container.setGravity(Gravity.RIGHT)
         root.setGravity(Gravity.RIGHT)
-        lp.setMargins(margin, 0, 0, 0)
+        root.setPadding(paddingLarge, 0, paddingSmall, 0)
       } else {
         container.setGravity(Gravity.LEFT)
         root.setGravity(Gravity.LEFT)
-        lp.setMargins(0, 0, margin, 0)
+        root.setPadding(paddingSmall, 0, paddingLarge, 0)
       }
-      view.setLayoutParams(lp)
-
-      view
     }
   })
 
