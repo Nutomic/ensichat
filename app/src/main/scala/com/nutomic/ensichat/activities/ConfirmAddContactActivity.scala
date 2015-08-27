@@ -20,7 +20,8 @@ object ConfirmAddContactActivity {
 /**
  * Shows a dialog for adding a new contact (including key fingerprints).
  */
-class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener {
+class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener
+  with DialogInterface.OnDismissListener {
 
   private lazy val user = service.getUser(
     new Address(getIntent.getStringExtra(ConfirmAddContactActivity.ExtraContactAddress)))
@@ -50,16 +51,15 @@ class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener {
     new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AppTheme))
       .setTitle(getString(R.string.add_contact_dialog, user.name))
       .setView(view)
-      .setCancelable(false)
       .setPositiveButton(android.R.string.yes, this)
       .setNegativeButton(android.R.string.no, this)
-      .setCancelable(false)
+      .setOnDismissListener(this)
       .show()
   }
 
-  override def onClick(dialogInterface: DialogInterface, i: Int): Unit = {
+  override def onClick(dialogInterface: DialogInterface, i: Int): Unit =
     service.sendTo(user.address, new ResultAddContact(i == DialogInterface.BUTTON_POSITIVE))
-    finish()
-  }
+
+  override def onDismiss(dialog: DialogInterface): Unit = finish()
 
 }
