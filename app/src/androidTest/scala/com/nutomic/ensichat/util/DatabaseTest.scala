@@ -2,34 +2,29 @@ package com.nutomic.ensichat.util
 
 import java.util.concurrent.CountDownLatch
 
-import android.content.{IntentFilter, Intent, BroadcastReceiver, Context}
+import android.content._
 import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.support.v4.content.LocalBroadcastManager
-import android.test.{AndroidTestCase, mock}
-import com.nutomic.ensichat.protocol.{MessageTest, UserTest}
+import android.test.AndroidTestCase
+import com.nutomic.ensichat.protocol.MessageTest._
 import com.nutomic.ensichat.protocol.body.CryptoData
-import com.nutomic.ensichat.protocol.header.ContentHeaderTest
-import com.nutomic.ensichat.protocol.header.ContentHeader
-import ContentHeaderTest._
-import MessageTest._
+import com.nutomic.ensichat.protocol.header.{ContentHeader, ContentHeaderTest}
+import com.nutomic.ensichat.protocol.header.ContentHeaderTest._
+import com.nutomic.ensichat.protocol.{MessageTest, UserTest}
 import junit.framework.Assert._
 
 object DatabaseTest {
 
   /**
-   * Provides a temporary database file that can be deleted with [[MockContext#deleteDbFile]].
-   *
-   * Does not work if multiple db files are opened!
+   * Provides a temporary database file that can be deleted easily.
    */
-  class MockContext(context: Context) extends mock.MockContext {
-    private var dbFile: String = _
+  class DatabaseContext(context: Context) extends ContextWrapper(context) {
+    private val dbFile = "database-test.db"
     override def openOrCreateDatabase(file: String, mode: Int, factory:
     SQLiteDatabase.CursorFactory, errorHandler: DatabaseErrorHandler): SQLiteDatabase = {
-      dbFile = file + "-test"
       context.openOrCreateDatabase(dbFile, mode, factory, errorHandler)
     }
-    override def getApplicationContext = context
     def deleteDbFile() = context.deleteDatabase(dbFile)
   }
 
@@ -37,11 +32,12 @@ object DatabaseTest {
 
 class DatabaseTest extends AndroidTestCase {
 
-  private lazy val context = new DatabaseTest.MockContext(getContext)
+  private lazy val context = new DatabaseTest.DatabaseContext(getContext)
 
   private lazy val database = new Database(context)
 
   override def setUp(): Unit = {
+    super.setUp()
     database.onMessageReceived(m1)
     database.onMessageReceived(m2)
     database.onMessageReceived(m3)
@@ -63,7 +59,7 @@ class DatabaseTest extends AndroidTestCase {
 
   def testMessageOrder(): Unit = {
     val msg = database.getMessages(m1.header.target, 1)
-    assertTrue(msg.contains(m3))
+    assertTrue(msg.contains(m1))
   }
 
   def testMessageSelect(): Unit = {
@@ -73,17 +69,17 @@ class DatabaseTest extends AndroidTestCase {
   }
 
   def testMessageFields(): Unit = {
-    val msg = database.getMessages(m3.header.target, 1).firstKey
+    val msg = database.getMessages(m2.header.target, 1).firstKey
     val header = msg.header.asInstanceOf[ContentHeader]
 
-    assertEquals(h3.origin, header.origin)
-    assertEquals(h3.target, header.target)
+    assertEquals(h2.origin, header.origin)
+    assertEquals(h2.target, header.target)
     assertEquals(-1, msg.header.seqNum)
-    assertEquals(h3.contentType, header.contentType)
-    assertEquals(h3.messageId, header.messageId)
-    assertEquals(h3.time, header.time)
+    assertEquals(h2.contentType, header.contentType)
+    assertEquals(h2.messageId, header.messageId)
+    assertEquals(h2.time, header.time)
     assertEquals(new CryptoData(None, None), msg.crypto)
-    assertEquals(m3.body, msg.body)
+    assertEquals(m2.body, msg.body)
   }
 
   def testAddContact(): Unit = {

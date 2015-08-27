@@ -2,25 +2,19 @@ package com.nutomic.ensichat.util
 
 import java.util.GregorianCalendar
 
-import android.content.Context
 import android.test.AndroidTestCase
 import com.nutomic.ensichat.protocol.body.{RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.protocol.{Address, Crypto, Message, UserTest}
+import com.nutomic.ensichat.util.DatabaseTest.DatabaseContext
 import junit.framework.Assert._
 
 class AddContactsHandlerTest extends AndroidTestCase {
 
-  private class MockContext(context: Context) extends DatabaseTest.MockContext(context) {
-    override def getResources = context.getResources
-    override def getSystemService(name: String) = context.getSystemService(name)
-    override def getPackageName = context.getPackageName
-  }
-
   private lazy val handler =
     new AddContactsHandler(context, (address: Address) => UserTest.u1, UserTest.u1.address)
 
-  private lazy val context = new MockContext(getContext)
+  private lazy val context = new DatabaseContext(getContext)
 
   private lazy val database = new Database(context)
 
