@@ -60,9 +60,6 @@
     <!-- Information text shown in the "add contact" dialog -->
     <string name="add_contact_dialog_hint">Before accepting, make sure the images match on both devices</string>
 
-    <!-- Toast shown when a contact is not added because it was not accepted on the other device -->
-    <string name="contact_not_added">Contact not added (denied by other device)</string>
-
     <!-- Toast shown when a new contact was added. Parameter is contact name -->
     <string name="contact_added">%1$s was added as a contact</string>
 

@@ -7,7 +7,7 @@ import android.support.v4.app.NotificationCompat
 import android.util.Log
 import android.widget.Toast
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.{MainActivity, ConfirmAddContactActivity}
+import com.nutomic.ensichat.activities.{ConfirmAddContactActivity, MainActivity}
 import com.nutomic.ensichat.protocol.body.{RequestAddContact, ResultAddContact}
 import com.nutomic.ensichat.protocol.{Address, Message, User}
 
@@ -25,9 +25,13 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
 
   private lazy val database = new Database(context)
 
+  private val notificationManager =
+    context.getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
+
   private var currentlyAdding = Map[Address, AddContactInfo]()
 
-  private case class AddContactInfo(localConfirmed: Boolean, remoteConfirmed: Boolean)
+  private case class AddContactInfo(localConfirmed: Boolean, remoteConfirmed: Boolean,
+                                    notificationId: Int)
 
   def onMessageReceived(msg: Message): Unit = {
     val remote =
@@ -38,12 +42,22 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
 
     msg.body match {
       case _: RequestAddContact =>
-        Log.i(Tag, "Remote device " + remote + " wants to add us as a contact")
-        currentlyAdding += (remote -> new AddContactInfo(false, false))
+        // Don't show notification if we are already adding the contact.
+        // Can happen when both users click on each other to add.
+        if (currentlyAdding.keySet.contains(remote)) {
+          notificationManager.cancel(currentlyAdding(remote).notificationId)
+          return
+        }
+
+        // Notification ID is unused for requests coming from local device, but that doesn't matter.
+        val notificationId = notificationIdAddContactGenerator.next()
+        currentlyAdding += (remote -> new AddContactInfo(false, false, notificationId))
 
         // Don't show notification for requests coming from local device.
         if (msg.header.origin == localAddress)
           return
+
+        Log.i(Tag, "Remote device " + remote + " wants to add us as a contact")
 
         val intent = new Intent(context, classOf[ConfirmAddContactActivity])
         intent.putExtra(ConfirmAddContactActivity.ExtraContactAddress, msg.header.origin.toString)
@@ -57,26 +71,26 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
           .setAutoCancel(true)
           .build()
 
-        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE).asInstanceOf[NotificationManager]
-        nm.notify(notificationIdAddContactGenerator.next(), notification)
+        notificationManager.notify(notificationId, notification)
       case res: ResultAddContact =>
         if (!currentlyAdding.contains(remote)) {
           Log.w(Tag, "ResultAddContact without previous RequestAddContact, ignoring")
           return
         }
 
+        val previousInfo = currentlyAdding(remote)
         val newInfo =
           if (msg.header.origin == localAddress)
-            new AddContactInfo(res.accepted, currentlyAdding(remote).remoteConfirmed)
+            new AddContactInfo(res.accepted, previousInfo.remoteConfirmed, previousInfo.notificationId)
           else
-            new AddContactInfo(currentlyAdding(remote).localConfirmed, res.accepted)
+            new AddContactInfo(previousInfo.localConfirmed, res.accepted, previousInfo.notificationId)
         currentlyAdding += (remote -> newInfo)
 
         if (res.accepted)
           addContactIfBothConfirmed(remote)
         else {
-          showToast(context.getString(R.string.contact_not_added), Toast.LENGTH_LONG)
           currentlyAdding -= remote
+          notificationManager.cancel(previousInfo.notificationId)
         }
       case _ =>
     }
@@ -92,7 +106,12 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
     if (info.localConfirmed && info.remoteConfirmed) {
       Log.i(Tag, "Adding new contact " + user.toString)
       database.addContact(user)
-      showToast(context.getString(R.string.contact_added, user.name), Toast.LENGTH_SHORT)
+      new Handler(Looper.getMainLooper).post(new Runnable {
+        override def run(): Unit = {
+          Toast.makeText(context, context.getString(R.string.contact_added, user.name),
+                         Toast.LENGTH_SHORT).show()
+        }
+      })
       val intent = new Intent(context, classOf[MainActivity])
       intent.setAction(MainActivity.ActionOpenChat)
       intent.putExtra(MainActivity.ExtraAddress, address.toString)
@@ -100,18 +119,8 @@ class AddContactsHandler(context: Context, getUser: (Address) => User, localAddr
                       Intent.FLAG_ACTIVITY_SINGLE_TOP)
       context.startActivity(intent)
       currentlyAdding -= address
+      notificationManager.cancel(info.notificationId)
     }
-  }
-
-  /**
-   * Creates and shows toast on main thread.
-   */
-  private def showToast(message: String, length: Integer): Unit = {
-    new Handler(Looper.getMainLooper).post(new Runnable {
-      override def run(): Unit = {
-        Toast.makeText(context, message, length).show()
-      }
-    })
   }
 
 }
