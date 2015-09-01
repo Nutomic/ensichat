@@ -27,7 +27,17 @@ class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener
   private lazy val user = service.getUser(
     new Address(getIntent.getStringExtra(ConfirmAddContactActivity.ExtraContactAddress)))
 
-  private var dialog: AlertDialog = _
+  private lazy val view = getSystemService(Context.LAYOUT_INFLATER_SERVICE)
+    .asInstanceOf[LayoutInflater]
+    .inflate(R.layout.dialog_add_contact, null)
+
+  private lazy val dialog = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AppTheme))
+    .setTitle(getString(R.string.add_contact_dialog, user.name))
+    .setView(view)
+    .setPositiveButton(android.R.string.yes, this)
+    .setNegativeButton(android.R.string.no, this)
+    .setOnDismissListener(this)
+    .create()
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
@@ -47,9 +57,6 @@ class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener
    * Shows a dialog to accept/deny adding a device as a new contact.
    */
   private def showDialog(): Unit = {
-    val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE).asInstanceOf[LayoutInflater]
-    val view     = inflater.inflate(R.layout.dialog_add_contact, null)
-
     val local       = view.findViewById(R.id.local_identicon).asInstanceOf[ImageView]
     val remote      = view.findViewById(R.id.remote_identicon).asInstanceOf[ImageView]
     val remoteTitle = view.findViewById(R.id.remote_identicon_title).asInstanceOf[TextView]
@@ -59,13 +66,7 @@ class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener
     remote.setImageBitmap(IdenticonGenerator.generate(user.address, (150, 150), this))
     remoteTitle.setText(getString(R.string.remote_fingerprint_title, user.name))
 
-    dialog = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AppTheme))
-      .setTitle(getString(R.string.add_contact_dialog, user.name))
-      .setView(view)
-      .setPositiveButton(android.R.string.yes, this)
-      .setNegativeButton(android.R.string.no, this)
-      .setOnDismissListener(this)
-      .show()
+    dialog.show()
   }
 
   override def onClick(dialogInterface: DialogInterface, i: Int): Unit =
