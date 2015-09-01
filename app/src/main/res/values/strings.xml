@@ -112,6 +112,4 @@
     <!-- Notification text for incoming message -->
     <string name="notification_message">New message!</string>
 
-    <string name="toast_user_not_connected">User is not connected. Cannot send message.</string>
-
 </resources>
