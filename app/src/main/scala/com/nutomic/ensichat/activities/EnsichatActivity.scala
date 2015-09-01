@@ -44,7 +44,7 @@ class EnsichatActivity extends AppCompatActivity with ServiceConnection {
   }
 
   override def onServiceDisconnected(componentName: ComponentName) =
-    chatService = null
+    chatService = None
 
   /**
    * Calls l as soon as [[ChatService]] first becomes available.
