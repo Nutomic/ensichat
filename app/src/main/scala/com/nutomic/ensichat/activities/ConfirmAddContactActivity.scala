@@ -2,13 +2,14 @@ package com.nutomic.ensichat.activities
 
 import android.app.AlertDialog
 import android.content.DialogInterface.OnClickListener
-import android.content.{Context, DialogInterface}
+import android.content._
 import android.os.Bundle
+import android.support.v4.content.LocalBroadcastManager
 import android.view.{ContextThemeWrapper, LayoutInflater}
 import android.widget.{ImageView, TextView}
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.protocol.body.ResultAddContact
-import com.nutomic.ensichat.protocol.{Address, Crypto}
+import com.nutomic.ensichat.protocol.{ChatService, Address, Crypto}
 import com.nutomic.ensichat.util.IdenticonGenerator
 
 object ConfirmAddContactActivity {
@@ -26,10 +27,20 @@ class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener
   private lazy val user = service.getUser(
     new Address(getIntent.getStringExtra(ConfirmAddContactActivity.ExtraContactAddress)))
 
+  private var dialog: AlertDialog = _
+
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
 
     runOnServiceConnected(() => showDialog())
+    LocalBroadcastManager.getInstance(this)
+      .registerReceiver(onConnectionsChangedReceiver,
+                        new IntentFilter(ChatService.ActionConnectionsChanged))
+  }
+
+  override def onDestroy(): Unit = {
+    super.onDestroy()
+    LocalBroadcastManager.getInstance(this).unregisterReceiver(onConnectionsChangedReceiver)
   }
 
   /**
@@ -48,7 +59,7 @@ class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener
     remote.setImageBitmap(IdenticonGenerator.generate(user.address, (150, 150), this))
     remoteTitle.setText(getString(R.string.remote_fingerprint_title, user.name))
 
-    new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AppTheme))
+    dialog = new AlertDialog.Builder(new ContextThemeWrapper(this, R.style.AppTheme))
       .setTitle(getString(R.string.add_contact_dialog, user.name))
       .setView(view)
       .setPositiveButton(android.R.string.yes, this)
@@ -61,5 +72,15 @@ class ConfirmAddContactActivity extends EnsichatActivity with OnClickListener
     service.sendTo(user.address, new ResultAddContact(i == DialogInterface.BUTTON_POSITIVE))
 
   override def onDismiss(dialog: DialogInterface): Unit = finish()
+
+  private val onConnectionsChangedReceiver = new BroadcastReceiver {
+    override def onReceive(context: Context, intent: Intent): Unit = {
+      if (!service.connections().contains(user.address)) {
+        dialog.dismiss()
+        service.sendTo(user.address, new ResultAddContact(false))
+        finish()
+      }
+    }
+  }
 
 }
