@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:title="@string/user_name"
+        android:key="user_name"
+        android:inputType="textCapWords"/>
+
+    <EditTextPreference
+        android:title="@string/user_status"
+        android:key="user_status"
+        android:inputType="textCapSentences" />
+
+    <CheckBoxPreference
+        android:title="@string/notification_sounds"
+        android:key="notification_sounds" />
+
+    <EditTextPreference
+        android:title="@string/scan_interval_seconds"
+        android:key="scan_interval_seconds"
+        android:inputType="number"
+        android:numeric="integer" />
+
+    <EditTextPreference
+        android:title="@string/max_connections"
+        android:key="max_connections"
+        android:inputType="number"
+        android:numeric="integer" />
+
+    <Preference
+        android:title="@string/report_issue"
+        android:summary="@string/report_issue_summary" >
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="@string/issue_tracker_url" />
+    </Preference>
+
+    <Preference
+        android:title="@string/version"
+        android:key="version" />
+
+</PreferenceScreen>
