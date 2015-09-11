@@ -2,6 +2,7 @@ package com.nutomic.ensichat.views
 
 import android.app.Activity
 import android.content.Context
+import android.os.Bundle
 import android.view.View.OnClickListener
 import android.view.{LayoutInflater, View, ViewGroup}
 import android.widget.{ArrayAdapter, ImageView, TextView}
@@ -39,7 +40,11 @@ class UsersAdapter(activity: Activity) extends ArrayAdapter[User](activity, 0) w
 
   override def onClick (v: View): Unit = {
     val user = v.getTag.asInstanceOf[User]
-    val fragment = IdenticonFragment.getInstance(user.address, user.name)
+    val fragment = new IdenticonFragment()
+    val bundle = new Bundle()
+    bundle.putString(IdenticonFragment.ExtraAddress, user.address.toString)
+    bundle.putString(IdenticonFragment.ExtraUserName, user.name)
+    fragment.setArguments(bundle)
     fragment.show(activity.getFragmentManager, "dialog")
   }
 

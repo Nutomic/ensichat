@@ -10,10 +10,6 @@
         android:title="@string/user_status"
         android:key="user_status" />
 
-    <Preference
-        android:title="@string/my_address"
-        android:key="my_address" />
-
     <CheckBoxPreference
         android:title="@string/notification_sounds"
         android:key="notification_sounds"

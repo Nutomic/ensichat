@@ -9,18 +9,8 @@ import com.nutomic.ensichat.protocol.Address
 import com.nutomic.ensichat.util.IdenticonGenerator
 
 object IdenticonFragment {
-  private val ExtraAddress  = "address"
-  private val ExtraUserName = "user_name"
-
-  def getInstance(address: Address, userName: String): IdenticonFragment = {
-    val bundle = new Bundle()
-    bundle.putString(IdenticonFragment.ExtraAddress, address.toString)
-    bundle.putString(IdenticonFragment.ExtraUserName, userName)
-
-    val fragment = new IdenticonFragment()
-    fragment.setArguments(bundle)
-    fragment
-  }
+  val ExtraAddress  = "address"
+  val ExtraUserName = "user_name"
 }
 
 /**
@@ -32,7 +22,6 @@ class IdenticonFragment extends DialogFragment {
 
   private lazy val address = new Address(getArguments.getString(IdenticonFragment.ExtraAddress))
   private lazy val userName = getArguments.getString(IdenticonFragment.ExtraUserName)
-
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
                           savedInstanceState: Bundle): View = {

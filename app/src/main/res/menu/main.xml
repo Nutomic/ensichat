@@ -14,6 +14,10 @@
         android:title="@string/share_app" />
 
     <item
+        android:id="@+id/my_address"
+        android:title="@string/my_address" />
+
+    <item
         android:id="@+id/settings"
         android:title="@string/settings" />
 

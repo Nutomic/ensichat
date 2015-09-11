@@ -6,12 +6,13 @@ import android.app.ListFragment
 import android.content.{IntentFilter, Context, BroadcastReceiver, Intent}
 import android.net.Uri
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v4.content.LocalBroadcastManager
 import android.view._
 import android.widget.ListView
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.{AddContactsActivity, EnsichatActivity, MainActivity, SettingsActivity}
-import com.nutomic.ensichat.protocol.ChatService
+import com.nutomic.ensichat.protocol.{Crypto, ChatService}
 import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.views.UsersAdapter
 import scala.collection.JavaConversions._
@@ -64,6 +65,17 @@ class ContactsFragment extends ListFragment {
       intent.setType("*/*")
       intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(ai.get.sourceDir)))
       startActivity(intent)
+      true
+    case R.id.my_address =>
+      val prefs = PreferenceManager.getDefaultSharedPreferences(getActivity)
+      val fragment = new IdenticonFragment()
+      val bundle = new Bundle()
+      bundle.putString(
+        IdenticonFragment.ExtraAddress, new Crypto(getActivity).localAddress.toString)
+      bundle.putString(
+        IdenticonFragment.ExtraUserName, prefs.getString(SettingsFragment.KeyUserName, ""))
+      fragment.setArguments(bundle)
+      fragment.show(getFragmentManager, "dialog")
       true
     case R.id.settings =>
       startActivity(new Intent(getActivity, classOf[SettingsActivity]))
