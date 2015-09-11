@@ -162,7 +162,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
   def connectionOpened(device: Device, socket: BluetoothSocket): Unit = {
     devices += (device.id -> device)
     connections += (device.id ->
-      new TransferThread(device, socket, this, crypto, onReceiveMessage))
+      new TransferThread(context, device, socket, this, crypto, onReceiveMessage))
     connections(device.id).start()
   }
 

@@ -29,6 +29,4 @@ private[bluetooth] case class Device(id: Device.ID, name: String, connected: Boo
     this(new Device.ID(btDevice.getAddress), btDevice.getName, connected, Option(btDevice))
   }
 
-  def bluetoothDevice = btDevice.get
-
 }

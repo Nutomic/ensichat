@@ -2,7 +2,8 @@ package com.nutomic.ensichat.bluetooth
 
 import java.io._
 
-import android.bluetooth.BluetoothSocket
+import android.bluetooth.{BluetoothDevice, BluetoothSocket}
+import android.content.{IntentFilter, Intent, Context, BroadcastReceiver}
 import android.util.Log
 import com.nutomic.ensichat.protocol._
 import com.nutomic.ensichat.protocol.body.ConnectionInfo
@@ -16,12 +17,14 @@ import Message.ReadMessageException
  * @param socket An open socket to the given device.
  * @param onReceive Called when a message was received from the other device.
  */
-class TransferThread(device: Device, socket: BluetoothSocket, handler: BluetoothInterface,
+class TransferThread(context: Context, device: Device, socket: BluetoothSocket, handler: BluetoothInterface,
                      crypto: Crypto, onReceive: (Message, Device.ID) => Unit) extends Thread {
 
   private val Tag = "TransferThread"
 
-  val inStream: InputStream =
+  private var isClosed = false
+
+  private val inStream: InputStream =
     try {
       socket.getInputStream
     } catch {
@@ -30,7 +33,7 @@ class TransferThread(device: Device, socket: BluetoothSocket, handler: Bluetooth
         null
     }
 
-  val outStream: OutputStream =
+  private val outStream: OutputStream =
     try {
       socket.getOutputStream
     } catch {
@@ -39,19 +42,24 @@ class TransferThread(device: Device, socket: BluetoothSocket, handler: Bluetooth
         null
     }
 
+  private val disconnectReceiver = new BroadcastReceiver {
+    override def onReceive(context: Context, intent: Intent): Unit = {
+      val address = intent.getParcelableExtra[BluetoothDevice](BluetoothDevice.EXTRA_DEVICE).getAddress
+      if (device.btDevice.get.getAddress == address) {
+        Log.i(Tag, "Device with address " + address + " disconnected")
+        close()
+      }
+    }
+  }
+
   override def run(): Unit = {
     Log.i(Tag, "Starting data transfer with " + device.toString)
 
+    context.registerReceiver(disconnectReceiver,
+                             new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED))
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
       Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 
-    // TODO: on disconnect (disable bluetooth):
-    //       connection is never closed
-    //         - no exception thrown
-    //         - isConnected returning true
-    //       -> step through, find alternative method/callback etc
-    //       -> check source
-    //       -> otherwise, need timeout?
     while (socket.isConnected) {
       try {
         if (inStream.available() > 0) {
@@ -80,13 +88,20 @@ class TransferThread(device: Device, socket: BluetoothSocket, handler: Bluetooth
   }
 
   def close(): Unit = {
+    if (isClosed)
+      return
+
+    isClosed = true
+    context.unregisterReceiver(disconnectReceiver)
     try {
       Log.i(Tag, "Closing connection to " + device)
+      inStream.close()
+      outStream.close()
       socket.close()
     } catch {
       case e: IOException => Log.e(Tag, "Failed to close socket", e);
     } finally {
-      handler.onConnectionClosed(new Device(device.bluetoothDevice, false), null)
+      handler.onConnectionClosed(new Device(device.btDevice.get, false), null)
     }
   }
 

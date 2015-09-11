@@ -13,7 +13,7 @@ class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Un
   private val Tag = "ConnectThread"
 
   private val socket =
-      device.bluetoothDevice.createInsecureRfcommSocketToServiceRecord(BluetoothInterface.AppUuid)
+      device.btDevice.get.createInsecureRfcommSocketToServiceRecord(BluetoothInterface.AppUuid)
 
   override def run(): Unit = {
     Log.i(Tag, "Connecting to " + device.toString)
@@ -32,7 +32,7 @@ class ConnectThread(device: Device, onConnected: (Device, BluetoothSocket) => Un
     }
 
     Log.i(Tag, "Successfully connected to device " + device.name)
-    onConnected(new Device(device.bluetoothDevice, true), socket)
+    onConnected(new Device(device.btDevice.get, true), socket)
   }
 
 }
