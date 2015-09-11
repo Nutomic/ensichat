@@ -229,7 +229,7 @@ contain the Content-Type and Message ID fields.
 These messages always have a Protocol-Type of 255.
 
 
-### Text (Content-Type = 3)
+### Text (Content-Type = 6)
 
 A simple chat message.
 
@@ -245,7 +245,7 @@ A simple chat message.
 
 Text the string to be transferred, encoded as UTF-8.
 
-### UserInfo (Content-Type = 4)
+### UserInfo (Content-Type = 7)
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
