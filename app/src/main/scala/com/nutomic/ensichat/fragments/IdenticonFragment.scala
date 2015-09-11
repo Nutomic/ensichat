@@ -23,17 +23,20 @@ class IdenticonFragment extends DialogFragment {
   private lazy val address = new Address(getArguments.getString(IdenticonFragment.ExtraAddress))
   private lazy val userName = getArguments.getString(IdenticonFragment.ExtraUserName)
 
-  override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
-                          savedInstanceState: Bundle): View = {
-    getDialog.setTitle(userName)
-    val view = inflater.inflate(R.layout.activity_identicon, container)
+  override def onCreateDialog(savedInstanceState: Bundle): Dialog = {
+    val view = LayoutInflater.from(getActivity).inflate(R.layout.fragment_identicon, null)
     view.findViewById(R.id.identicon)
       .asInstanceOf[ImageView]
       .setImageBitmap(IdenticonGenerator.generate(address, (150, 150), getActivity))
     view.findViewById(R.id.address)
       .asInstanceOf[TextView]
       .setText(getString(R.string.address_colon, address.toString))
-    view
+
+    new AlertDialog.Builder(getActivity)
+      .setTitle(userName)
+      .setView(view)
+      .setPositiveButton(android.R.string.ok, null)
+      .create()
   }
 
 }
