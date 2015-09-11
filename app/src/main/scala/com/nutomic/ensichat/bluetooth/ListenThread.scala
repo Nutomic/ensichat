@@ -2,7 +2,7 @@ package com.nutomic.ensichat.bluetooth
 
 import java.io.IOException
 
-import android.bluetooth.{BluetoothAdapter, BluetoothServerSocket, BluetoothSocket}
+import android.bluetooth.{BluetoothAdapter, BluetoothSocket}
 import android.util.Log
 
 /**
@@ -25,7 +25,6 @@ class ListenThread(name: String, adapter: BluetoothAdapter,
     }
 
   override  def run(): Unit = {
-    Log.i(Tag, "Listening for connections at " + adapter.getAddress)
     var socket: BluetoothSocket = null
 
     while (true) {

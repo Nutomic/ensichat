@@ -57,6 +57,7 @@ class TransferThread(context: Context, device: Device, socket: BluetoothSocket, 
 
     context.registerReceiver(disconnectReceiver,
                              new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED))
+
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
       Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 

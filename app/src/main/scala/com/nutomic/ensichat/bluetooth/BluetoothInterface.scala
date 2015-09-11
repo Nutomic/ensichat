@@ -43,8 +43,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
 
   private var connections = new HashMap[Device.ID, TransferThread]()
 
-  private lazy val listenThread =
-    new ListenThread(context.getString(R.string.app_name), btAdapter, connectionOpened)
+  private var listenThread: Option[ListenThread] = None
 
   private var cancelDiscovery = false
 
@@ -56,6 +55,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Initializes and starts discovery and listening.
    */
   override def create(): Unit = {
+    Log.i(Tag, "Local Bluetooth address is " + btAdapter.getAddress)
     context.registerReceiver(deviceDiscoveredReceiver,
       new IntentFilter(BluetoothDevice.ACTION_FOUND))
     context.registerReceiver(bluetoothStateReceiver,
@@ -71,7 +71,8 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Stops discovery and listening.
    */
   override def destroy(): Unit = {
-    listenThread.cancel()
+    listenThread.get.cancel()
+    listenThread = None
     cancelDiscovery = true
     try {
       context.unregisterReceiver(deviceDiscoveredReceiver)
@@ -88,7 +89,8 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Starts discovery and listening.
    */
   private def startBluetoothConnections(): Unit = {
-    listenThread.start()
+    listenThread = Some(new ListenThread(context.getString(R.string.app_name), btAdapter, connectionOpened))
+    listenThread.get.start()
     cancelDiscovery = false
     discover()
   }
@@ -143,11 +145,12 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
     override def onReceive(context: Context, intent: Intent): Unit = {
       intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1) match {
         case BluetoothAdapter.STATE_ON =>
-          if (!listenThread.isAlive)
+          if (listenThread.isEmpty)
             startBluetoothConnections()
         case BluetoothAdapter.STATE_TURNING_OFF =>
           Log.i(Tag, "Bluetooth disabled, stopping connectivity")
-          listenThread.cancel()
+          listenThread.get.cancel()
+          listenThread = None
           cancelDiscovery = true
           connections.foreach(_._2.close())
         case _ =>
