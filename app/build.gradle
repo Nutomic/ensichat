@@ -11,7 +11,7 @@ buildscript {
 }
 
 dependencies {
-    compile "com.android.support:appcompat-v7:22.2.0"
+    compile "com.android.support:appcompat-v7:23.0.1"
     compile 'com.android.support:multidex:1.0.1'
     androidTestCompile "com.android.support:multidex-instrumentation:1.0.1",
                        { exclude module: "multidex" }
@@ -31,12 +31,12 @@ preBuild.doFirst {
 }
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.0"
 
     defaultConfig {
         applicationId "com.nutomic.ensichat"
-        targetSdkVersion 22
+        targetSdkVersion 23
         versionCode 5
         versionName "0.1.4"
         multiDexEnabled true
