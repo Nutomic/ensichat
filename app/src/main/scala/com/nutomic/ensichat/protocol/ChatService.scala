@@ -15,7 +15,7 @@ import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.body.{ConnectionInfo, MessageBody, UserInfo}
 import com.nutomic.ensichat.protocol.header.ContentHeader
-import com.nutomic.ensichat.util.{AddContactsHandler, Database, NotificationHandler}
+import com.nutomic.ensichat.util.{Database, NotificationHandler}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -61,8 +61,6 @@ class ChatService extends Service {
     onMessageReceived, callConnectionListeners, onConnectionOpened)
 
   private lazy val notificationHandler = new NotificationHandler(this)
-
-  private lazy val addContactsHandler = new AddContactsHandler(this, getUser, crypto.localAddress)
 
   private lazy val router = new Router(connections, sendVia)
 
@@ -163,9 +161,12 @@ class ChatService extends Service {
 
       callConnectionListeners()
     case _ =>
+      val origin = msg.header.origin
+      if (origin != crypto.localAddress && database.getContact(origin).isEmpty)
+        database.addContact(getUser(origin))
+
       database.onMessageReceived(msg)
       notificationHandler.onMessageReceived(msg)
-      addContactsHandler.onMessageReceived(msg)
       val i = new Intent(ChatService.ActionMessageReceived)
       i.putExtra(ChatService.ExtraMessage, msg)
       LocalBroadcastManager.getInstance(this)

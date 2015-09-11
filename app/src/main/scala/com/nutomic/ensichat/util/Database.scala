@@ -2,16 +2,16 @@ package com.nutomic.ensichat.util
 
 import java.util.Date
 
-import android.content.{Intent, ContentValues, Context}
+import android.content.{ContentValues, Context, Intent}
 import android.database.Cursor
 import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import android.support.v4.content.LocalBroadcastManager
 import com.nutomic.ensichat.protocol._
-import com.nutomic.ensichat.protocol.body.{Text, ResultAddContact, RequestAddContact}
+import com.nutomic.ensichat.protocol.body.Text
 import com.nutomic.ensichat.protocol.header.ContentHeader
 
+import scala.collection.SortedSet
 import scala.collection.immutable.TreeSet
-import scala.collection.{SortedSet, mutable}
 
 object Database {
 
@@ -96,8 +96,6 @@ class Database(context: Context)
       cv.put("date",       msg.header.time.get.getTime.toString)
       cv.put("text", text.text)
       getWritableDatabase.insert("messages", null, cv)
-    case _: RequestAddContact | _: ResultAddContact =>
-      // Never stored.
   }
 
   /**

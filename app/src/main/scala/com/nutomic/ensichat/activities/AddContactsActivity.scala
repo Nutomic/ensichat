@@ -1,6 +1,8 @@
 package com.nutomic.ensichat.activities
 
-import android.content.{IntentFilter, Intent, Context, BroadcastReceiver}
+import android.app.AlertDialog.Builder
+import android.content.DialogInterface.OnClickListener
+import android.content._
 import android.os.Bundle
 import android.support.v4.app.NavUtils
 import android.support.v4.content.LocalBroadcastManager
@@ -9,7 +11,6 @@ import android.widget.AdapterView.OnItemClickListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.protocol.ChatService
-import com.nutomic.ensichat.protocol.body.RequestAddContact
 import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.views.UsersAdapter
 
@@ -54,10 +55,17 @@ class AddContactsActivity extends EnsichatActivity with OnItemClickListener {
    */
   override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = {
     val contact = adapter.getItem(position)
-    service.sendTo(contact.address, new RequestAddContact())
-    val intent = new Intent(this, classOf[ConfirmAddContactActivity])
-    intent.putExtra(ConfirmAddContactActivity.ExtraContactAddress, contact.address.toString)
-    startActivity(intent)
+    new Builder(this)
+      .setMessage(getString(R.string.dialog_add_contact, contact.name))
+      .setPositiveButton(android.R.string.yes, new OnClickListener {
+        override def onClick(dialog: DialogInterface, which: Int): Unit = {
+          database.addContact(contact)
+          Toast.makeText(AddContactsActivity.this, R.string.toast_contact_added, Toast.LENGTH_SHORT)
+            .show()
+        }
+      })
+      .setNegativeButton(android.R.string.no, null)
+      .show()
   }
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {

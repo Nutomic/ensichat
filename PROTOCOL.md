@@ -229,33 +229,6 @@ contain the Content-Type and Message ID fields.
 These messages always have a Protocol-Type of 255.
 
 
-### RequestAddContact (Content-Type = 1)
-
-Sent when a user wants to add another node as a contact. After this,
-a ResultAddContact message should be returned.
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                           Reserved                            |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-
-### ResultAddContact (Content-Type = 2)
-
-Sent as response to a RequestAddContact message.
-
-     0                   1                   2                   3
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |A|                          Reserved                           |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-Accepted bit (A) is true if the user accepts the new contact, false
-otherwise. Nodes should only add another node as a contact if both
-users agreed.
-
-
 ### Text (Content-Type = 3)
 
 A simple chat message.

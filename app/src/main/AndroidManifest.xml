@@ -40,11 +40,6 @@
         </activity>
 
         <activity
-            android:name=".activities.ConfirmAddContactActivity"
-            android:theme="@style/Translucent"
-            android:excludeFromRecents="true" />
-
-        <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/settings" >
             <meta-data

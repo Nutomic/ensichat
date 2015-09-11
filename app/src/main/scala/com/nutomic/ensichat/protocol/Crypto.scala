@@ -254,8 +254,6 @@ class Crypto(context: Context) {
     symmetricCipher.init(Cipher.DECRYPT_MODE, key)
     val decrypted = copyThroughCipher(symmetricCipher, msg.body.asInstanceOf[EncryptedBody].data)
     val body = msg.header.asInstanceOf[ContentHeader].contentType match {
-      case RequestAddContact.Type => RequestAddContact.read(decrypted)
-      case ResultAddContact.Type  => ResultAddContact.read(decrypted)
       case Text.Type              => Text.read(decrypted)
       case UserInfo.Type          => UserInfo.read(decrypted)
     }

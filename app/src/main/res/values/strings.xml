@@ -45,23 +45,11 @@
     <!-- Empty text for devices list -->
     <string name="devices_empty">Searching for Users\nRange: ~10m</string>
 
+    <!-- Alertdialog message to add new contact -->
+    <string name="dialog_add_contact">Do you want to add %1$s as contact?</string>
 
-    <!-- ConfirmAddContactDialog -->
-
-    <!-- Title of dialog shown when clicking a device -->
-    <string name="add_contact_dialog">Do you want to add %1$s as a new contact?</string>
-
-    <!-- Text to describe the local device's identicon image -->
-    <string name="local_fingerprint_title">Your key fingerprint:</string>
-
-    <!-- Text to describe the remote device's identicon image. Argument is the contact name -->
-    <string name="remote_fingerprint_title">%1$s\'s key fingerprint:</string>
-
-    <!-- Information text shown in the "add contact" dialog -->
-    <string name="add_contact_dialog_hint">Before accepting, make sure the images match on both devices</string>
-
-    <!-- Toast shown when a new contact was added. Parameter is contact name -->
-    <string name="contact_added">%1$s was added as a contact</string>
+    <!-- Toast shown after contact has been added -->
+    <string name="toast_contact_added">Contact added</string>
 
 
     <!-- SettingsActivity -->
@@ -105,9 +93,6 @@
 
 
     <!-- ChatService -->
-
-    <!-- Notification text for incoming friend request -->
-    <string name="notification_friend_request">New friend request!</string>
 
     <!-- Notification text for incoming message -->
     <string name="notification_message">New message!</string>
