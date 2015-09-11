@@ -188,24 +188,26 @@ class ChatService extends Service {
       getResources.getString(R.string.default_max_connections)).toInt
     if (connections().size == maxConnections) {
       Log.i(Tag, "Maximum number of connections reached")
-      false
+      return false
     }
 
     val info = msg.body.asInstanceOf[ConnectionInfo]
     val sender = crypto.calculateAddress(info.key)
     if (sender == Address.Broadcast || sender == Address.Null) {
       Log.i(Tag, "Ignoring ConnectionInfo message with invalid sender " + sender)
-      false
+      return false
     }
 
     if (crypto.havePublicKey(sender) && !crypto.verify(msg, crypto.getPublicKey(sender))) {
       Log.i(Tag, "Ignoring ConnectionInfo message with invalid signature")
-      false
+      return false
     }
 
-    if (!crypto.havePublicKey(sender)) {
-      crypto.addPublicKey(sender, info.key)
-      Log.i(Tag, "Added public key for new device " + sender.toString)
+    synchronized {
+      if (!crypto.havePublicKey(sender)) {
+        crypto.addPublicKey(sender, info.key)
+        Log.i(Tag, "Added public key for new device " + sender.toString)
+      }
     }
 
     Log.i(Tag, "Node " + sender + " connected")
