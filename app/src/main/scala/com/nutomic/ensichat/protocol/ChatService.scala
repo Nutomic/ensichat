@@ -15,10 +15,9 @@ import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.fragments.SettingsFragment
 import com.nutomic.ensichat.protocol.body.{ConnectionInfo, MessageBody, UserInfo}
 import com.nutomic.ensichat.protocol.header.ContentHeader
-import com.nutomic.ensichat.util.{Database, NotificationHandler}
+import com.nutomic.ensichat.util.{Database, FutureHelper, NotificationHandler}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 object ChatService {
 
@@ -84,12 +83,12 @@ class ChatService extends Service {
 
     showPersistentNotification()
 
-    Future {
+    FutureHelper {
       crypto.generateLocalKeys()
 
       btInterface.create()
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
-    }.onFailure {case e => throw e}
+    }
   }
 
   def showPersistentNotification(): Unit = {
@@ -117,7 +116,7 @@ class ChatService extends Service {
    * Sends a new message to the given target address.
    */
   def sendTo(target: Address, body: MessageBody): Unit = {
-    Future {
+    FutureHelper {
       val messageId = preferences.getLong("message_id", 0)
       val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
         body.contentType, Some(messageId), Some(new Date()))
@@ -127,7 +126,7 @@ class ChatService extends Service {
       val encrypted = crypto.encrypt(crypto.sign(msg))
       router.onReceive(encrypted)
       onNewMessage(msg)
-    }.onFailure {case e => throw e}
+    }
   }
 
   private def sendVia(nextHop: Address, msg: Message) =
