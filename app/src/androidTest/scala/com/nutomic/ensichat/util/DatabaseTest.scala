@@ -9,10 +9,13 @@ import android.support.v4.content.LocalBroadcastManager
 import android.test.AndroidTestCase
 import com.nutomic.ensichat.protocol.MessageTest._
 import com.nutomic.ensichat.protocol.body.CryptoData
-import com.nutomic.ensichat.protocol.header.{ContentHeader, ContentHeaderTest}
+import com.nutomic.ensichat.protocol.header.ContentHeader
 import com.nutomic.ensichat.protocol.header.ContentHeaderTest._
-import com.nutomic.ensichat.protocol.{MessageTest, UserTest}
+import com.nutomic.ensichat.protocol.{Address, Message, UserTest}
 import junit.framework.Assert._
+
+import scala.collection.SortedSet
+import scala.collection.immutable.TreeSet
 
 object DatabaseTest {
 
@@ -49,27 +52,40 @@ class DatabaseTest extends AndroidTestCase {
     context.deleteDbFile()
   }
 
+  /**
+   * Calls [[Database.getMessagesCursor]] with parameters and converts the result to sorted set.
+   */
+  private def getMessages(address: Address, count: Int): SortedSet[Message] = {
+    val c = database.getMessagesCursor(address, Option(count))
+    var messages = new TreeSet[Message]()(Message.Ordering)
+    while (c.moveToNext()) {
+      messages += Database.messageFromCursor(c)
+    }
+    c.close()
+    messages
+  }
+
   def testMessageCount(): Unit = {
-    val msg1 = database.getMessages(m1.header.origin, 1)
+    val msg1 = getMessages(m1.header.origin, 1)
     assertEquals(1, msg1.size)
 
-    val msg2 = database.getMessages(m1.header.origin, 3)
+    val msg2 = getMessages(m1.header.origin, 3)
     assertEquals(2, msg2.size)
   }
 
   def testMessageOrder(): Unit = {
-    val msg = database.getMessages(m1.header.target, 1)
+    val msg = getMessages(m1.header.target, 1)
     assertTrue(msg.contains(m1))
   }
 
   def testMessageSelect(): Unit = {
-    val msg = database.getMessages(m1.header.target, 2)
+    val msg = getMessages(m1.header.target, 2)
     assertTrue(msg.contains(m1))
     assertTrue(msg.contains(m3))
   }
 
   def testMessageFields(): Unit = {
-    val msg = database.getMessages(m2.header.target, 1).firstKey
+    val msg = getMessages(m2.header.target, 1).firstKey
     val header = msg.header.asInstanceOf[ContentHeader]
 
     assertEquals(h2.origin, header.origin)

@@ -71,19 +71,6 @@ class Database(context: Context)
   }
 
   /**
-   * Returns the count last messages for device.
-   */
-  def getMessages(address: Address, count: Int): SortedSet[Message] = {
-    val c = getMessagesCursor(address, Option(count))
-    var messages = new TreeSet[Message]()(Message.Ordering)
-    while (c.moveToNext()) {
-      messages += Database.messageFromCursor(c)
-    }
-    c.close()
-    messages
-  }
-
-  /**
    * Inserts the given new message into the database.
    */
   def onMessageReceived(msg: Message): Unit = msg.body match {
