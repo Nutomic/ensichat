@@ -55,8 +55,8 @@ class DatabaseTest extends AndroidTestCase {
   /**
    * Calls [[Database.getMessagesCursor]] with parameters and converts the result to sorted set.
    */
-  private def getMessages(address: Address, count: Int): SortedSet[Message] = {
-    val c = database.getMessagesCursor(address, Option(count))
+  private def getMessages(address: Address): SortedSet[Message] = {
+    val c = database.getMessagesCursor(address)
     var messages = new TreeSet[Message]()(Message.Ordering)
     while (c.moveToNext()) {
       messages += Database.messageFromCursor(c)
@@ -65,27 +65,20 @@ class DatabaseTest extends AndroidTestCase {
     messages
   }
 
-  def testMessageCount(): Unit = {
-    val msg1 = getMessages(m1.header.origin, 1)
-    assertEquals(1, msg1.size)
-
-    val msg2 = getMessages(m1.header.origin, 3)
-    assertEquals(2, msg2.size)
-  }
-
   def testMessageOrder(): Unit = {
-    val msg = getMessages(m1.header.target, 1)
-    assertTrue(msg.contains(m1))
+    val msg = getMessages(m1.header.target).firstKey
+    assertEquals(m1.body, msg.body)
   }
 
   def testMessageSelect(): Unit = {
-    val msg = getMessages(m1.header.target, 2)
+    val msg = getMessages(m1.header.target)
     assertTrue(msg.contains(m1))
+    assertFalse(msg.contains(m2))
     assertTrue(msg.contains(m3))
   }
 
   def testMessageFields(): Unit = {
-    val msg = getMessages(m2.header.target, 1).firstKey
+    val msg = getMessages(m2.header.target).firstKey
     val header = msg.header.asInstanceOf[ContentHeader]
 
     assertEquals(h2.origin, header.origin)

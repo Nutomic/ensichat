@@ -63,11 +63,11 @@ class Database(context: Context)
     db.execSQL(Database.CreateMessagesTable)
   }
 
-  def getMessagesCursor(address: Address, count: Option[Int]): Cursor = {
+  def getMessagesCursor(address: Address): Cursor = {
     getReadableDatabase.query(true,
       "messages", Array("_id", "origin", "target", "message_id", "text", "date"),
       "origin = ? OR target = ?", Array(address.toString, address.toString),
-      null, null, "date ASC", count.map(_.toString).orNull)
+      null, null, "date ASC", null)
   }
 
   /**
