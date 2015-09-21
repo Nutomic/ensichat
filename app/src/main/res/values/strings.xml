@@ -27,6 +27,12 @@
 
     <!-- ContactsFragment -->
 
+    <!-- Number of connections shown in actionbar -->
+    <plurals name="title_connections">
+        <item quantity="one">1 Connection</item>
+        <item quantity="other">%s Connections</item>
+    </plurals>
+
     <!-- Empty text for contacts list -->
     <string name="no_contacts_found">You haven\'t added any contacts yet</string>
 

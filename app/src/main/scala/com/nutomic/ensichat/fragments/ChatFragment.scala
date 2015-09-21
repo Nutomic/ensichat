@@ -4,6 +4,7 @@ import android.app.ListFragment
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.Bundle
 import android.support.v4.content.LocalBroadcastManager
+import android.support.v7.widget.Toolbar
 import android.view.View.OnClickListener
 import android.view.inputmethod.EditorInfo
 import android.view.{KeyEvent, LayoutInflater, View, ViewGroup}
@@ -31,6 +32,8 @@ class ChatFragment extends ListFragment with OnClickListener {
 
   private lazy val database = new Database(getActivity)
 
+  private lazy val activity = getActivity.asInstanceOf[EnsichatActivity]
+
   private var address: Address = _
 
   private var chatService: ChatService = _
@@ -46,7 +49,6 @@ class ChatFragment extends ListFragment with OnClickListener {
   override def onActivityCreated(savedInstanceState: Bundle): Unit = {
     super.onActivityCreated(savedInstanceState)
 
-    val activity = getActivity.asInstanceOf[EnsichatActivity]
     activity.runOnServiceConnected(() => {
       chatService = activity.service
 
@@ -62,8 +64,11 @@ class ChatFragment extends ListFragment with OnClickListener {
   }
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
-        savedInstanceState: Bundle): View = {
-    val view: View =  inflater.inflate(R.layout.fragment_chat, container, false)
+                            savedInstanceState: Bundle): View = {
+    val view =  inflater.inflate(R.layout.fragment_chat, container, false)
+    val toolbar = view.findViewById(R.id.toolbar).asInstanceOf[Toolbar]
+    activity.setSupportActionBar(toolbar)
+    activity.getSupportActionBar.setDisplayHomeAsUpEnabled(true)
     sendButton = view.findViewById(R.id.send).asInstanceOf[Button]
     sendButton.setOnClickListener(this)
     messageText = view.findViewById(R.id.message).asInstanceOf[EditText]

@@ -2,56 +2,84 @@ package com.nutomic.ensichat.fragments
 
 import java.io.File
 
-import android.app.ListFragment
-import android.content.{IntentFilter, Context, BroadcastReceiver, Intent}
+import android.app.{ActionBar, ListFragment}
+import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.v4.content.LocalBroadcastManager
+import android.support.v4.content.{ContextCompat, LocalBroadcastManager}
+import android.support.v7.widget.Toolbar
+import android.view.View.OnClickListener
 import android.view._
-import android.widget.ListView
+import android.widget.{ListView, TextView, Toast}
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.{AddContactsActivity, EnsichatActivity, MainActivity, SettingsActivity}
-import com.nutomic.ensichat.protocol.{Crypto, ChatService}
+import com.nutomic.ensichat.protocol.{ChatService, Crypto}
 import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.views.UsersAdapter
+
 import scala.collection.JavaConversions._
 
 /**
  * Lists all nearby, connected devices.
  */
-class ContactsFragment extends ListFragment {
+class ContactsFragment extends ListFragment with OnClickListener {
 
   private lazy val adapter = new UsersAdapter(getActivity)
 
   private lazy val database = new Database(getActivity)
+
+  private lazy val lbm = LocalBroadcastManager.getInstance(getActivity)
+
+  private lazy val activity = getActivity.asInstanceOf[EnsichatActivity]
+
+  private var title: TextView = _
+  private var subtitle: TextView = _
 
   override def onCreate(savedInstanceState: Bundle): Unit = {
     super.onCreate(savedInstanceState)
 
     setListAdapter(adapter)
     setHasOptionsMenu(true)
+    lbm.registerReceiver(onContactsUpdatedListener, new IntentFilter(Database.ActionContactsUpdated))
+    lbm.registerReceiver(onConnectionsChangedListener, new IntentFilter(ChatService.ActionConnectionsChanged))
+  }
 
-    getActivity.asInstanceOf[EnsichatActivity].runOnServiceConnected(() => {
+  override def onResume(): Unit = {
+    super.onResume()
+    activity.runOnServiceConnected(() => {
+      adapter.clear()
       database.getContacts.foreach(adapter.add)
+      updateConnections()
     })
-    LocalBroadcastManager.getInstance(getActivity)
-      .registerReceiver(onContactsUpdatedListener, new IntentFilter(Database.ActionContactsUpdated))
   }
 
   override def onDestroy(): Unit = {
     super.onDestroy()
-    LocalBroadcastManager.getInstance(getActivity).unregisterReceiver(onContactsUpdatedListener)
+    lbm.unregisterReceiver(onContactsUpdatedListener)
+    lbm.unregisterReceiver(onConnectionsChangedListener)
   }
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup,
-                            savedInstanceState: Bundle): View =
-    inflater.inflate(R.layout.fragment_contacts, container, false)
+                            savedInstanceState: Bundle): View = {
+    val v = inflater.inflate(R.layout.fragment_contacts, container, false)
+    val toolbar = v.findViewById(R.id.toolbar).asInstanceOf[Toolbar]
+    v.findViewById(R.id.title_holder).setOnClickListener(this)
+    activity.setSupportActionBar(toolbar)
+    toolbar.setNavigationIcon(R.drawable.ic_launcher)
+    title = v.findViewById(R.id.title).asInstanceOf[TextView]
+    subtitle = v.findViewById(R.id.subtitle).asInstanceOf[TextView]
+    v
+  }
 
   override def onCreateOptionsMenu(menu: Menu, inflater: MenuInflater): Unit = {
     super.onCreateOptionsMenu(menu, inflater)
     inflater.inflate(R.menu.main, menu)
   }
+
+  override def onClick(v: View): Unit =
+    startActivity(new Intent(getActivity, classOf[AddContactsActivity]))
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
     case R.id.add_contact =>
@@ -103,6 +131,33 @@ class ContactsFragment extends ListFragment {
         }
       })
     }
+  }
+
+  private val onConnectionsChangedListener = new BroadcastReceiver {
+    override def onReceive(context: Context, intent: Intent): Unit = updateConnections()
+  }
+
+  /**
+   * Updates TextViews in actionbar with current connections.
+   */
+  private def updateConnections(): Unit = {
+    val service = activity.service
+    if (service == null || title == null)
+      return
+
+    val connections = service.connections()
+    val count = connections.size
+    val color = count match {
+      case 0 => R.color.title_connections_error
+      case 1 => R.color.title_connections_warning
+      case _ => R.color.title_connections_ok
+    }
+
+    title.setText(getResources.getQuantityString(R.plurals.title_connections, count, count.toString))
+    title.setTextColor(ContextCompat.getColor(getActivity, color))
+
+    subtitle.setText(connections.map(service.getUser(_).name).mkString(", "))
+    subtitle.setVisibility(if (count == 0) View.GONE else View.VISIBLE)
   }
 
 }
