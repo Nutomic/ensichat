@@ -17,7 +17,7 @@ import com.nutomic.ensichat.views.UsersAdapter
 /**
  * Lists all nearby, connected devices and allows adding them to be added as contacts.
  */
-class AddContactsActivity extends EnsichatActivity with OnItemClickListener {
+class ConnectionsActivity extends EnsichatActivity with OnItemClickListener {
 
   private val Tag = "AddContactsActivity"
 
@@ -32,7 +32,7 @@ class AddContactsActivity extends EnsichatActivity with OnItemClickListener {
     super.onCreate(savedInstanceState)
     getSupportActionBar.setDisplayHomeAsUpEnabled(true)
 
-    setContentView(R.layout.activity_add_contacts)
+    setContentView(R.layout.activity_connections)
     val list = findViewById(android.R.id.list).asInstanceOf[ListView]
     list.setAdapter(adapter)
     list.setOnItemClickListener(this)
@@ -45,6 +45,13 @@ class AddContactsActivity extends EnsichatActivity with OnItemClickListener {
       .registerReceiver(onContactsUpdatedReceiver, filter)
   }
 
+  override def onResume(): Unit = {
+    super.onResume()
+    runOnServiceConnected(() => {
+      updateConnections()
+    })
+  }
+
   override def onDestroy(): Unit = {
     super.onDestroy()
     LocalBroadcastManager.getInstance(this).unregisterReceiver(onContactsUpdatedReceiver)
@@ -55,12 +62,18 @@ class AddContactsActivity extends EnsichatActivity with OnItemClickListener {
    */
   override def onItemClick(parent: AdapterView[_], view: View, position: Int, id: Long): Unit = {
     val contact = adapter.getItem(position)
+    if (database.getContacts.contains(contact)) {
+      val text = getString(R.string.contact_already_added, contact.name)
+      Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+      return
+    }
+
     new Builder(this)
       .setMessage(getString(R.string.dialog_add_contact, contact.name))
       .setPositiveButton(android.R.string.yes, new OnClickListener {
         override def onClick(dialog: DialogInterface, which: Int): Unit = {
           database.addContact(contact)
-          Toast.makeText(AddContactsActivity.this, R.string.toast_contact_added, Toast.LENGTH_SHORT)
+          Toast.makeText(ConnectionsActivity.this, R.string.toast_contact_added, Toast.LENGTH_SHORT)
             .show()
         }
       })
@@ -82,13 +95,15 @@ class AddContactsActivity extends EnsichatActivity with OnItemClickListener {
   private val onContactsUpdatedReceiver = new BroadcastReceiver() {
     override def onReceive(context: Context, intent: Intent): Unit = {
       runOnUiThread(new Runnable {
-        override def run(): Unit  = {
-          adapter.clear()
-          (service.get.connections().map(a => service.get.getUser(a)) -- database.getContacts)
-            .foreach(adapter.add)
-        }
+        override def run(): Unit = updateConnections()
       })
     }
+  }
+
+  private def updateConnections(): Unit = {
+    adapter.clear()
+    service.get.connections().map(a => service.get.getUser(a))
+      .foreach(adapter.add)
   }
 
 }

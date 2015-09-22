@@ -43,19 +43,22 @@
     <string name="exit">Exit</string>
 
 
-    <!-- AddContactsActivity -->
+    <!-- ConnectionsActivity -->
 
     <!-- Activity title -->
-    <string name="add_contacts">Add Contacts</string>
+    <string name="connections">Connections</string>
 
     <!-- Empty text for devices list -->
-    <string name="devices_empty">Searching for Users\nRange: ~10m</string>
+    <string name="no_connections">Searching for Users\nRange: ~10m</string>
 
     <!-- Alertdialog message to add new contact -->
     <string name="dialog_add_contact">Do you want to add %1$s as contact?</string>
 
     <!-- Toast shown after contact has been added -->
     <string name="toast_contact_added">Contact added</string>
+
+    <!-- Toast shown when clicking a user that is already a contact -->
+    <string name="contact_already_added">You have already added %1$s as a contact</string>
 
 
     <!-- SettingsActivity -->

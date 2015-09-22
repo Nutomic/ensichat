@@ -34,8 +34,8 @@
             android:theme="@style/AppTheme.NoActionBar"/>
 
         <activity
-            android:name=".activities.AddContactsActivity"
-            android:label="@string/add_contacts"
+            android:name=".activities.ConnectionsActivity"
+            android:label="@string/connections"
             android:parentActivityName=".activities.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

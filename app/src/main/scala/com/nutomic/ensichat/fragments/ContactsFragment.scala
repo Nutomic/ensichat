@@ -14,7 +14,7 @@ import android.view.View.OnClickListener
 import android.view._
 import android.widget.{ListView, TextView, Toast}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.activities.{AddContactsActivity, EnsichatActivity, MainActivity, SettingsActivity}
+import com.nutomic.ensichat.activities.{ConnectionsActivity, EnsichatActivity, MainActivity, SettingsActivity}
 import com.nutomic.ensichat.protocol.{ChatService, Crypto}
 import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.views.UsersAdapter
@@ -80,7 +80,7 @@ class ContactsFragment extends ListFragment with OnClickListener {
   }
 
   override def onClick(v: View): Unit =
-    startActivity(new Intent(getActivity, classOf[AddContactsActivity]))
+    startActivity(new Intent(getActivity, classOf[ConnectionsActivity]))
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
     case R.id.share_app =>
