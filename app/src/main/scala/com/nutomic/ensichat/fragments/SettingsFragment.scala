@@ -1,15 +1,15 @@
 package com.nutomic.ensichat.fragments
 
-import android.content.Intent
-import android.os.{Build, Bundle}
-import android.preference.Preference.{OnPreferenceClickListener, OnPreferenceChangeListener}
+import android.content.SharedPreferences
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import android.os.Bundle
+import android.preference.Preference.OnPreferenceChangeListener
 import android.preference.{Preference, PreferenceFragment, PreferenceManager}
-import com.nutomic.ensichat.protocol.Crypto
-import com.nutomic.ensichat.{BuildConfig, R}
 import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.fragments.SettingsFragment._
 import com.nutomic.ensichat.protocol.body.UserInfo
 import com.nutomic.ensichat.util.Database
+import com.nutomic.ensichat.{BuildConfig, R}
 
 object SettingsFragment {
 
@@ -24,7 +24,8 @@ object SettingsFragment {
 /**
  * Settings screen.
  */
-class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListener {
+class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListener
+  with OnSharedPreferenceChangeListener {
 
   private lazy val database = new Database(getActivity)
 
@@ -59,20 +60,32 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
 
     val packageInfo = getActivity.getPackageManager.getPackageInfo(getActivity.getPackageName, 0)
     version.setSummary(packageInfo.versionName)
+    prefs.registerOnSharedPreferenceChangeListener(this)
+  }
+
+  override def onDestroy(): Unit = {
+    super.onDestroy()
+    prefs.unregisterOnSharedPreferenceChangeListener(this)
   }
 
   /**
    * Updates summary, sends updated name to contacts.
    */
   override def onPreferenceChange(preference: Preference, newValue: AnyRef): Boolean = {
-    preference.getKey match {
+    preference.setSummary(newValue.toString)
+    true
+  }
+
+  /**
+   * Sends the updated username or status to all contacts.
+   */
+  override def onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+    key match {
       case KeyUserName | KeyUserStatus =>
         val service = getActivity.asInstanceOf[EnsichatActivity].service
         val ui = new UserInfo(prefs.getString(KeyUserName, ""), prefs.getString(KeyUserStatus, ""))
         database.getContacts.foreach(c => service.get.sendTo(c.address, ui))
     }
-    preference.setSummary(newValue.toString)
-    true
   }
 
 }
