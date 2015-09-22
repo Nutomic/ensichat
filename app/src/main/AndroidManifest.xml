@@ -34,7 +34,8 @@
 
         <activity
             android:name=".activities.AddContactsActivity"
-            android:label="@string/add_contacts" >
+            android:label="@string/add_contacts"
+            android:parentActivityName=".activities.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.MainActivity" />
@@ -42,7 +43,8 @@
 
         <activity
             android:name=".activities.SettingsActivity"
-            android:label="@string/settings" >
+            android:label="@string/settings"
+            android:parentActivityName=".activities.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.MainActivity" />
