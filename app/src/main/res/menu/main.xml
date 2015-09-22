@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
-    <item
-        android:id="@+id/add_contact"
-        android:title="@string/add_contacts"
-        android:icon="@drawable/ic_action_add_person"
-        app:showAsAction="ifRoom" />
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/share_app"

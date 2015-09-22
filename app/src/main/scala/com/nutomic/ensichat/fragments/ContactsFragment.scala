@@ -83,9 +83,6 @@ class ContactsFragment extends ListFragment with OnClickListener {
     startActivity(new Intent(getActivity, classOf[AddContactsActivity]))
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
-    case R.id.add_contact =>
-      startActivity(new Intent(getActivity, classOf[AddContactsActivity]))
-      true
     case R.id.share_app =>
       val pm = getActivity.getPackageManager
       val ai = pm.getInstalledApplications(0).find(_.sourceDir.contains(getActivity.getPackageName))
