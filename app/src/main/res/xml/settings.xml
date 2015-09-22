@@ -4,11 +4,13 @@
 
     <EditTextPreference
         android:title="@string/user_name"
-        android:key="user_name" />
+        android:key="user_name"
+        android:inputType="textCapWords"/>
 
     <EditTextPreference
         android:title="@string/user_status"
-        android:key="user_status" />
+        android:key="user_status"
+        android:inputType="textCapSentences" />
 
     <CheckBoxPreference
         android:title="@string/notification_sounds"
