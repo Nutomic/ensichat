@@ -70,6 +70,7 @@ class ContactsFragment extends ListFragment with OnClickListener {
     toolbar.setNavigationIcon(R.drawable.ic_launcher)
     title = v.findViewById(R.id.title).asInstanceOf[TextView]
     subtitle = v.findViewById(R.id.subtitle).asInstanceOf[TextView]
+    updateConnections()
     v
   }
 
@@ -141,10 +142,10 @@ class ContactsFragment extends ListFragment with OnClickListener {
    * Updates TextViews in actionbar with current connections.
    */
   private def updateConnections(): Unit = {
-    val service = activity.service
-    if (service == null || title == null)
+    if (activity.service.isEmpty || title == null)
       return
 
+    val service = activity.service.get
     val connections = service.connections()
     val count = connections.size
     val color = count match {

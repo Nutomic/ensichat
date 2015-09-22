@@ -50,7 +50,7 @@ class ChatFragment extends ListFragment with OnClickListener {
     super.onActivityCreated(savedInstanceState)
 
     activity.runOnServiceConnected(() => {
-      chatService = activity.service
+      chatService = activity.service.get
 
       database.getContact(address).foreach(c => getActivity.setTitle(c.name))
 

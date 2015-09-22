@@ -58,8 +58,8 @@ class EnsichatActivity extends AppCompatActivity with ServiceConnection {
   /**
    * Returns the [[ChatService]].
    *
-   * Should only be called after [[runOnServiceConnected]] callback was called.
+   * Will only be set after [[runOnServiceConnected]].
    */
-  def service = chatService.get
+  def service = chatService
 
 }

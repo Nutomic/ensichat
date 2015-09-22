@@ -69,7 +69,7 @@ class SettingsFragment extends PreferenceFragment with OnPreferenceChangeListene
       case KeyUserName | KeyUserStatus =>
         val service = getActivity.asInstanceOf[EnsichatActivity].service
         val ui = new UserInfo(prefs.getString(KeyUserName, ""), prefs.getString(KeyUserStatus, ""))
-        database.getContacts.foreach(c => service.sendTo(c.address, ui))
+        database.getContacts.foreach(c => service.get.sendTo(c.address, ui))
     }
     preference.setSummary(newValue.toString)
     true

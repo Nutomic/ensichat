@@ -84,7 +84,7 @@ class AddContactsActivity extends EnsichatActivity with OnItemClickListener {
       runOnUiThread(new Runnable {
         override def run(): Unit  = {
           adapter.clear()
-          (service.connections().map(a => service.getUser(a)) -- database.getContacts)
+          (service.get.connections().map(a => service.get.getUser(a)) -- database.getContacts)
             .foreach(adapter.add)
         }
       })
