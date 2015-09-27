@@ -25,4 +25,4 @@ License
 
 All code is licensed under the [GPL](LICENSE), v3 or later.
 
-The launcher icon is based on the [Bubbles Icon by Paomedia](https://www.iconfinder.com/icons/285667/bubbles_icon) (CC BY 3.0).
+The launcher icon is based on the [Bubbles Icon](https://www.iconfinder.com/icons/285667/bubbles_icon) created by [Paomedia](https://www.iconfinder.com/paomedia) which is available under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0/).
