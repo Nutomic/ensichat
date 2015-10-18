@@ -22,7 +22,7 @@ object ConnectionInfo {
     val encoded = new Array[Byte](length)
     b.get(encoded, 0, length)
 
-    val factory = KeyFactory.getInstance(Crypto.KeyAlgorithm)
+    val factory = KeyFactory.getInstance(Crypto.PublicKeyAlgorithm)
     val key = factory.generatePublic(new X509EncodedKeySpec(encoded))
     new ConnectionInfo(key)
   }

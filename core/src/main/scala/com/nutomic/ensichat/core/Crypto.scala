@@ -14,32 +14,31 @@ import com.nutomic.ensichat.core.interfaces.{Log, Settings}
 object Crypto {
 
   /**
-   * Name of algorithm used for key generation.
+   * Algorithm used to generate the local public/private keypair.
+   *
+   * This keypair is generated on first start, and persistent for the lifetime of the app.
    */
-  val KeyAlgorithm = "RSA"
+  val PublicKeyAlgorithm = "RSA"
 
   /**
-   * Number of bits for local key pair.
+   * Length of the local public/private keypair in bits.
    */
-  val KeySize = 4096
+  val PublicKeySize = 4096
 
   /**
    * Algorithm used for message signing.
    */
-  val SignAlgorithm = "SHA256withRSA"
+  val SigningAlgorithm = "SHA256withRSA"
 
   /**
-   * Algorithm used for symmetric crypto cipher.
-   */
-  val SymmetricCipherAlgorithm = "AES"
-
-  /**
-   * Algorithm used for symmetric message encryption.
+   * Algorithm used for the symmetric encryption key.
+   *
+   * A new key is generated for every message to be encrypted.
    */
   val SymmetricKeyAlgorithm = "AES"
 
   /**
-   * Length of the symmetric message encryption key in bits.
+   * Length of the symmetric encryption key in bits.
    */
   val SymmetricKeyLength = 128
 
@@ -48,10 +47,19 @@ object Crypto {
    */
   val KeyHashAlgorithm = "SHA-256"
 
+  /**
+   * Name of the preference where the local address is stored.
+   */
   private val LocalAddressKey = "local_address"
 
+  /**
+   * Filename of the local private key in [[Crypto.keyFolder]].
+   */
   private val PrivateKeyAlias = "local-private"
 
+  /**
+   * Filename of the local public key in [[Crypto.keyFolder]].
+   */
   private val PublicKeyAlias = "local-public"
 
 }
@@ -66,7 +74,8 @@ class Crypto(settings: Settings, keyFolder: File) {
   private val Tag = "Crypto"
 
   /**
-   * Generates a new key pair using [[KeyAlgorithm]] with [[KeySize]] bits and stores the keys.
+   * Generates a new key pair using [[ [[Crypto.keyFolder]].]] with [[KeySize]] bits and stores the
+   * keys.
    *
    * Does nothing if the key pair already exists.
    */
@@ -77,8 +86,8 @@ class Crypto(settings: Settings, keyFolder: File) {
     var address: Address = null
     var keyPair: KeyPair = null
     do {
-      val keyGen = KeyPairGenerator.getInstance(KeyAlgorithm)
-      keyGen.initialize(KeySize)
+      val keyGen = KeyPairGenerator.getInstance(PublicKeyAlgorithm)
+      keyGen.initialize(PublicKeySize)
       keyPair = keyGen.genKeyPair()
 
       address = calculateAddress(keyPair.getPublic)
@@ -122,7 +131,7 @@ class Crypto(settings: Settings, keyFolder: File) {
   }
 
   def sign(msg: Message): Message = {
-    val sig = Signature.getInstance(SignAlgorithm)
+    val sig = Signature.getInstance(SigningAlgorithm)
     val key = loadKey(PrivateKeyAlias, classOf[PrivateKey])
     sig.initSign(key)
     sig.update(msg.body.write)
@@ -133,7 +142,7 @@ class Crypto(settings: Settings, keyFolder: File) {
     val publicKey =
       if (key != null) key
       else loadKey(msg.header.origin.toString, classOf[PublicKey])
-    val sig = Signature.getInstance(SignAlgorithm)
+    val sig = Signature.getInstance(SigningAlgorithm)
     sig.initVerify(publicKey)
     sig.update(msg.body.write)
     sig.verify(msg.crypto.signature.get)
@@ -203,7 +212,7 @@ class Crypto(settings: Settings, keyFolder: File) {
     } finally {
       fis.foreach(_.close())
     }
-    val keyFactory = KeyFactory.getInstance(KeyAlgorithm)
+    val keyFactory = KeyFactory.getInstance(PublicKeyAlgorithm)
     keyType match {
       case c if c == classOf[PublicKey]  =>
         val keySpec = new X509EncodedKeySpec(data)
@@ -219,7 +228,7 @@ class Crypto(settings: Settings, keyFolder: File) {
 
     // Symmetric encryption of data
     val secretKey = makeSecretKey()
-    val symmetricCipher = Cipher.getInstance(SymmetricCipherAlgorithm)
+    val symmetricCipher = Cipher.getInstance(SymmetricKeyAlgorithm)
     symmetricCipher.init(Cipher.ENCRYPT_MODE, secretKey)
     val encrypted = new EncryptedBody(copyThroughCipher(symmetricCipher, msg.body.write))
 
@@ -227,7 +236,7 @@ class Crypto(settings: Settings, keyFolder: File) {
     val publicKey =
       if (key != null) key
       else loadKey(msg.header.target.toString, classOf[PublicKey])
-    val asymmetricCipher = Cipher.getInstance(KeyAlgorithm)
+    val asymmetricCipher = Cipher.getInstance(PublicKeyAlgorithm)
     asymmetricCipher.init(Cipher.WRAP_MODE, publicKey)
 
     new Message(msg.header,
@@ -236,12 +245,12 @@ class Crypto(settings: Settings, keyFolder: File) {
 
   def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
-    val asymmetricCipher = Cipher.getInstance(KeyAlgorithm)
+    val asymmetricCipher = Cipher.getInstance(PublicKeyAlgorithm)
     asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))
     val key = asymmetricCipher.unwrap(msg.crypto.key.get, SymmetricKeyAlgorithm, Cipher.SECRET_KEY)
 
     // Symmetric decryption of data
-    val symmetricCipher = Cipher.getInstance(SymmetricCipherAlgorithm)
+    val symmetricCipher = Cipher.getInstance(SymmetricKeyAlgorithm)
     symmetricCipher.init(Cipher.DECRYPT_MODE, key)
     val decrypted = copyThroughCipher(symmetricCipher, msg.body.asInstanceOf[EncryptedBody].data)
     val body = msg.header.asInstanceOf[ContentHeader].contentType match {
@@ -265,7 +274,7 @@ class Crypto(settings: Settings, keyFolder: File) {
     val baos = new ByteArrayOutputStream()
     val cos = new CipherOutputStream(baos, cipher)
     var i = 0
-    val b = new Array[Byte](1024)
+    val b = new Array[Byte](8192)
     while({i = bais.read(b); i != -1}) {
       cos.write(b, 0, i)
     }
@@ -277,14 +286,14 @@ class Crypto(settings: Settings, keyFolder: File) {
    * Creates a new, random AES key.
    */
   private def makeSecretKey(): SecretKey = {
-    val kgen = KeyGenerator.getInstance(SymmetricCipherAlgorithm)
+    val kgen = KeyGenerator.getInstance(SymmetricKeyAlgorithm)
     kgen.init(SymmetricKeyLength)
     val key = kgen.generateKey()
     new SecretKeySpec(key.getEncoded, SymmetricKeyAlgorithm)
   }
 
   /**
-   * Hashes the given public key and returns the hash as address.
+   * Generates the address by hashing the given public key with [[KeyHashAlgorithm]].
    */
   def calculateAddress(key: PublicKey): Address = {
     val md = MessageDigest.getInstance(KeyHashAlgorithm)
