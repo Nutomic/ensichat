@@ -32,7 +32,7 @@ object ConnectionInfo {
 /**
  * Holds a node's public key.
  */
-case class ConnectionInfo(key: PublicKey) extends MessageBody {
+final case class ConnectionInfo(key: PublicKey) extends MessageBody {
 
   override def protocolType = ConnectionInfo.Type
 

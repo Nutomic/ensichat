@@ -1,12 +1,12 @@
 package com.nutomic.ensichat.core
 
 import com.nutomic.ensichat.core.header.ContentHeader
-import com.nutomic.ensichat.core.interfaces.Settings
+import com.nutomic.ensichat.core.interfaces.SettingsInterface
 
 /**
  * Generates sequence numbers according to protocol, which are stored persistently.
  */
-class SeqNumGenerator(preferences: Settings) {
+final private[core] class SeqNumGenerator(preferences: SettingsInterface) {
 
   private val KeySequenceNumber = "sequence_number"
 

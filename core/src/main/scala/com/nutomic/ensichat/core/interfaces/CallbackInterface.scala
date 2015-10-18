@@ -7,4 +7,5 @@ trait CallbackInterface {
   def onMessageReceived(msg: Message): Unit
 
   def onConnectionsChanged(): Unit
+
 }

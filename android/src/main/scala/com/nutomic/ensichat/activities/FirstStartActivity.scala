@@ -11,8 +11,8 @@ import android.view.{KeyEvent, View}
 import android.widget.TextView.OnEditorActionListener
 import android.widget.{Button, EditText, TextView}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.core.interfaces.Settings
-import com.nutomic.ensichat.core.interfaces.Settings._
+import com.nutomic.ensichat.core.interfaces.SettingsInterface
+import com.nutomic.ensichat.core.interfaces.SettingsInterface._
 
 /**
  * Shown on first start, lets the user enter their name.
@@ -69,11 +69,11 @@ class FirstStartActivity extends AppCompatActivity with OnEditorActionListener w
     preferences
       .edit()
       .putBoolean(KeyIsFirstStart, false)
-      .putString(Settings.KeyUserName, username.getText.toString.trim)
-      .putString(Settings.KeyUserStatus, Settings.DefaultUserStatus)
-      .putBoolean(Settings.KeyNotificationSoundsOn, DefaultNotificationSoundsOn)
-      .putString(Settings.KeyScanInterval, DefaultScanInterval.toString)
-      .putString(Settings.KeyMaxConnections, DefaultMaxConnections.toString)
+      .putString(SettingsInterface.KeyUserName, username.getText.toString.trim)
+      .putString(SettingsInterface.KeyUserStatus, SettingsInterface.DefaultUserStatus)
+      .putBoolean(SettingsInterface.KeyNotificationSoundsOn, DefaultNotificationSoundsOn)
+      .putString(SettingsInterface.KeyScanInterval, DefaultScanInterval.toString)
+      .putString(SettingsInterface.KeyMaxConnections, DefaultMaxConnections.toString)
       .apply()
 
     startMainActivity()

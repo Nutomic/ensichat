@@ -10,7 +10,7 @@ import android.util.Log
  *
  * @param name Service name to broadcast.
  */
-class ListenThread(name: String, adapter: BluetoothAdapter,
+class BluetoothListenThread(name: String, adapter: BluetoothAdapter,
                    onConnected: (Device, BluetoothSocket) => Unit) extends Thread {
 
   private val Tag = "ListenThread"

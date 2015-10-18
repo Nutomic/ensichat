@@ -2,13 +2,13 @@ package com.nutomic.ensichat.core
 
 import java.io.File
 
-import com.nutomic.ensichat.core.interfaces.Settings
+import com.nutomic.ensichat.core.interfaces.SettingsInterface
 import junit.framework.TestCase
 import org.junit.Assert._
 
 object CryptoTest {
 
-  class TestSettings extends Settings {
+  class TestSettings extends SettingsInterface {
     private var map = Map[String, Any]()
     override def get[T](key: String, default: T): T = map.getOrElse(key, default).asInstanceOf[T]
     override def put[T](key: String, value: T): Unit = map += (key -> value)

@@ -2,9 +2,9 @@ package com.nutomic.ensichat.util
 
 import android.content.Context
 import android.preference.PreferenceManager
-import com.nutomic.ensichat.core.interfaces.Settings
+import com.nutomic.ensichat.core.interfaces.SettingsInterface
 
-class SettingsWrapper(context: Context) extends Settings {
+class SettingsWrapper(context: Context) extends SettingsInterface {
 
   private val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 

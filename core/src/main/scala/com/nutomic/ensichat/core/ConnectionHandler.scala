@@ -6,6 +6,7 @@ import java.util.Date
 import com.nutomic.ensichat.core.body.{ConnectionInfo, MessageBody, UserInfo}
 import com.nutomic.ensichat.core.header.ContentHeader
 import com.nutomic.ensichat.core.interfaces._
+import com.nutomic.ensichat.core.internet.InternetInterface
 import com.nutomic.ensichat.core.util.FutureHelper
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -13,14 +14,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
  * High-level handling of all message transfers and callbacks.
  */
-class ConnectionHandler(settings: Settings, database: DatabaseInterface,
-                        callbacks: CallbackInterface, keyFolder: File) {
+final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInterface,
+                              callbacks: CallbackInterface, crypto: Crypto) {
 
   private val Tag = "ConnectionHandler"
 
-  private lazy val crypto = new Crypto(settings, keyFolder)
-
-  private var transmissionInterface: TransmissionInterface = _
+  private var transmissionInterfaces = Set[TransmissionInterface]()
 
   private lazy val router = new Router(connections, sendVia)
 
@@ -40,16 +39,20 @@ class ConnectionHandler(settings: Settings, database: DatabaseInterface,
     FutureHelper {
       crypto.generateLocalKeys()
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
+      transmissionInterfaces += new InternetInterface(this, crypto)
+      transmissionInterfaces.foreach(_.create())
     }
   }
 
   def stop(): Unit = {
-    transmissionInterface.destroy()
+    transmissionInterfaces.foreach(_.destroy())
   }
 
-  def setTransmissionInterface(interface: TransmissionInterface) = {
-    transmissionInterface = interface
-    transmissionInterface.create()
+  /**
+   * NOTE: This *must* be called before [[start()]], or it will have no effect.
+   */
+  def addTransmissionInterface(interface: TransmissionInterface) = {
+    transmissionInterfaces += interface
   }
 
   /**
@@ -70,7 +73,7 @@ class ConnectionHandler(settings: Settings, database: DatabaseInterface,
   }
 
   private def sendVia(nextHop: Address, msg: Message) =
-    transmissionInterface.send(nextHop, msg)
+    transmissionInterfaces.foreach(_.send(nextHop, msg))
 
   /**
    * Decrypts and verifies incoming messages, forwards valid ones to [[onNewMessage()]].
@@ -78,10 +81,8 @@ class ConnectionHandler(settings: Settings, database: DatabaseInterface,
   def onMessageReceived(msg: Message): Unit = {
     if (msg.header.target == crypto.localAddress) {
       crypto.verifyAndDecrypt(msg) match {
-        case Some(msg) => onNewMessage(msg)
-        case None =>
-          Log.i(Tag, "Ignoring message with invalid signature from " + msg.header.origin)
-          return
+        case Some(m) => onNewMessage(m)
+        case None => Log.i(Tag, "Ignoring message with invalid signature from " + msg.header.origin)
       }
     } else {
       router.onReceive(msg)
@@ -118,7 +119,8 @@ class ConnectionHandler(settings: Settings, database: DatabaseInterface,
    * @return True if the connection is valid
    */
   def onConnectionOpened(msg: Message): Boolean = {
-    val maxConnections = settings.get(Settings.KeyMaxConnections, Settings.DefaultMaxConnections.toString).toInt
+    val maxConnections = settings.get(SettingsInterface.KeyMaxConnections,
+      SettingsInterface.DefaultMaxConnections.toString).toInt
     if (connections().size == maxConnections) {
       Log.i(Tag, "Maximum number of connections reached")
       return false
@@ -144,17 +146,22 @@ class ConnectionHandler(settings: Settings, database: DatabaseInterface,
     }
 
     Log.i(Tag, "Node " + sender + " connected")
-    sendTo(sender, new UserInfo(settings.get(Settings.KeyUserName, ""),
-                                settings.get(Settings.KeyUserStatus, "")))
+    sendTo(sender, new UserInfo(settings.get(SettingsInterface.KeyUserName, ""),
+                                settings.get(SettingsInterface.KeyUserStatus, "")))
     callbacks.onConnectionsChanged()
     true
   }
 
   def onConnectionClosed() = callbacks.onConnectionsChanged()
 
-  def connections() = transmissionInterface.getConnections
+  def connections(): Set[Address] = transmissionInterfaces.flatMap(_.getConnections)
 
   def getUser(address: Address) =
     knownUsers.find(_.address == address).getOrElse(new User(address, address.toString, ""))
 
+  def internetConnectionChanged(): Unit = {
+    transmissionInterfaces
+      .find(_.isInstanceOf[InternetInterface])
+      .foreach(_.asInstanceOf[InternetInterface].connectionChanged())
+  }
 }

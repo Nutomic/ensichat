@@ -35,7 +35,7 @@ object CryptoData {
 /**
  * Holds the signature and (optional) key that are stored in a message.
  */
-case class CryptoData(signature: Option[Array[Byte]], key: Option[Array[Byte]]) {
+final case class CryptoData(signature: Option[Array[Byte]], key: Option[Array[Byte]]) {
 
   override def equals(a: Any): Boolean = a match {
     case o: CryptoData => util.Arrays.equals(signature.orNull, o.signature.orNull) &&

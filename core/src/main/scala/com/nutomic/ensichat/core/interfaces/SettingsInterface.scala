@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.core.interfaces
 
-object Settings {
+object SettingsInterface {
 
   val KeyUserName             = "user_name"
   val KeyUserStatus           = "user_status"
@@ -26,9 +26,9 @@ object Settings {
 /**
  * Interface for persistent storage of key value pairs.
  *
- * Must support at least storage of strings and integers.
+ * Must support at least storage of String, Int, Long.
  */
-trait Settings {
+trait SettingsInterface {
 
   def put[T](key: String, value: T): Unit
   def get[T](key: String, default: T): T

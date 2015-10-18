@@ -19,8 +19,6 @@ import com.nutomic.ensichat.views.UsersAdapter
  */
 class ConnectionsActivity extends EnsichatActivity with OnItemClickListener {
 
-  private val Tag = "AddContactsActivity"
-
   private lazy val database = new Database(this)
 
   private lazy val adapter = new UsersAdapter(this)

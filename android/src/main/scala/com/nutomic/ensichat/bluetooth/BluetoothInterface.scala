@@ -9,7 +9,7 @@ import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.core.body.ConnectionInfo
-import com.nutomic.ensichat.core.interfaces.{Settings, TransmissionInterface}
+import com.nutomic.ensichat.core.interfaces.{SettingsInterface, TransmissionInterface}
 import com.nutomic.ensichat.core.{Address, ConnectionHandler, Message}
 import com.nutomic.ensichat.service.ChatService
 
@@ -38,9 +38,9 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
 
   private var devices = new HashMap[Device.ID, Device]()
 
-  private var connections = new HashMap[Device.ID, TransferThread]()
+  private var connections = new HashMap[Device.ID, BluetoothTransferThread]()
 
-  private var listenThread: Option[ListenThread] = None
+  private var listenThread: Option[BluetoothListenThread] = None
 
   private var cancelDiscovery = false
 
@@ -86,7 +86,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Starts discovery and listening.
    */
   private def startBluetoothConnections(): Unit = {
-    listenThread = Some(new ListenThread(context.getString(R.string.app_name), btAdapter, connectionOpened))
+    listenThread = Some(new BluetoothListenThread(context.getString(R.string.app_name), btAdapter, connectionOpened))
     listenThread.get.start()
     cancelDiscovery = false
     discover()
@@ -106,7 +106,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
 
     val pm = PreferenceManager.getDefaultSharedPreferences(context)
     val scanInterval =
-      pm.getString(Settings.KeyScanInterval, Settings.DefaultScanInterval.toString).toInt * 1000
+      pm.getString(SettingsInterface.KeyScanInterval, SettingsInterface.DefaultScanInterval.toString).toInt * 1000
     mainHandler.postDelayed(new Runnable {
       override def run(): Unit = discover()
     }, scanInterval)
@@ -128,7 +128,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
     override def onReceive(context: Context, intent: Intent): Unit = {
       discovered.filterNot(d => connections.keySet.contains(d.id))
         .foreach { d =>
-          new ConnectThread(d, connectionOpened).start()
+          new BluetoothConnectThread(d, connectionOpened).start()
           devices += (d.id -> d)
         }
       discovered = Set[Device]()
@@ -162,7 +162,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
   def connectionOpened(device: Device, socket: BluetoothSocket): Unit = {
     devices += (device.id -> device)
     connections += (device.id ->
-      new TransferThread(context, device, socket, this, crypto, onReceiveMessage))
+      new BluetoothTransferThread(context, device, socket, this, crypto, onReceiveMessage))
     connections(device.id).start()
   }
 
@@ -198,13 +198,18 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
   /**
    * Sends the message to nextHop.
    */
-  override def send(nextHop: Address, msg: Message): Unit =
-    connections.get(addressDeviceMap(nextHop)).foreach(_.send(msg))
+  override def send(nextHop: Address, msg: Message): Unit = {
+    addressDeviceMap
+      .find(_._1 == nextHop)
+      .map(i => connections.get(i._2))
+      .getOrElse(None)
+      .foreach(_.send(msg))
+  }
 
   /**
    * Returns all active Bluetooth connections.
    */
-  def getConnections: Set[Address] =
+  override def getConnections: Set[Address] =
     connections.map(x => addressDeviceMap.find(_._2 == x._1).get._1).toSet
 
 }

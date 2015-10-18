@@ -29,7 +29,7 @@ object UserInfo {
 /**
  * Holds display name and status of the sender.
  */
-case class UserInfo(name: String, status: String) extends MessageBody {
+final case class UserInfo(name: String, status: String) extends MessageBody {
 
   override def protocolType = -1
 
