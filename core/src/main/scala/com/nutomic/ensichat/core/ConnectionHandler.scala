@@ -63,7 +63,7 @@ class ConnectionHandler(settings: Settings, database: DatabaseInterface,
       settings.put("message_id", messageId + 1)
 
       val msg = new Message(header, body)
-      val encrypted = crypto.encrypt(crypto.sign(msg))
+      val encrypted = crypto.encryptAndSign(msg)
       router.onReceive(encrypted)
       onNewMessage(msg)
     }
@@ -77,12 +77,12 @@ class ConnectionHandler(settings: Settings, database: DatabaseInterface,
    */
   def onMessageReceived(msg: Message): Unit = {
     if (msg.header.target == crypto.localAddress) {
-      val decrypted = crypto.decrypt(msg)
-      if (!crypto.verify(decrypted)) {
-        Log.i(Tag, "Ignoring message with invalid signature from " + msg.header.origin)
-        return
+      crypto.verifyAndDecrypt(msg) match {
+        case Some(msg) => onNewMessage(msg)
+        case None =>
+          Log.i(Tag, "Ignoring message with invalid signature from " + msg.header.origin)
+          return
       }
-      onNewMessage(decrypted)
     } else {
       router.onReceive(msg)
     }
@@ -131,7 +131,7 @@ class ConnectionHandler(settings: Settings, database: DatabaseInterface,
       return false
     }
 
-    if (crypto.havePublicKey(sender) && !crypto.verify(msg, crypto.getPublicKey(sender))) {
+    if (crypto.havePublicKey(sender) && !crypto.verify(msg, Option(crypto.getPublicKey(sender)))) {
       Log.i(Tag, "Ignoring ConnectionInfo message with invalid signature")
       return false
     }

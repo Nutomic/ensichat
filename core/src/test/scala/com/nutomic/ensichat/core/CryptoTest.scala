@@ -32,7 +32,7 @@ class CryptoTest extends TestCase {
   def testSignVerify(): Unit = {
     MessageTest.messages.foreach { m =>
       val signed = crypto.sign(m)
-      assertTrue(crypto.verify(signed, crypto.getLocalPublicKey))
+      assertTrue(crypto.verify(signed, Option(crypto.getLocalPublicKey)))
       assertEquals(m.header, signed.header)
       assertEquals(m.body, signed.body)
     }
@@ -40,9 +40,9 @@ class CryptoTest extends TestCase {
 
   def testEncryptDecrypt(): Unit = {
     MessageTest.messages.foreach{ m =>
-      val encrypted = crypto.encrypt(crypto.sign(m), crypto.getLocalPublicKey)
-      val decrypted = crypto.decrypt(encrypted)
-      assertEquals(m.body, decrypted.body)
+      val encrypted = crypto.encryptAndSign(m, Option(crypto.getLocalPublicKey))
+      val decrypted = crypto.verifyAndDecrypt(encrypted, Option(crypto.getLocalPublicKey))
+      assertEquals(m.body, decrypted.get.body)
       assertEquals(m.header, encrypted.header)
     }
   }

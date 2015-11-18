@@ -135,15 +135,13 @@ class Crypto(settings: Settings, keyFolder: File) {
     val key = loadKey(PrivateKeyAlias, classOf[PrivateKey])
     sig.initSign(key)
     sig.update(msg.body.write)
-    new Message(msg.header, new CryptoData(Option(sig.sign), None), msg.body)
+    new Message(msg.header, new CryptoData(Option(sig.sign), msg.crypto.key), msg.body)
   }
 
-  def verify(msg: Message, key: PublicKey = null): Boolean = {
-    val publicKey =
-      if (key != null) key
-      else loadKey(msg.header.origin.toString, classOf[PublicKey])
+  def verify(msg: Message, key: Option[PublicKey] = None): Boolean = {
     val sig = Signature.getInstance(SigningAlgorithm)
-    sig.initVerify(publicKey)
+    lazy val defaultKey = loadKey(msg.header.origin.toString, classOf[PublicKey])
+    sig.initVerify(key.getOrElse(defaultKey))
     sig.update(msg.body.write)
     sig.verify(msg.crypto.signature.get)
   }
@@ -223,9 +221,18 @@ class Crypto(settings: Settings, keyFolder: File) {
     }
   }
 
-  def encrypt(msg: Message, key: PublicKey = null): Message = {
-    assert(msg.crypto.signature.isDefined, "Message must be signed before encryption")
+  def encryptAndSign(msg: Message, key: Option[PublicKey] = None): Message = {
+    sign(encrypt(msg, key))
+  }
 
+  def verifyAndDecrypt(msg: Message, key: Option[PublicKey] = None): Option[Message] = {
+    if (verify(msg, key))
+      Option(decrypt(msg))
+    else
+      None
+  }
+
+  private def encrypt(msg: Message, key: Option[PublicKey] = None): Message = {
     // Symmetric encryption of data
     val secretKey = makeSecretKey()
     val symmetricCipher = Cipher.getInstance(SymmetricKeyAlgorithm)
@@ -233,17 +240,15 @@ class Crypto(settings: Settings, keyFolder: File) {
     val encrypted = new EncryptedBody(copyThroughCipher(symmetricCipher, msg.body.write))
 
     // Asymmetric encryption of secret key
-    val publicKey =
-      if (key != null) key
-      else loadKey(msg.header.target.toString, classOf[PublicKey])
     val asymmetricCipher = Cipher.getInstance(PublicKeyAlgorithm)
-    asymmetricCipher.init(Cipher.WRAP_MODE, publicKey)
+    lazy val defaultKey = loadKey(msg.header.target.toString, classOf[PublicKey])
+    asymmetricCipher.init(Cipher.WRAP_MODE, key.getOrElse(defaultKey))
 
     new Message(msg.header,
-      new CryptoData(msg.crypto.signature, Option(asymmetricCipher.wrap(secretKey))), encrypted)
+      new CryptoData(None, Option(asymmetricCipher.wrap(secretKey))), encrypted)
   }
 
-  def decrypt(msg: Message): Message = {
+  private def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
     val asymmetricCipher = Cipher.getInstance(PublicKeyAlgorithm)
     asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))

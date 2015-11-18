@@ -48,21 +48,19 @@ class MessageTest extends TestCase {
     val read = Message.read(new ByteArrayInputStream(bytes))
 
     assertEquals(signed, read)
-    assertTrue(crypto.verify(read, crypto.getLocalPublicKey))
+    assertTrue(crypto.verify(read, Option(crypto.getLocalPublicKey)))
   }
 
   def testSerializeEncrypted(): Unit = {
     MessageTest.messages.foreach{ m =>
-      val signed = crypto.sign(m)
-      val encrypted = crypto.encrypt(signed, crypto.getLocalPublicKey)
+      val encrypted = crypto.encryptAndSign(m, Option(crypto.getLocalPublicKey))
       val bytes = encrypted.write
 
       val read = Message.read(new ByteArrayInputStream(bytes))
       assertEquals(encrypted.crypto, read.crypto)
-      val decrypted = crypto.decrypt(read)
-      assertEquals(m.header, decrypted.header)
-      assertEquals(m.body, decrypted.body)
-      assertTrue(crypto.verify(decrypted, crypto.getLocalPublicKey))
+      val decrypted = crypto.verifyAndDecrypt(read, Option(crypto.getLocalPublicKey))
+      assertEquals(m.header, decrypted.get.header)
+      assertEquals(m.body, decrypted.get.body)
     }
   }
 
