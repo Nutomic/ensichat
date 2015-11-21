@@ -7,7 +7,6 @@ import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
-import com.google.common.collect.HashBiMap
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.core.body.ConnectionInfo
 import com.nutomic.ensichat.core.interfaces.{Settings, TransmissionInterface}
@@ -47,7 +46,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
 
   private var discovered = Set[Device]()
 
-  private val addressDeviceMap = HashBiMap.create[Address, Device.ID]()
+  private var addressDeviceMap = new HashMap[Address, Device.ID]()
 
   /**
    * Initializes and starts discovery and listening.
@@ -174,7 +173,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
     devices -= device.id
     connections -= device.id
     connectionHandler.onConnectionClosed()
-    addressDeviceMap.inverse().remove(device.id)
+    addressDeviceMap = addressDeviceMap.filterNot(_._2 == device.id)
   }
 
   /**
@@ -189,9 +188,9 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
     case info: ConnectionInfo =>
       val address = crypto.calculateAddress(info.key)
       // Service.onConnectionOpened sends message, so mapping already needs to be in place.
-      addressDeviceMap.put(address, device)
+      addressDeviceMap += (address -> device)
       if (!connectionHandler.onConnectionOpened(msg))
-        addressDeviceMap.remove(address)
+        addressDeviceMap -= address
     case _ =>
       connectionHandler.onMessageReceived(msg)
   }
@@ -200,12 +199,12 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Sends the message to nextHop.
    */
   override def send(nextHop: Address, msg: Message): Unit =
-    connections.get(addressDeviceMap.get(nextHop)).foreach(_.send(msg))
+    connections.get(addressDeviceMap(nextHop)).foreach(_.send(msg))
 
   /**
    * Returns all active Bluetooth connections.
    */
   def getConnections: Set[Address] =
-    connections.map(x => addressDeviceMap.inverse().get(x._1)).toSet
+    connections.map(x => addressDeviceMap.find(_._2 == x._1).get._1).toSet
 
 }

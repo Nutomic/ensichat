@@ -16,7 +16,6 @@ dependencies {
     androidTestCompile 'com.android.support:multidex-instrumentation:1.0.1',
                        { exclude module: 'multidex' }
     compile 'org.scala-lang:scala-library:2.11.7'
-    compile 'com.google.guava:guava:18.0'
     compile 'com.mobsandgeeks:adapter-kit:0.5.3'
     compile project(path: ':core')
 }
