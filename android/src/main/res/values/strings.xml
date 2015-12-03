@@ -22,7 +22,7 @@
     <!-- MainActivity -->
 
     <!-- Toast shown if user denies request to enable bluetooth -->
-    <string name="bluetooth_required">Bluetooth is required for this app.</string>
+    <string name="toast_bluetooth_denied">Please enable Bluetooth to access the complete app functionality.</string>
 
 
     <!-- ContactsFragment -->

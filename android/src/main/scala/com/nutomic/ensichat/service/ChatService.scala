@@ -3,6 +3,7 @@ package com.nutomic.ensichat.service
 import java.io.File
 
 import android.app.Service
+import android.bluetooth.BluetoothAdapter
 import android.content.{Context, Intent}
 import android.os.Handler
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
@@ -47,8 +48,10 @@ class ChatService extends Service {
   override def onCreate(): Unit = {
     super.onCreate()
     notificationHandler.showPersistentNotification()
-    connectionHandler.addTransmissionInterface(new BluetoothInterface(this, new Handler(),
-      connectionHandler))
+    if (Option(BluetoothAdapter.getDefaultAdapter).isDefined) {
+      connectionHandler.addTransmissionInterface(new BluetoothInterface(this, new Handler(),
+        connectionHandler))
+    }
     connectionHandler.start()
   }
 
