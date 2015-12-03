@@ -7,6 +7,7 @@ import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.support.design.widget.FloatingActionButton
 import android.support.v4.content.{ContextCompat, LocalBroadcastManager}
 import android.support.v7.widget.Toolbar
 import android.view.View.OnClickListener
@@ -70,6 +71,8 @@ class ContactsFragment extends ListFragment with OnClickListener {
     toolbar.setNavigationIcon(R.drawable.ic_launcher)
     title = v.findViewById(R.id.title).asInstanceOf[TextView]
     subtitle = v.findViewById(R.id.subtitle).asInstanceOf[TextView]
+    val fab = v.findViewById(R.id.fab).asInstanceOf[FloatingActionButton]
+    fab.setOnClickListener(this)
     updateConnections()
     v
   }
