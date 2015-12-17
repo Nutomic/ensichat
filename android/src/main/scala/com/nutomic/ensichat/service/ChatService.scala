@@ -36,8 +36,10 @@ class ChatService extends Service {
   override def onBind(intent: Intent) =  binder
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
-    if (intent.getAction == ChatService.ActionNetworkChanged)
-      connectionHandler.internetConnectionChanged()
+    Option(intent).foreach { i =>
+      if (i.getAction == ChatService.ActionNetworkChanged)
+          connectionHandler.internetConnectionChanged()
+    }
 
     Service.START_STICKY
   }
