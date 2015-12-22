@@ -68,7 +68,7 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Stops discovery and listening.
    */
   override def destroy(): Unit = {
-    listenThread.get.cancel()
+    listenThread.foreach(_.cancel())
     listenThread = None
     cancelDiscovery = true
     try {
