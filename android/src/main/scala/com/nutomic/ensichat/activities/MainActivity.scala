@@ -120,7 +120,8 @@ class MainActivity extends EnsichatActivity {
       currentChat = None
       getSupportActionBar.setDisplayHomeAsUpEnabled(false)
       setTitle(R.string.app_name)
-    }
+    } else
+      super.onBackPressed()
   }
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
