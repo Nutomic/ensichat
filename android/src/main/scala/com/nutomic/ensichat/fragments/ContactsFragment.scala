@@ -97,12 +97,13 @@ class ContactsFragment extends ListFragment with OnClickListener {
       true
     case R.id.my_address =>
       val prefs = PreferenceManager.getDefaultSharedPreferences(getActivity)
-      val fragment = new IdenticonFragment()
+      val fragment = new UserInfoFragment()
       val bundle = new Bundle()
       bundle.putString(
-        IdenticonFragment.ExtraAddress, ChatService.newCrypto(getActivity).localAddress.toString)
+        UserInfoFragment.ExtraAddress, ChatService.newCrypto(getActivity).localAddress.toString)
       bundle.putString(
-        IdenticonFragment.ExtraUserName, prefs.getString(SettingsInterface.KeyUserName, ""))
+        UserInfoFragment.ExtraUserName, prefs.getString(SettingsInterface.KeyUserName, ""))
+      bundle.putBoolean(UserInfoFragment.ExtraShowQr, true)
       fragment.setArguments(bundle)
       fragment.show(getFragmentManager, "dialog")
       true

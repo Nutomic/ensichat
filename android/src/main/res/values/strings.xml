@@ -60,6 +60,10 @@
     <!-- Toast shown when clicking a user that is already a contact -->
     <string name="contact_already_added">You have already added %1$s as a contact</string>
 
+    <string name="enter_id">Enter user ID</string>
+
+    <string name="invalid_address">Invalid address</string>
+
 
     <!-- SettingsActivity -->
 
