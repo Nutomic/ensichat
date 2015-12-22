@@ -4,11 +4,12 @@ import java.io.File
 
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
-import android.content.{Context, Intent}
+import android.content.{Context, Intent, IntentFilter}
+import android.net.ConnectivityManager
 import android.os.Handler
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.core.{ConnectionHandler, Crypto}
-import com.nutomic.ensichat.util.{Database, SettingsWrapper}
+import com.nutomic.ensichat.util.{Database, NetworkChangedReceiver, SettingsWrapper}
 
 object ChatService {
 
@@ -33,6 +34,8 @@ class ChatService extends Service {
     new ConnectionHandler(new SettingsWrapper(this), new Database(this), callbackHandler,
                           ChatService.newCrypto(this))
 
+  private val networkReceiver = new NetworkChangedReceiver()
+
   override def onBind(intent: Intent) =  binder
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
@@ -55,11 +58,13 @@ class ChatService extends Service {
         connectionHandler))
     }
     connectionHandler.start()
+    registerReceiver(networkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
   }
 
   override def onDestroy(): Unit = {
     notificationHandler.cancelPersistentNotification()
     connectionHandler.stop()
+    unregisterReceiver(networkReceiver)
   }
 
   def getConnectionHandler = connectionHandler
