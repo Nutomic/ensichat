@@ -79,6 +79,9 @@
     <string name="scan_interval_seconds">Scan Interval (seconds)</string>
 
     <!-- Preference title -->
+    <string name="start_on_boot">Start on Boot</string>
+
+    <!-- Preference title -->
     <string name="notification_sounds">Notification Sounds</string>
 
     <!-- Preference title (debug only)-->
