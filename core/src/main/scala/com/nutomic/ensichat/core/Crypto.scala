@@ -143,6 +143,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     new Message(msg.header, new CryptoData(Option(sig.sign), msg.crypto.key), msg.body)
   }
 
+  @throws[InvalidKeyException]
   private[core] def verify(msg: Message, key: Option[PublicKey] = None): Boolean = {
     val sig = Signature.getInstance(SigningAlgorithm)
     lazy val defaultKey = loadKey(msg.header.origin.toString, classOf[PublicKey])
@@ -231,10 +232,17 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
   }
 
   private[core] def verifyAndDecrypt(msg: Message, key: Option[PublicKey] = None): Option[Message] = {
-    if (verify(msg, key))
-      Option(decrypt(msg))
-    else
-      None
+    // Catch exception to avoid crash if we receive invalid message.
+    try {
+      if (verify(msg, key))
+        Option(decrypt(msg))
+      else
+        None
+    } catch {
+      case e: InvalidKeyException =>
+        Log.w(Tag, "Failed to verify or decrypt message", e)
+        None
+    }
   }
 
   private def encrypt(msg: Message, key: Option[PublicKey] = None): Message = {
@@ -253,6 +261,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
       new CryptoData(None, Option(asymmetricCipher.wrap(secretKey))), encrypted)
   }
 
+  @throws[InvalidKeyException]
   private def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
     val asymmetricCipher = Cipher.getInstance(CipherAlgorithm)
