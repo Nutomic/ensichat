@@ -14,16 +14,12 @@ object InternetInterface {
   val Port = 26344
 
   val BootstrapNodes = Set("192.168.1.104:26344", // T420
-                           "46.101.229.4:26344")  // digital ocean
+                           "46.101.249.188:26344")  // digital ocean
 
 }
 
 /**
  * Handles all Internet connectivity.
- *
- * TODO: send message through internet node: android -> server -> android
- * TODO: send test reply to incoming messages
- * TODO: send a list of all connected nodes when we connect to a node
  */
 class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto)
   extends TransmissionInterface {

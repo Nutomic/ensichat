@@ -25,6 +25,11 @@ object Main extends App with CallbackInterface {
 
   init()
 
+  /**
+   * Initializes the app, parses command line parameters.
+   *
+   * See build.gradle for information about passing command line parameters from gradle.
+   */
   private def init(): Unit = {
     ConfigFolder.mkdirs()
     KeyFolder.mkdirs()
