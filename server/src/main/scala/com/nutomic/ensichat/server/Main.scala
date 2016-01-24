@@ -40,11 +40,15 @@ object Main extends App with CallbackInterface {
       opt[String]('n', "name") action { (x, c) =>
         c.copy(name = Option(x))
       } text "the username for this node (optional)"
+      opt[String]('s', "status") action { (x, c) =>
+        c.copy(status = Option(x))
+      } text "the status line (optional)"
       help("help") text "prints this usage text"
     }
 
     parser.parse(args, Config()).foreach { config =>
       config.name.foreach(settings.put(SettingsInterface.KeyUserName, _))
+      config.status.foreach(settings.put(SettingsInterface.KeyUserStatus, _))
       run()
     }
   }
