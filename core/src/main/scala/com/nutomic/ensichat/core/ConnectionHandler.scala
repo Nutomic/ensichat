@@ -145,7 +145,12 @@ final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInt
       }
     }
 
-    Log.i(Tag, "Node " + sender + " connected")
+    // Log with username if we know it.
+    if (allKnownUsers().map(_.address).contains(sender))
+      Log.i(Tag, "Node " + getUser(sender).name + " (" + sender + ") connected")
+    else
+      Log.i(Tag, "Node " + sender + " connected")
+
     sendTo(sender, new UserInfo(settings.get(SettingsInterface.KeyUserName, ""),
                                 settings.get(SettingsInterface.KeyUserStatus, "")))
     callbacks.onConnectionsChanged()
@@ -156,8 +161,15 @@ final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInt
 
   def connections(): Set[Address] = transmissionInterfaces.flatMap(_.getConnections)
 
+  private def allKnownUsers() = database.getContacts ++ knownUsers
+
+  /**
+   * Returns [[User]] object containing the user's name (if we know it).
+   */
   def getUser(address: Address) =
-    knownUsers.find(_.address == address).getOrElse(new User(address, address.toString, ""))
+    allKnownUsers()
+      .find(_.address == address)
+      .getOrElse(new User(address, address.toString(), ""))
 
   def internetConnectionChanged(): Unit = {
     transmissionInterfaces
