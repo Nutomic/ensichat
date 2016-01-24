@@ -13,11 +13,16 @@ applicationName = 'ensichat'
 
 run {
     // Use this to pass command line arguments via `gradle run`.
-    // Example:
+    //
+    // Uses comma instead of space for command seperation for simpler parsing.
+    //
+    // Examples:
     // ```
     // ./gradlew server:run -Pargs="--help"
+    // ./gradlew server:run -Pargs="--name,MyName"
+    // ./gradlew server:run -Pargs="--name,MyName,--status,My Status"
     // ```
     if (project.hasProperty('args')) {
-        args project.args.split('\\s+')
+        args project.args.split(',')
     }
 }
