@@ -120,7 +120,7 @@ class ConnectionsActivity extends EnsichatActivity with OnItemClickListener {
 
     val user = service.get.getUser(parsedAddress)
 
-    if (database.getContacts.contains(user)) {
+    if (database.getContacts.map(_.address).contains(user.address)) {
       val text = getString(R.string.contact_already_added, user.name)
       Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
       return
