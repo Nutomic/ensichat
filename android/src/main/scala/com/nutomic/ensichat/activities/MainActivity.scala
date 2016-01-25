@@ -126,7 +126,8 @@ class MainActivity extends EnsichatActivity {
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {
     case android.R.id.home =>
-      onBackPressed()
+      if (currentChat.isDefined)
+        onBackPressed()
       true;
     case _ =>
       super.onOptionsItemSelected(item);
