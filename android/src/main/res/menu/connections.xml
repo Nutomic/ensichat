@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/add_contact"
+        android:title="Add Contact"
+        android:icon="@drawable/ic_person_add_white_24dp"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/scan_qr"
+        android:title="Scan QR-Code"
+        android:icon="@drawable/ic_qrcode_white_24dp"
+        app:showAsAction="ifRoom" />
+
+</menu>

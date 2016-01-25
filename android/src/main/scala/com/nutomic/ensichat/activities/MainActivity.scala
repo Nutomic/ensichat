@@ -44,7 +44,8 @@ class MainActivity extends EnsichatActivity {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
 
-    if (getIntent.getAction == MainActivity.ActionRequestBluetooth) {
+    if (getIntent.getAction == MainActivity.ActionRequestBluetooth &&
+        Option(BluetoothAdapter.getDefaultAdapter).isDefined) {
       val intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
       intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0)
       startActivityForResult(intent, RequestSetDiscoverable)
@@ -89,8 +90,7 @@ class MainActivity extends EnsichatActivity {
     requestCode match {
       case RequestSetDiscoverable =>
         if (resultCode == Activity.RESULT_CANCELED) {
-          Toast.makeText(this, R.string.bluetooth_required, Toast.LENGTH_LONG).show()
-          finish()
+          Toast.makeText(this, R.string.toast_bluetooth_denied, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -120,7 +120,8 @@ class MainActivity extends EnsichatActivity {
       currentChat = None
       getSupportActionBar.setDisplayHomeAsUpEnabled(false)
       setTitle(R.string.app_name)
-    }
+    } else
+      super.onBackPressed()
   }
 
   override def onOptionsItemSelected(item: MenuItem): Boolean = item.getItemId match {

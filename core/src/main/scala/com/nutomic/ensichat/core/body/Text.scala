@@ -25,7 +25,7 @@ object Text {
 /**
  * Holds a plain text message.
  */
-case class Text(text: String) extends MessageBody {
+final case class Text(text: String) extends MessageBody {
 
   override def protocolType = -1
 

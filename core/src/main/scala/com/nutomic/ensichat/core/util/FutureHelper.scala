@@ -21,7 +21,7 @@ object FutureHelper {
         //       cross-platform way to execute on the foreground thread.
         //       We use this to make sure exceptions are not hidden in the logs.
         Log.e(Tag, "Exception in Future", e)
-        System.exit(-1)
+        //System.exit(-1)
     }
     f
   }

@@ -39,7 +39,7 @@ object ContentHeader {
  *
  * This is [[AbstractHeader]] with messageId and time fields set.
  */
-case class ContentHeader(override val origin: Address,
+final case class ContentHeader(override val origin: Address,
                     override val target: Address,
                     override val seqNum: Int,
                     contentType: Int,

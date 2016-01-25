@@ -41,7 +41,7 @@ object MessageHeader {
  *
  * This is the same as [[AbstractHeader]].
  */
-case class MessageHeader(override val protocolType: Int,
+final case class MessageHeader(override val protocolType: Int,
                     override val origin: Address,
                     override val target: Address,
                     override val seqNum: Int,

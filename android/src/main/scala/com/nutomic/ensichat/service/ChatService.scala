@@ -3,12 +3,13 @@ package com.nutomic.ensichat.service
 import java.io.File
 
 import android.app.Service
-import android.content.{Context, Intent}
+import android.bluetooth.BluetoothAdapter
+import android.content.{Context, Intent, IntentFilter}
+import android.net.ConnectivityManager
 import android.os.Handler
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
-import com.nutomic.ensichat.core.interfaces.Log
 import com.nutomic.ensichat.core.{ConnectionHandler, Crypto}
-import com.nutomic.ensichat.util.{Database, PRNGFixes, SettingsWrapper}
+import com.nutomic.ensichat.util.{Database, NetworkChangedReceiver, SettingsWrapper}
 
 object ChatService {
 
@@ -16,6 +17,8 @@ object ChatService {
 
   private def keyFolder(context: Context) = new File(context.getFilesDir, "keys")
   def newCrypto(context: Context) = new Crypto(new SettingsWrapper(context), keyFolder(context))
+
+  val ActionNetworkChanged = "network_changed"
 
 }
 
@@ -29,28 +32,39 @@ class ChatService extends Service {
 
   private lazy val connectionHandler =
     new ConnectionHandler(new SettingsWrapper(this), new Database(this), callbackHandler,
-                          ChatService.keyFolder(this))
+                          ChatService.newCrypto(this))
+
+  private val networkReceiver = new NetworkChangedReceiver()
 
   override def onBind(intent: Intent) =  binder
 
-  override def onStartCommand(intent: Intent, flags: Int, startId: Int) = Service.START_STICKY
+  override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
+    Option(intent).foreach { i =>
+      if (i.getAction == ChatService.ActionNetworkChanged)
+          connectionHandler.internetConnectionChanged()
+    }
+
+    Service.START_STICKY
+  }
 
   /**
    * Generates keys and starts Bluetooth interface.
    */
   override def onCreate(): Unit = {
     super.onCreate()
-    PRNGFixes.apply()
-    Log.setLogClass(classOf[android.util.Log])
     notificationHandler.showPersistentNotification()
+    if (Option(BluetoothAdapter.getDefaultAdapter).isDefined) {
+      connectionHandler.addTransmissionInterface(new BluetoothInterface(this, new Handler(),
+        connectionHandler))
+    }
     connectionHandler.start()
-    connectionHandler.setTransmissionInterface(new BluetoothInterface(this, new Handler(),
-                                               connectionHandler))
+    registerReceiver(networkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
   }
 
   override def onDestroy(): Unit = {
     notificationHandler.cancelPersistentNotification()
     connectionHandler.stop()
+    unregisterReceiver(networkReceiver)
   }
 
   def getConnectionHandler = connectionHandler

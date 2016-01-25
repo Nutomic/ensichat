@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 /**
  * Provides various helper methods for [[ByteBuffer]].
  */
-object BufferUtils {
+private[core] object BufferUtils {
 
   def getUnsignedByte(bb: ByteBuffer): Short       = (bb.get & 0xff).toShort
 

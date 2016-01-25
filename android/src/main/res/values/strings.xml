@@ -22,7 +22,7 @@
     <!-- MainActivity -->
 
     <!-- Toast shown if user denies request to enable bluetooth -->
-    <string name="bluetooth_required">Bluetooth is required for this app.</string>
+    <string name="toast_bluetooth_denied">Please enable Bluetooth to access the complete app functionality.</string>
 
 
     <!-- ContactsFragment -->
@@ -60,6 +60,10 @@
     <!-- Toast shown when clicking a user that is already a contact -->
     <string name="contact_already_added">You have already added %1$s as a contact</string>
 
+    <string name="enter_id">Enter user ID</string>
+
+    <string name="invalid_address">Invalid address</string>
+
 
     <!-- SettingsActivity -->
 
@@ -86,6 +90,9 @@
 
     <!-- Preference title (debug only)-->
     <string name="max_connections" translatable="false">Maximum Number of Connections</string>
+
+    <!-- Preference title -->
+    <string name="servers">Servers</string>
 
     <!-- Preference title -->
     <string name="report_issue">Report Issue</string>

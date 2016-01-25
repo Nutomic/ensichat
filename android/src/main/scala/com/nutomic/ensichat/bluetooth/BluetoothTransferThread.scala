@@ -17,7 +17,7 @@ import com.nutomic.ensichat.core.{Address, Crypto, Message}
  * @param socket An open socket to the given device.
  * @param onReceive Called when a message was received from the other device.
  */
-class TransferThread(context: Context, device: Device, socket: BluetoothSocket, handler: BluetoothInterface,
+class BluetoothTransferThread(context: Context, device: Device, socket: BluetoothSocket, handler: BluetoothInterface,
                      crypto: Crypto, onReceive: (Message, Device.ID) => Unit) extends Thread {
 
   private val Tag = "TransferThread"
@@ -30,6 +30,7 @@ class TransferThread(context: Context, device: Device, socket: BluetoothSocket, 
     } catch {
       case e: IOException =>
         Log.e(Tag, "Failed to open stream", e)
+        close()
         null
     }
 
@@ -39,6 +40,7 @@ class TransferThread(context: Context, device: Device, socket: BluetoothSocket, 
     } catch {
       case e: IOException =>
         Log.e(Tag, "Failed to open stream", e)
+        close()
         null
     }
 

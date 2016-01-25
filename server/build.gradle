@@ -1,0 +1,28 @@
+apply plugin: 'scala'
+apply plugin: 'application'
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.11.7'
+    compile project(path: ':core')
+    compile 'com.github.scopt:scopt_2.10:3.3.0'
+}
+
+mainClassName = 'com.nutomic.ensichat.server.Main'
+version = properties.versionName
+applicationName = 'ensichat'
+
+run {
+    // Use this to pass command line arguments via `gradle run`.
+    //
+    // Uses comma instead of space for command seperation for simpler parsing.
+    //
+    // Examples:
+    // ```
+    // ./gradlew server:run -Pargs="--help"
+    // ./gradlew server:run -Pargs="--name,MyName"
+    // ./gradlew server:run -Pargs="--name,MyName,--status,My Status"
+    // ```
+    if (project.hasProperty('args')) {
+        args project.args.split(',')
+    }
+}

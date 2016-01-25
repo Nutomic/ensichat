@@ -5,7 +5,7 @@ import com.nutomic.ensichat.core.header.{ContentHeader, MessageHeader}
 /**
  * Forwards messages to all connected devices.
  */
-class Router(activeConnections: () => Set[Address], send: (Address, Message) => Unit) {
+final private[core] class Router(activeConnections: () => Set[Address], send: (Address, Message) => Unit) {
 
   private var messageSeen = Set[(Address, Int)]()
 

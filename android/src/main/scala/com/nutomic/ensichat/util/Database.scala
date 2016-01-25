@@ -128,7 +128,7 @@ class Database(context: Context) extends DatabaseInterface {
 
   def addContact(contact: User): Unit = {
     val cv = new ContentValues()
-    cv.put("address", contact.address.toString)
+    cv.put("address", contact.address.toString())
     cv.put("name", contact.name)
     cv.put("status", contact.status)
     helper.getWritableDatabase.insert("contacts", null, cv)
@@ -139,7 +139,7 @@ class Database(context: Context) extends DatabaseInterface {
     val cv = new ContentValues()
     cv.put("name", contact.name)
     cv.put("status", contact.status)
-    helper.getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.address.toString))
+    helper.getWritableDatabase.update("contacts", cv, "address = ?", Array(contact.address.toString()))
     contactsUpdated()
   }
 

@@ -8,7 +8,7 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.MainActivity
 import com.nutomic.ensichat.core.Message
 import com.nutomic.ensichat.core.body.Text
-import com.nutomic.ensichat.core.interfaces.Settings
+import com.nutomic.ensichat.core.interfaces.SettingsInterface
 import com.nutomic.ensichat.service.NotificationHandler._
 
 object NotificationHandler {
@@ -65,7 +65,7 @@ class NotificationHandler(context: Context) {
    */
   private def defaults(): Int = {
     val sp = PreferenceManager.getDefaultSharedPreferences(context)
-    if (sp.getBoolean(Settings.KeyNotificationSoundsOn, Settings.DefaultNotificationSoundsOn))
+    if (sp.getBoolean(SettingsInterface.KeyNotificationSoundsOn, SettingsInterface.DefaultNotificationSoundsOn))
       Notification.DEFAULT_ALL
     else
       Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS

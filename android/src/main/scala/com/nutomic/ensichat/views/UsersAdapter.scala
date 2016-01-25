@@ -8,7 +8,7 @@ import android.view.{LayoutInflater, View, ViewGroup}
 import android.widget.{ArrayAdapter, ImageView, TextView}
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.core.User
-import com.nutomic.ensichat.fragments.IdenticonFragment
+import com.nutomic.ensichat.fragments.UserInfoFragment
 import com.nutomic.ensichat.util.IdenticonGenerator
 
 /**
@@ -40,10 +40,10 @@ class UsersAdapter(activity: Activity) extends ArrayAdapter[User](activity, 0) w
 
   override def onClick (v: View): Unit = {
     val user = v.getTag.asInstanceOf[User]
-    val fragment = new IdenticonFragment()
+    val fragment = new UserInfoFragment()
     val bundle = new Bundle()
-    bundle.putString(IdenticonFragment.ExtraAddress, user.address.toString)
-    bundle.putString(IdenticonFragment.ExtraUserName, user.name)
+    bundle.putString(UserInfoFragment.ExtraAddress, user.address.toString)
+    bundle.putString(UserInfoFragment.ExtraUserName, user.name)
     fragment.setArguments(bundle)
     fragment.show(activity.getFragmentManager, "dialog")
   }

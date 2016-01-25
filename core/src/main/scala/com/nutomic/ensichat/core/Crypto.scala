@@ -9,7 +9,7 @@ import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 import com.nutomic.ensichat.core.Crypto._
 import com.nutomic.ensichat.core.body._
 import com.nutomic.ensichat.core.header.ContentHeader
-import com.nutomic.ensichat.core.interfaces.{Log, Settings}
+import com.nutomic.ensichat.core.interfaces.{Log, SettingsInterface}
 
 object Crypto {
 
@@ -19,6 +19,11 @@ object Crypto {
    * This keypair is generated on first start, and persistent for the lifetime of the app.
    */
   val PublicKeyAlgorithm = "RSA"
+
+  /**
+   * Algorithm used to read public keys.
+   */
+  val CipherAlgorithm = "RSA/ECB/PKCS1Padding"
 
   /**
    * Length of the local public/private keypair in bits.
@@ -50,7 +55,7 @@ object Crypto {
   /**
    * Name of the preference where the local address is stored.
    */
-  private val LocalAddressKey = "local_address"
+  val LocalAddressKey = "local_address"
 
   /**
    * Filename of the local private key in [[Crypto.keyFolder]].
@@ -60,7 +65,7 @@ object Crypto {
   /**
    * Filename of the local public key in [[Crypto.keyFolder]].
    */
-  private val PublicKeyAlias = "local-public"
+  val PublicKeyAlias = "local-public"
 
 }
 
@@ -69,17 +74,17 @@ object Crypto {
  *
  * @param keyFolder Folder where private and public keys are stored.
  */
-class Crypto(settings: Settings, keyFolder: File) {
+class Crypto(settings: SettingsInterface, keyFolder: File) {
 
   private val Tag = "Crypto"
 
   /**
-   * Generates a new key pair using [[ [[Crypto.keyFolder]].]] with [[KeySize]] bits and stores the
+   * Generates a new key pair using [[keyFolder]] with [[PublicKeySize]] bits and stores the
    * keys.
    *
    * Does nothing if the key pair already exists.
    */
-  def generateLocalKeys(): Unit = {
+  private[core] def generateLocalKeys(): Unit = {
     if (localKeysExist)
       return
 
@@ -92,7 +97,7 @@ class Crypto(settings: Settings, keyFolder: File) {
 
       address = calculateAddress(keyPair.getPublic)
 
-      // The hash must have at least one bit set to not collide with the broadcast address.
+      // Never generate an invalid address.
     } while(address == Address.Broadcast || address == Address.Null)
 
     settings.put(LocalAddressKey, address.toString)
@@ -105,7 +110,7 @@ class Crypto(settings: Settings, keyFolder: File) {
   /**
    * Returns true if we have a public key stored for the given device.
    */
-  def havePublicKey(address: Address): Boolean = new File(keyFolder, address.toString).exists()
+  private[core] def havePublicKey(address: Address) = new File(keyFolder, address.toString).exists()
 
   /**
    * Returns the public key for the given device.
@@ -113,7 +118,7 @@ class Crypto(settings: Settings, keyFolder: File) {
    * @throws RuntimeException If the key does not exist.
    */
   @throws[RuntimeException]
-  def getPublicKey(address: Address): PublicKey = {
+  private[core] def getPublicKey(address: Address): PublicKey = {
     loadKey(address.toString, classOf[PublicKey])
   }
 
@@ -123,7 +128,7 @@ class Crypto(settings: Settings, keyFolder: File) {
    * @throws RuntimeException If a key already exists for this address.
    */
   @throws[RuntimeException]
-  def addPublicKey(address: Address, key: PublicKey): Unit = {
+  private[core] def addPublicKey(address: Address, key: PublicKey): Unit = {
     if (havePublicKey(address))
       throw new RuntimeException("Already have key for " + address + ", not overwriting")
 
@@ -138,7 +143,8 @@ class Crypto(settings: Settings, keyFolder: File) {
     new Message(msg.header, new CryptoData(Option(sig.sign), msg.crypto.key), msg.body)
   }
 
-  def verify(msg: Message, key: Option[PublicKey] = None): Boolean = {
+  @throws[InvalidKeyException]
+  private[core] def verify(msg: Message, key: Option[PublicKey] = None): Boolean = {
     val sig = Signature.getInstance(SigningAlgorithm)
     lazy val defaultKey = loadKey(msg.header.origin.toString, classOf[PublicKey])
     sig.initVerify(key.getOrElse(defaultKey))
@@ -149,7 +155,7 @@ class Crypto(settings: Settings, keyFolder: File) {
   /**
    * Returns true if the local private and public key exist.
    */
-  def localKeysExist = new File(keyFolder, PublicKeyAlias).exists()
+  private[core] def localKeysExist = new File(keyFolder, PublicKeyAlias).exists()
 
   /**
    * Returns the local public key.
@@ -193,7 +199,7 @@ class Crypto(settings: Settings, keyFolder: File) {
    * @return The key read from storage.
    * @throws RuntimeException If the key does not exist.
    */
-  private def loadKey[T](alias: String, keyType: Class[T]): T = {
+  private[core] def loadKey[T](alias: String, keyType: Class[T]): T = {
     val path = new File(keyFolder, alias)
     if (!path.exists()) {
       throw new RuntimeException("The requested key with alias " + alias + " does not exist")
@@ -221,15 +227,22 @@ class Crypto(settings: Settings, keyFolder: File) {
     }
   }
 
-  def encryptAndSign(msg: Message, key: Option[PublicKey] = None): Message = {
+  private[core] def encryptAndSign(msg: Message, key: Option[PublicKey] = None): Message = {
     sign(encrypt(msg, key))
   }
 
-  def verifyAndDecrypt(msg: Message, key: Option[PublicKey] = None): Option[Message] = {
-    if (verify(msg, key))
-      Option(decrypt(msg))
-    else
-      None
+  private[core] def verifyAndDecrypt(msg: Message, key: Option[PublicKey] = None): Option[Message] = {
+    // Catch exception to avoid crash if we receive invalid message.
+    try {
+      if (verify(msg, key))
+        Option(decrypt(msg))
+      else
+        None
+    } catch {
+      case e: InvalidKeyException =>
+        Log.w(Tag, "Failed to verify or decrypt message", e)
+        None
+    }
   }
 
   private def encrypt(msg: Message, key: Option[PublicKey] = None): Message = {
@@ -240,7 +253,7 @@ class Crypto(settings: Settings, keyFolder: File) {
     val encrypted = new EncryptedBody(copyThroughCipher(symmetricCipher, msg.body.write))
 
     // Asymmetric encryption of secret key
-    val asymmetricCipher = Cipher.getInstance(PublicKeyAlgorithm)
+    val asymmetricCipher = Cipher.getInstance(CipherAlgorithm)
     lazy val defaultKey = loadKey(msg.header.target.toString, classOf[PublicKey])
     asymmetricCipher.init(Cipher.WRAP_MODE, key.getOrElse(defaultKey))
 
@@ -248,9 +261,10 @@ class Crypto(settings: Settings, keyFolder: File) {
       new CryptoData(None, Option(asymmetricCipher.wrap(secretKey))), encrypted)
   }
 
+  @throws[InvalidKeyException]
   private def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
-    val asymmetricCipher = Cipher.getInstance(PublicKeyAlgorithm)
+    val asymmetricCipher = Cipher.getInstance(CipherAlgorithm)
     asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))
     val key = asymmetricCipher.unwrap(msg.crypto.key.get, SymmetricKeyAlgorithm, Cipher.SECRET_KEY)
 
