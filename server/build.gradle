@@ -9,7 +9,7 @@ dependencies {
 
 mainClassName = 'com.nutomic.ensichat.server.Main'
 version = properties.versionName
-applicationName = 'ensichat'
+applicationName = 'ensichat-server'
 
 run {
     // Use this to pass command line arguments via `gradle run`.
