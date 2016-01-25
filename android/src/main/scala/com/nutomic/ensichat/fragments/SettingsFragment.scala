@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.fragments
 
-import android.content.SharedPreferences
+import android.content.{Intent, SharedPreferences}
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
 import android.os.Bundle
 import android.preference.{PreferenceFragment, PreferenceManager}
@@ -8,6 +8,7 @@ import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.core.body.UserInfo
 import com.nutomic.ensichat.core.interfaces.SettingsInterface._
 import com.nutomic.ensichat.fragments.SettingsFragment._
+import com.nutomic.ensichat.service.ChatService
 import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.{BuildConfig, R}
 
@@ -54,6 +55,10 @@ class SettingsFragment extends PreferenceFragment with OnSharedPreferenceChangeL
         val service = getActivity.asInstanceOf[EnsichatActivity].service
         val ui = new UserInfo(prefs.getString(KeyUserName, ""), prefs.getString(KeyUserStatus, ""))
         database.getContacts.foreach(c => service.get.sendTo(c.address, ui))
+      case KeyServers =>
+        val intent = new Intent(getActivity, classOf[ChatService])
+        intent.setAction(ChatService.ActionNetworkChanged)
+        getActivity.startService(intent)
       case _ =>
     }
   }

@@ -92,6 +92,9 @@
     <string name="max_connections" translatable="false">Maximum Number of Connections</string>
 
     <!-- Preference title -->
+    <string name="servers">Servers</string>
+
+    <!-- Preference title -->
     <string name="report_issue">Report Issue</string>
 
     <!-- Preference summary -->

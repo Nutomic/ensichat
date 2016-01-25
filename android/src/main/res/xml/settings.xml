@@ -32,6 +32,10 @@
         android:inputType="number"
         android:numeric="integer" />
 
+    <EditTextPreference
+        android:title="@string/servers"
+        android:key="servers" />
+
     <Preference
         android:title="@string/report_issue"
         android:summary="@string/report_issue_summary" >

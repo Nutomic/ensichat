@@ -41,7 +41,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInt
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
       Log.i(Tag, "Local user is " + settings.get(SettingsInterface.KeyUserName, "none") +
         " with status '" + settings.get(SettingsInterface.KeyUserStatus, "") + "'")
-      transmissionInterfaces += new InternetInterface(this, crypto)
+      transmissionInterfaces += new InternetInterface(this, crypto, settings)
       transmissionInterfaces.foreach(_.create())
     }
   }

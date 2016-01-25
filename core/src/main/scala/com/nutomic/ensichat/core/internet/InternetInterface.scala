@@ -4,29 +4,27 @@ import java.io.IOException
 import java.net.{InetAddress, Socket}
 
 import com.nutomic.ensichat.core.body.ConnectionInfo
-import com.nutomic.ensichat.core.interfaces.{Log, TransmissionInterface}
+import com.nutomic.ensichat.core.interfaces.{SettingsInterface, Log, TransmissionInterface}
 import com.nutomic.ensichat.core.util.FutureHelper
 import com.nutomic.ensichat.core.{Address, ConnectionHandler, Crypto, Message}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object InternetInterface {
 
-  val Port = 26344
-
-  val BootstrapNodes = Set("192.168.1.104:26344", // T420
-                           "46.101.249.188:26344")  // digital ocean
+  val ServerPort = 26344
 
 }
 
 /**
  * Handles all Internet connectivity.
  */
-class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto)
-  extends TransmissionInterface {
+class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
+                        settings: SettingsInterface) extends TransmissionInterface {
 
   private val Tag = "InternetInterface"
 
-  private lazy val serverThread = new InternetServerThread(crypto, onConnected, onDisconnected, onReceiveMessage)
+  private lazy val serverThread =
+    new InternetServerThread(crypto, onConnected, onDisconnected, onReceiveMessage)
 
   private var connections = Set[InternetConnectionThread]()
 
@@ -38,7 +36,7 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto)
   override def create(): Unit = {
     FutureHelper {
       serverThread.start()
-      InternetInterface.BootstrapNodes.foreach(openConnection)
+      openAllConnections()
     }
   }
 
@@ -50,9 +48,18 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto)
     connections.foreach(_.close())
   }
 
+  private def openAllConnections(): Unit =
+    settings.get(SettingsInterface.KeyServers, "")
+      .split(",")
+      .map(_.trim())
+      .foreach(openConnection)
+
   private def openConnection(addressPort: String): Unit = {
     val split = addressPort.split(":")
-    openConnection(split(0), split(1).toInt)
+    if (split.length >= 2) {
+      Log.d(Tag, "Attempting connection to " + addressPort)
+      openConnection(split(0), split(1).toInt)
+    }
   }
 
   /**
@@ -118,7 +125,7 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto)
     FutureHelper {
       Log.i(Tag, "Network has changed. Close all connections and connect to bootstrap nodes again")
       connections.foreach(_.close())
-      InternetInterface.BootstrapNodes.foreach(openConnection)
+      openAllConnections()
     }
   }
 

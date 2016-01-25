@@ -14,7 +14,7 @@ class InternetServerThread(crypto: Crypto, onConnected: (InternetConnectionThrea
   private val Tag = "InternetServerThread"
 
   private lazy val socket: Option[ServerSocket] = try {
-    Option(new ServerSocket(InternetInterface.Port))
+    Option(new ServerSocket(InternetInterface.ServerPort))
   } catch {
     case e: IOException =>
       Log.w(Tag, "Failed to create server socket", e)

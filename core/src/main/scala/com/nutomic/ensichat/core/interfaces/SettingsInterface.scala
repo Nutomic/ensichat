@@ -7,19 +7,25 @@ object SettingsInterface {
   val KeyNotificationSoundsOn = "notification_sounds"
 
   /**
-   * NOTE: Stored as string in settings.
+   * NOTE: Stored as string.
    */
   val KeyScanInterval         = "scan_interval_seconds"
 
   /**
-   * NOTE: Stored as string in settings.
+   * NOTE: Stored as string.
    */
   val KeyMaxConnections       = "max_connections"
+
+  /**
+   * NOTE: Stored as comma separated string.
+   */
+  val KeyServers              = "servers"
 
   val DefaultUserStatus           = "Let's chat!"
   val DefaultScanInterval         = 15
   val DefaultNotificationSoundsOn = true
   val DefaultMaxConnections       = 1000000
+  val DefaultServers              = Set("46.101.249.188:26344")
 
 }
 

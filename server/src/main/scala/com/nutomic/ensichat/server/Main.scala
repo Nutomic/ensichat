@@ -4,6 +4,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 import com.nutomic.ensichat.core.body.Text
+import com.nutomic.ensichat.core.interfaces.SettingsInterface._
 import com.nutomic.ensichat.core.interfaces.{CallbackInterface, Log, SettingsInterface}
 import com.nutomic.ensichat.core.{Message, ConnectionHandler, Crypto}
 import scopt.OptionParser
@@ -35,6 +36,8 @@ object Main extends App with CallbackInterface {
     KeyFolder.mkdirs()
     Log.setLogInstance(logInstance)
     sys.addShutdownHook(connectionHandler.stop())
+    settings.put(KeyServers, DefaultServers.mkString(", "))
+
     val parser = new OptionParser[Config]("ensichat") {
       head("ensichat")
       opt[String]('n', "name") action { (x, c) =>
