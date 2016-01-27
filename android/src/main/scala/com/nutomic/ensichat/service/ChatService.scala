@@ -52,7 +52,7 @@ class ChatService extends Service {
    */
   override def onCreate(): Unit = {
     super.onCreate()
-    notificationHandler.showPersistentNotification()
+    notificationHandler.updatePersistentNotification(getConnectionHandler.connections().size)
     if (Option(BluetoothAdapter.getDefaultAdapter).isDefined) {
       connectionHandler.addTransmissionInterface(new BluetoothInterface(this, new Handler(),
         connectionHandler))
@@ -62,7 +62,7 @@ class ChatService extends Service {
   }
 
   override def onDestroy(): Unit = {
-    notificationHandler.cancelPersistentNotification()
+    notificationHandler.stopPersistentNotification()
     connectionHandler.stop()
     unregisterReceiver(networkReceiver)
   }

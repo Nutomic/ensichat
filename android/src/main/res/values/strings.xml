@@ -116,4 +116,10 @@
     <!-- Notification text for incoming message -->
     <string name="notification_message">New message!</string>
 
+    <!-- Info text for persistent notification -->
+    <plurals name="notification_connections">
+        <item quantity="one">Connected to %1$s device</item>
+        <item quantity="other">Connected to %1$s devices</item>
+    </plurals>
+
 </resources>

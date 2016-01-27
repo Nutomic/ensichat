@@ -18,22 +18,24 @@ object CallbackHandler {
 /**
  * Receives events from [[ConnectionHandler]] and sends them as local broadcasts.
  */
-class CallbackHandler(context: Context, notificationHandler: NotificationHandler)
+class CallbackHandler(chatService: ChatService, notificationHandler: NotificationHandler)
   extends CallbackInterface {
 
   def onMessageReceived(msg: Message): Unit = {
     notificationHandler.onMessageReceived(msg)
     val i = new Intent(ActionMessageReceived)
     i.putExtra(ExtraMessage, msg)
-    LocalBroadcastManager.getInstance(context)
+    LocalBroadcastManager.getInstance(chatService)
       .sendBroadcast(i)
 
   }
 
   def onConnectionsChanged(): Unit = {
     val i = new Intent(ActionConnectionsChanged)
-    LocalBroadcastManager.getInstance(context)
+    LocalBroadcastManager.getInstance(chatService)
       .sendBroadcast(i)
+    notificationHandler
+      .updatePersistentNotification(chatService.getConnectionHandler.connections().size)
   }
 
 }

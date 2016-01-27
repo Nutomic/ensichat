@@ -27,11 +27,20 @@ class NotificationHandler(context: Context) {
   private lazy val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE)
     .asInstanceOf[NotificationManager]
 
-  def showPersistentNotification(): Unit = {
+  private var persistentNotificationShutdown = false
+
+  def updatePersistentNotification(connections: Int): Unit = {
+    if (persistentNotificationShutdown)
+      return
+
     val intent = PendingIntent.getActivity(context, 0, new Intent(context, classOf[MainActivity]), 0)
+    val info = context.getResources
+      .getQuantityString(R.plurals.notification_connections, connections, connections.toString)
+
     val notification = new NotificationCompat.Builder(context)
       .setSmallIcon(R.drawable.ic_launcher)
       .setContentTitle(context.getString(R.string.app_name))
+      .setContentText(info)
       .setContentIntent(intent)
       .setOngoing(true)
       .setPriority(Notification.PRIORITY_MIN)
@@ -39,7 +48,15 @@ class NotificationHandler(context: Context) {
     notificationManager.notify(NotificationIdRunning, notification)
   }
 
-  def cancelPersistentNotification() =  notificationManager.cancel(NotificationIdRunning)
+  /**
+   * Cancels the persistent notification.
+   *
+   * After calling this method, [[updatePersistentNotification()]] will have no effect.
+   */
+  def stopPersistentNotification() = {
+    persistentNotificationShutdown = true
+    notificationManager.cancel(NotificationIdRunning)
+  }
 
   def onMessageReceived(msg: Message): Unit = msg.body match {
     case text: Text =>
