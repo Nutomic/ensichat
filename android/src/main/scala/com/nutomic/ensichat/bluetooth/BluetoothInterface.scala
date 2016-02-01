@@ -210,6 +210,11 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Returns all active Bluetooth connections.
    */
   override def getConnections: Set[Address] =
-    connections.map(x => addressDeviceMap.find(_._2 == x._1).get._1).toSet
+    connections.flatMap { x =>
+        addressDeviceMap
+          .find(_._2 == x._1)
+          .map(_._1)
+      }
+      .toSet
 
 }
