@@ -69,7 +69,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInt
 
       val msg = new Message(header, body)
       val encrypted = crypto.encryptAndSign(msg)
-      router.onReceive(encrypted)
+      router.forwardMessage(encrypted)
       onNewMessage(msg)
     }
   }
@@ -81,13 +81,15 @@ final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInt
    * Decrypts and verifies incoming messages, forwards valid ones to [[onNewMessage()]].
    */
   def onMessageReceived(msg: Message): Unit = {
-    if (msg.header.target == crypto.localAddress) {
+    if (router.isMessageSeen(msg)) {
+      Log.v(Tag, "Ignoring message from " + msg.header.origin + " that we already received")
+    } else if (msg.header.target == crypto.localAddress) {
       crypto.verifyAndDecrypt(msg) match {
         case Some(m) => onNewMessage(m)
         case None => Log.i(Tag, "Ignoring message with invalid signature from " + msg.header.origin)
       }
     } else {
-      router.onReceive(msg)
+      router.forwardMessage(msg)
     }
   }
 

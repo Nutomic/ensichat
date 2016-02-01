@@ -9,17 +9,32 @@ final private[core] class Router(activeConnections: () => Set[Address], send: (A
 
   private var messageSeen = Set[(Address, Int)]()
 
-  def onReceive(msg: Message): Unit = {
+  /**
+   * Returns true if we have received the same message before.
+   */
+  def isMessageSeen(msg: Message): Boolean = {
     val info = (msg.header.origin, msg.header.seqNum)
-    if (messageSeen.contains(info))
-      return
+    val seen = messageSeen.contains(info)
+    markMessageSeen(info)
+    seen
+  }
 
+  /**
+   * Sends message to all connected devices. Should only be called if [[isMessageSeen()]] returns
+   * true.
+   */
+  def forwardMessage(msg: Message): Unit = {
+    val info = (msg.header.origin, msg.header.seqNum)
     val updated = incHopCount(msg)
     if (updated.header.hopCount >= updated.header.hopLimit)
       return
 
     activeConnections().foreach(a => send(a, updated))
-    
+
+    markMessageSeen(info)
+  }
+
+  private def markMessageSeen(info: (Address, Int)): Unit = {
     trimMessageSeen(info._1, info._2)
     messageSeen += info
   }
