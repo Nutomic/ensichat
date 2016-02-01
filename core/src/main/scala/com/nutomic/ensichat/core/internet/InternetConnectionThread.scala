@@ -47,23 +47,22 @@ class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
       Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 
-    socket.setKeepAlive(true)
-    while (socket.isConnected) {
-      try {
-        if (inStream.available() > 0) {
-          val msg = Message.read(inStream)
+    try {
+      socket.setKeepAlive(true)
+      while (socket.isConnected) {
+          if (inStream.available() > 0) {
+            val msg = Message.read(inStream)
 
-          onReceive(msg, this)
-        }
-      } catch {
-        case e @ (_: ReadMessageException | _: IOException) =>
-          Log.w(Tag, "Failed to read incoming message", e)
-          close()
-          return
+            onReceive(msg, this)
+          }
       }
+    } catch {
+      case e @ (_: ReadMessageException | _: IOException) =>
+        Log.w(Tag, "Failed to read incoming message", e)
+        close()
+        return
     }
     close()
-    Log.d(Tag, "exited: " + socket.isConnected)
   }
 
   def send(msg: Message): Unit = {
