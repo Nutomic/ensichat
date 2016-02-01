@@ -104,7 +104,7 @@ class MainActivity extends EnsichatActivity {
       .detach(contactsFragment)
       .add(android.R.id.content, new ChatFragment(address))
       .commit()
-    getSupportActionBar.setDisplayHomeAsUpEnabled(true)
+    Option(getSupportActionBar).foreach(_.setDisplayHomeAsUpEnabled(true))
   }
 
   /**
