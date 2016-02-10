@@ -65,12 +65,13 @@ class BluetoothTransferThread(context: Context, device: Device, socket: Bluetoot
 
     while (socket.isConnected) {
       try {
-        if (inStream.available() > 0) {
-          val msg = Message.read(inStream)
+        // Block until data arrives.
+        inStream.read(Array[Byte](), 0, 0)
 
-          onReceive(msg, device.id)
-          Log.v(Tag, "Receiving " + msg)
-        }
+        val msg = Message.read(inStream)
+        Log.v(Tag, "Received " + msg)
+
+        onReceive(msg, device.id)
       } catch {
         case e @ (_: ReadMessageException | _: IOException) =>
           Log.w(Tag, "Failed to read incoming message", e)

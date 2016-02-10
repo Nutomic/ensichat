@@ -50,11 +50,13 @@ class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (
     try {
       socket.setKeepAlive(true)
       while (socket.isConnected) {
-          if (inStream.available() > 0) {
-            val msg = Message.read(inStream)
+        // Block until data arrives.
+        inStream.read(Array[Byte](), 0, 0)
 
-            onReceive(msg, this)
-          }
+        val msg = Message.read(inStream)
+        Log.v(Tag, "Received " + msg)
+
+        onReceive(msg, this)
       }
     } catch {
       case e @ (_: ReadMessageException | _: IOException) =>
