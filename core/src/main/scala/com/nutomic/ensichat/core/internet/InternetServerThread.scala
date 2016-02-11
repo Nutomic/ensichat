@@ -1,12 +1,10 @@
 package com.nutomic.ensichat.core.internet
 
-import java.io.{IOException, PrintStream}
-import java.net.{Socket, ServerSocket}
+import java.io.IOException
+import java.net.ServerSocket
 
-import com.nutomic.ensichat.core.{Message, Crypto}
 import com.nutomic.ensichat.core.interfaces.Log
-
-import scala.io.BufferedSource
+import com.nutomic.ensichat.core.{Crypto, Message}
 
 class InternetServerThread(crypto: Crypto, onConnected: (InternetConnectionThread) => Unit,
                    onDisconnected: (InternetConnectionThread) => Unit, onReceive: (Message, InternetConnectionThread) => Unit) extends Thread {

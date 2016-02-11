@@ -1,7 +1,7 @@
 package com.nutomic.ensichat.fragments
 
-import android.content.{Intent, SharedPreferences}
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
+import android.content.{Intent, SharedPreferences}
 import android.os.Bundle
 import android.preference.{PreferenceFragment, PreferenceManager}
 import com.nutomic.ensichat.activities.EnsichatActivity

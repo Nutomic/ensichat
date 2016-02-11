@@ -4,9 +4,10 @@ import java.io.IOException
 import java.net.{InetAddress, Socket}
 
 import com.nutomic.ensichat.core.body.ConnectionInfo
-import com.nutomic.ensichat.core.interfaces.{SettingsInterface, Log, TransmissionInterface}
+import com.nutomic.ensichat.core.interfaces.{Log, SettingsInterface, TransmissionInterface}
 import com.nutomic.ensichat.core.util.FutureHelper
 import com.nutomic.ensichat.core.{Address, ConnectionHandler, Crypto, Message}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object InternetInterface {

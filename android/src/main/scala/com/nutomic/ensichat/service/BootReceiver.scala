@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.service
 
-import android.content.{Intent, Context, BroadcastReceiver}
+import android.content.{BroadcastReceiver, Context, Intent}
 import android.preference.PreferenceManager
 
 /**

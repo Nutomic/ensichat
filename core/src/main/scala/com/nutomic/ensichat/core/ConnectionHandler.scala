@@ -1,6 +1,5 @@
 package com.nutomic.ensichat.core
 
-import java.io.File
 import java.util.Date
 
 import com.nutomic.ensichat.core.body.{ConnectionInfo, MessageBody, UserInfo}
