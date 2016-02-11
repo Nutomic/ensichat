@@ -4,6 +4,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.content._
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.MenuItem
 import android.widget.Toast
 import com.nutomic.ensichat.R
@@ -23,6 +24,8 @@ object MainActivity {
   val ActionOpenChat = "open_chat"
 
   val ExtraAddress = "address"
+
+  val PrefWasBluetoothEnabled = "was_bluetooth_enabled"
 
 }
 
@@ -46,6 +49,12 @@ class MainActivity extends EnsichatActivity {
 
     if (getIntent.getAction == MainActivity.ActionRequestBluetooth &&
         Option(BluetoothAdapter.getDefaultAdapter).isDefined) {
+      val btAdapter = BluetoothAdapter.getDefaultAdapter
+      PreferenceManager.getDefaultSharedPreferences(this)
+        .edit()
+        .putBoolean(MainActivity.PrefWasBluetoothEnabled, btAdapter.isEnabled)
+        .apply()
+
       val intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
       intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0)
       startActivityForResult(intent, RequestSetDiscoverable)

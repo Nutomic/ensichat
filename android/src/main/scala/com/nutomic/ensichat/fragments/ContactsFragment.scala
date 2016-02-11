@@ -3,6 +3,7 @@ package com.nutomic.ensichat.fragments
 import java.io.File
 
 import android.app.ListFragment
+import android.bluetooth.BluetoothAdapter
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.net.Uri
 import android.os.Bundle
@@ -111,6 +112,10 @@ class ContactsFragment extends ListFragment with OnClickListener {
       startActivity(new Intent(getActivity, classOf[SettingsActivity]))
       true
     case R.id.exit =>
+      val pm = PreferenceManager.getDefaultSharedPreferences(getActivity)
+      if (!pm.getBoolean(MainActivity.PrefWasBluetoothEnabled, false))
+        BluetoothAdapter.getDefaultAdapter.disable()
+
       getActivity.stopService(new Intent(getActivity, classOf[ChatService]))
       getActivity.finish()
       true
