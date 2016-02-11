@@ -65,9 +65,6 @@ class BluetoothTransferThread(context: Context, device: Device, socket: Bluetoot
 
     while (socket.isConnected) {
       try {
-        // Block until data arrives.
-        inStream.read(Array[Byte](), 0, 0)
-
         val msg = Message.read(inStream)
         Log.v(Tag, "Received " + msg)
 
