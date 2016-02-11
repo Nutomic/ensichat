@@ -23,7 +23,7 @@ class RouterTest extends TestCase {
         sentTo += a
       })
 
-    router.onReceive(msg)
+    router.forwardMessage(msg)
     assertEquals(neighbors(), sentTo)
   }
 
@@ -39,7 +39,7 @@ class RouterTest extends TestCase {
         assertEquals(msg.body, m.body)
         assertEquals(msg.crypto, m.crypto)
       })
-    router.onReceive(msg)
+    router.forwardMessage(msg)
   }
 
   /**
@@ -49,38 +49,23 @@ class RouterTest extends TestCase {
     var sentTo = Set[Address]()
     val router: Router = new Router(neighbors, (a, m) => sentTo += a)
 
-    router.onReceive(msg)
+    router.forwardMessage(msg)
     assertEquals(neighbors(), sentTo)
 
     sentTo = Set[Address]()
-    router.onReceive(generateMessage(AddressTest.a2, AddressTest.a4, 1))
+    router.forwardMessage(generateMessage(AddressTest.a2, AddressTest.a4, 1))
     assertEquals(neighbors(), sentTo)
-  }
-
-  /**
-   * Messages from the same sender with the same sequence number should be ignored.
-   */
-  def testIgnores(): Unit = {
-    var sentTo = Set[Address]()
-    val router: Router = new Router(neighbors, (a, m) => sentTo += a)
-
-    router.onReceive(msg)
-    assertEquals(neighbors(), sentTo)
-
-    sentTo = Set[Address]()
-    router.onReceive(generateMessage(AddressTest.a1, AddressTest.a2, 1))
-    assertTrue(sentTo.isEmpty)
   }
   
   def testDiscardOldIgnores(): Unit = {
     def test(first: Int, second: Int) {
       var sentTo = Set[Address]()
       val router: Router = new Router(neighbors, (a, m) => sentTo += a)
-      router.onReceive(generateMessage(AddressTest.a1, AddressTest.a3, first))
-      router.onReceive(generateMessage(AddressTest.a1, AddressTest.a3, second))
+      router.forwardMessage(generateMessage(AddressTest.a1, AddressTest.a3, first))
+      router.forwardMessage(generateMessage(AddressTest.a1, AddressTest.a3, second))
 
       sentTo = Set[Address]()
-      router.onReceive(generateMessage(AddressTest.a1, AddressTest.a3, first))
+      router.forwardMessage(generateMessage(AddressTest.a1, AddressTest.a3, first))
       assertEquals(neighbors(), sentTo)
     }
 
@@ -93,7 +78,7 @@ class RouterTest extends TestCase {
     val msg = new Message(
       new ContentHeader(AddressTest.a1, AddressTest.a2, 1, 1, Some(1), Some(new Date()), i), new Text(""))
     val router: Router = new Router(neighbors, (a, m) => fail())
-    router.onReceive(msg)
+    router.forwardMessage(msg)
   }
 
   private def generateMessage(sender: Address, receiver: Address, seqNum: Int): Message = {
