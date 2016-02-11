@@ -64,6 +64,10 @@
 
     <string name="invalid_address">Invalid address</string>
 
+    <string name="add_contact">Add Contact</string>
+
+    <string name="scan_qr_code">Scan QR-Code</string>
+
 
     <!-- SettingsActivity -->
 
