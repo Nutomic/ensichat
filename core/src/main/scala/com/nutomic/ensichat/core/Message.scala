@@ -19,13 +19,13 @@ object Message {
     }
   }
 
-  class ParseMessageException(detailMessage: String) extends RuntimeException(detailMessage) {
-  }
-
   val Charset = "UTF-8"
 
-  class ReadMessageException(throwable: Throwable)
-    extends RuntimeException(throwable)
+  class ReadMessageException(message: String, throwable: Throwable)
+      extends RuntimeException(message, throwable) {
+    def this(message: String) = this(message, null)
+    def this(throwable: Throwable) = this(null, throwable)
+  }
 
   /**
    * Reads the entire message (header, crypto and body) into an object.

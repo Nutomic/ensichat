@@ -3,7 +3,7 @@ package com.nutomic.ensichat.core.header
 import java.nio.ByteBuffer
 
 import com.nutomic.ensichat.core.Address
-import com.nutomic.ensichat.core.Message.ParseMessageException
+import com.nutomic.ensichat.core.Message.ReadMessageException
 import com.nutomic.ensichat.core.util.BufferUtils
 
 object MessageHeader {
@@ -15,17 +15,20 @@ object MessageHeader {
    *
    * @return The header and the message length in bytes.
    */
+  @throws(classOf[ReadMessageException])
   def read(bytes: Array[Byte]): (MessageHeader, Int) = {
     val b = ByteBuffer.wrap(bytes, 0, MessageHeader.Length)
 
     val version = BufferUtils.getUnsignedByte(b)
     if (version != AbstractHeader.Version)
-      throw new ParseMessageException("Failed to parse message with unsupported version " + version)
+      throw new ReadMessageException("Failed to parse message with unsupported version " + version)
     val protocolType = BufferUtils.getUnsignedByte(b)
     val hopLimit = BufferUtils.getUnsignedByte(b)
     val hopCount = BufferUtils.getUnsignedByte(b)
 
     val length = BufferUtils.getUnsignedInt(b)
+    if (length < Length)
+      throw new ReadMessageException("Received message with invalid length " + length)
     val origin = new Address(BufferUtils.getByteArray(b, Address.Length))
     val target = new Address(BufferUtils.getByteArray(b, Address.Length))
 
