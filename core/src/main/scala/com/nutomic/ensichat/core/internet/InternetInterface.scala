@@ -9,6 +9,7 @@ import com.nutomic.ensichat.core.util.FutureHelper
 import com.nutomic.ensichat.core.{Address, ConnectionHandler, Crypto, Message}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Random
 
 object InternetInterface {
 
@@ -18,9 +19,12 @@ object InternetInterface {
 
 /**
  * Handles all Internet connectivity.
+ *
+ * @param maxConnections Maximum number of concurrent connections that should be opened.
  */
 class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
-                        settings: SettingsInterface) extends TransmissionInterface {
+                        settings: SettingsInterface, maxConnections: Int)
+  extends TransmissionInterface {
 
   private val Tag = "InternetInterface"
 
@@ -37,7 +41,7 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
   override def create(): Unit = {
     FutureHelper {
       serverThread.start()
-      openAllConnections()
+      openAllConnections(maxConnections)
     }
   }
 
@@ -49,11 +53,15 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
     connections.foreach(_.close())
   }
 
-  private def openAllConnections(): Unit =
-    settings.get(SettingsInterface.KeyServers, "")
+  private def openAllConnections(maxConnections: Int): Unit = {
+    val addresses = settings.get(SettingsInterface.KeyServers, "")
       .split(",")
       .map(_.trim())
+
+    Random.shuffle(addresses.toList)
+      .take(maxConnections)
       .foreach(openConnection)
+  }
 
   private def openConnection(addressPort: String): Unit = {
     val split = addressPort.split(":")
@@ -124,9 +132,9 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
 
   def connectionChanged(): Unit = {
     FutureHelper {
-      Log.i(Tag, "Network has changed. Close all connections and connect to bootstrap nodes again")
+      Log.i(Tag, "Network has changed. Closing all connections and connecting to bootstrap nodes again")
       connections.foreach(_.close())
-      openAllConnections()
+      openAllConnections(maxConnections)
     }
   }
 

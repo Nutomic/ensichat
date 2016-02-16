@@ -32,7 +32,7 @@ class ChatService extends Service {
 
   private lazy val connectionHandler =
     new ConnectionHandler(new SettingsWrapper(this), new Database(this), callbackHandler,
-                          ChatService.newCrypto(this))
+                          ChatService.newCrypto(this), 1)
 
   private val networkReceiver = new NetworkChangedReceiver()
 

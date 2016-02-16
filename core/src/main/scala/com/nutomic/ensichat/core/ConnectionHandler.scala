@@ -12,9 +12,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * High-level handling of all message transfers and callbacks.
+ *
+ * @param maxInternetConnections Maximum number of concurrent connections that should be opened by
+ *                               [[InternetInterface]].
  */
 final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInterface,
-                              callbacks: CallbackInterface, crypto: Crypto) {
+                              callbacks: CallbackInterface, crypto: Crypto,
+                              maxInternetConnections: Int) {
 
   private val Tag = "ConnectionHandler"
 
@@ -40,7 +44,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInt
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
       Log.i(Tag, "Local user is " + settings.get(SettingsInterface.KeyUserName, "none") +
         " with status '" + settings.get(SettingsInterface.KeyUserStatus, "") + "'")
-      transmissionInterfaces += new InternetInterface(this, crypto, settings)
+      transmissionInterfaces += new InternetInterface(this, crypto, settings, maxInternetConnections)
       transmissionInterfaces.foreach(_.create())
     }
   }

@@ -22,7 +22,8 @@ object Main extends App with CallbackInterface {
   private lazy val logInstance       = new Logging()
   private lazy val settings          = new Settings(ConfigFile)
   private lazy val crypto            = new Crypto(settings, KeyFolder)
-  private lazy val connectionHandler = new ConnectionHandler(settings, new Database(), this, crypto)
+  private lazy val connectionHandler =
+    new ConnectionHandler(settings, new Database(), this, crypto, 7)
 
   init()
 
