@@ -42,6 +42,11 @@
     <!-- Menu item to close app and stop service -->
     <string name="exit">Exit</string>
 
+    <!-- ChatFragment -->
+
+    <!-- Hint text for the message EditText -->
+    <string name="message_hint">Type a message</string>
+
 
     <!-- ConnectionsActivity -->
 
