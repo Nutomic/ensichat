@@ -117,7 +117,7 @@ where such a packet came from MAY be closed.
 Protocol-Type is one of those specified in section Protocol Messages,
 or 255 for Content Messages.
 
-Hop Limit SHOULD be set to `MAX_HOP_COUNT` on message creation, and
+Hop Limit SHOULD be set to `20` on message creation, and
 MUST NOT be changed by a forwarding node.
 
 Hop Count specifies the number of nodes a message may pass. When
