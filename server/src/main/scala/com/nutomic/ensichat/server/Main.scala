@@ -1,6 +1,7 @@
 package com.nutomic.ensichat.server
 
 import java.io.File
+import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 import com.nutomic.ensichat.core.body.Text
@@ -13,7 +14,7 @@ object Main extends App with CallbackInterface {
 
   private val Tag = "Main"
 
-  private val ConfigFolder = new File(System.getProperty("user.home"), ".config/ensichat")
+  private val ConfigFolder = Paths.get("").toFile.getAbsoluteFile
   private val ConfigFile   = new File(ConfigFolder, "config.properties")
   private val KeyFolder    = new File(ConfigFolder, "keys")
 
