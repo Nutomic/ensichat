@@ -1,0 +1,19 @@
+[Unit]
+Description=Ensichat Server
+After=network.target
+
+[Service]
+User=ensichat
+Group=ensichat
+ExecStart=/usr/bin/ensichat --name "" --status ""
+WorkingDirectory=/var/lib/ensichat
+RootDirectory=/var/lib/ensichat
+
+Restart=always
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
