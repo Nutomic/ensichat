@@ -25,7 +25,8 @@ object SettingsInterface {
   val DefaultScanInterval         = 15
   val DefaultNotificationSoundsOn = true
   val DefaultMaxConnections       = 1000000
-  val DefaultServers              = Set("46.101.249.188:26344", "46.101.238.107:26344")
+  // When updating this, be sure to adjust the code in [[InternetInterface.create]].
+  val DefaultServers              = Set("ensichat.nutomic.com:26344").mkString(", ")
 
 }
 

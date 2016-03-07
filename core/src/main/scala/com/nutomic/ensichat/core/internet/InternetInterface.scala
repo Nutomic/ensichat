@@ -39,6 +39,10 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
    * Initializes and starts discovery and listening.
    */
   override def create(): Unit = {
+    val servers = settings.get(SettingsInterface.KeyServers, "")
+      .replace("46.101.249.188:26344", SettingsInterface.DefaultServers)
+    settings.put(SettingsInterface.KeyServers, servers)
+
     FutureHelper {
       serverThread.start()
       openAllConnections(maxConnections)
