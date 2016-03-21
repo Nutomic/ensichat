@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit
 import com.nutomic.ensichat.core.body.Text
 import com.nutomic.ensichat.core.interfaces.SettingsInterface._
 import com.nutomic.ensichat.core.interfaces.{CallbackInterface, Log, SettingsInterface}
+import com.nutomic.ensichat.core.util.Database
 import com.nutomic.ensichat.core.{ConnectionHandler, Crypto, Message}
 import scopt.OptionParser
 
@@ -16,6 +17,7 @@ object Main extends App with CallbackInterface {
 
   private val ConfigFolder = Paths.get("").toFile.getAbsoluteFile
   private val ConfigFile   = new File(ConfigFolder, "config.properties")
+  private val DatabaseFile = new File(ConfigFolder, "database")
   private val KeyFolder    = new File(ConfigFolder, "keys")
 
   private val LogInterval = TimeUnit.SECONDS.toMillis(1)
@@ -23,8 +25,8 @@ object Main extends App with CallbackInterface {
   private lazy val logInstance       = new Logging()
   private lazy val settings          = new Settings(ConfigFile)
   private lazy val crypto            = new Crypto(settings, KeyFolder)
-  private lazy val connectionHandler =
-    new ConnectionHandler(settings, new Database(), this, crypto, 7)
+  private lazy val database          = new Database(DatabaseFile, this)
+  private lazy val connectionHandler = new ConnectionHandler(settings, database, this, crypto, 7)
 
   init()
 
@@ -84,5 +86,7 @@ object Main extends App with CallbackInterface {
   }
 
   def onConnectionsChanged(): Unit = {}
+
+  def onContactsUpdated(): Unit = {}
 
 }

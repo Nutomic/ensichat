@@ -9,7 +9,6 @@ import com.nutomic.ensichat.core.body.UserInfo
 import com.nutomic.ensichat.core.interfaces.SettingsInterface._
 import com.nutomic.ensichat.fragments.SettingsFragment._
 import com.nutomic.ensichat.service.ChatService
-import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.{BuildConfig, R}
 
 object SettingsFragment {
@@ -21,7 +20,7 @@ object SettingsFragment {
  */
 class SettingsFragment extends PreferenceFragment with OnSharedPreferenceChangeListener {
 
-  private lazy val database = new Database(getActivity)
+  private lazy val activity = getActivity.asInstanceOf[EnsichatActivity]
 
   private lazy val maxConnections       = findPreference(KeyMaxConnections)
   private lazy val version              = findPreference(Version)
@@ -52,9 +51,8 @@ class SettingsFragment extends PreferenceFragment with OnSharedPreferenceChangeL
   override def onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
     key match {
       case KeyUserName | KeyUserStatus =>
-        val service = getActivity.asInstanceOf[EnsichatActivity].service
         val ui = new UserInfo(prefs.getString(KeyUserName, ""), prefs.getString(KeyUserStatus, ""))
-        database.getContacts.foreach(c => service.get.sendTo(c.address, ui))
+        activity.database.get.getContacts.foreach(c =>  activity.service.get.sendTo(c.address, ui))
       case KeyServers =>
         val intent = new Intent(getActivity, classOf[ChatService])
         intent.setAction(ChatService.ActionNetworkChanged)

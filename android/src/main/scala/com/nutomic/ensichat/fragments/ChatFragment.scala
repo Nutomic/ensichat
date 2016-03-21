@@ -15,7 +15,6 @@ import com.nutomic.ensichat.activities.EnsichatActivity
 import com.nutomic.ensichat.core.body.Text
 import com.nutomic.ensichat.core.{Address, ConnectionHandler, Message}
 import com.nutomic.ensichat.service.CallbackHandler
-import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.views.{DatesAdapter, MessagesAdapter}
 
 /**
@@ -30,8 +29,6 @@ class ChatFragment extends ListFragment with OnClickListener {
     this
     this.address = address
   }
-
-  private lazy val database = new Database(getActivity)
 
   private lazy val activity = getActivity.asInstanceOf[EnsichatActivity]
 
@@ -53,10 +50,10 @@ class ChatFragment extends ListFragment with OnClickListener {
     activity.runOnServiceConnected(() => {
       chatService = activity.service.get
 
-      database.getContact(address).foreach(c => getActivity.setTitle(c.name))
+      activity.database.get.getContact(address).foreach(c => getActivity.setTitle(c.name))
 
       adapter = new DatesAdapter(getActivity,
-        new MessagesAdapter(getActivity, database.getMessagesCursor(address), address))
+        new MessagesAdapter(getActivity, activity.database.get.getMessages(address), address))
 
       if (listView != null) {
         listView.setAdapter(adapter)
@@ -131,7 +128,8 @@ class ChatFragment extends ListFragment with OnClickListener {
 
       msg.body match {
         case _: Text =>
-          adapter.changeCursor(database.getMessagesCursor(address))
+          val messages = activity.database.get.getMessages(address)
+          adapter.replaceItems(messages)
         case _ =>
       }
     }

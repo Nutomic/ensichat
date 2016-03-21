@@ -18,7 +18,6 @@ import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.{ConnectionsActivity, EnsichatActivity, MainActivity, SettingsActivity}
 import com.nutomic.ensichat.core.interfaces.SettingsInterface
 import com.nutomic.ensichat.service.{CallbackHandler, ChatService}
-import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.views.UsersAdapter
 
 import scala.collection.JavaConversions._
@@ -30,7 +29,7 @@ class ContactsFragment extends ListFragment with OnClickListener {
 
   private lazy val adapter = new UsersAdapter(getActivity)
 
-  private lazy val database = new Database(getActivity)
+  private lazy val database = activity.database.get
 
   private lazy val lbm = LocalBroadcastManager.getInstance(getActivity)
 
@@ -44,7 +43,7 @@ class ContactsFragment extends ListFragment with OnClickListener {
 
     setListAdapter(adapter)
     setHasOptionsMenu(true)
-    lbm.registerReceiver(onContactsUpdatedListener, new IntentFilter(Database.ActionContactsUpdated))
+    lbm.registerReceiver(onContactsUpdatedListener, new IntentFilter(CallbackHandler.ActionContactsUpdated))
     lbm.registerReceiver(onConnectionsChangedListener, new IntentFilter(CallbackHandler.ActionConnectionsChanged))
   }
 
@@ -52,7 +51,7 @@ class ContactsFragment extends ListFragment with OnClickListener {
     super.onResume()
     activity.runOnServiceConnected(() => {
       adapter.clear()
-      database.getContacts.foreach(adapter.add)
+      adapter.addAll(database.getContacts)
       updateConnections()
     })
   }
