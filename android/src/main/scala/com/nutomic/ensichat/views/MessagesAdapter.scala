@@ -1,16 +1,26 @@
 package com.nutomic.ensichat.views
 
 import java.text.DateFormat
+import java.util
 
 import android.content.Context
-import android.database.Cursor
 import android.view._
 import android.widget._
-import com.mobsandgeeks.adapters.{InstantCursorAdapter, SimpleSectionAdapter, ViewHandler}
+import com.mobsandgeeks.adapters.{InstantAdapter, SimpleSectionAdapter, ViewHandler}
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.core.body.Text
 import com.nutomic.ensichat.core.{Address, Message}
-import com.nutomic.ensichat.util.Database
+import com.nutomic.ensichat.views.MessagesAdapter._
+
+object MessagesAdapter {
+
+  private def itemsAsMutableList(items: Seq[Message]): util.List[Message] = {
+    val list = new util.ArrayList[Message]()
+    items.foreach(list.add)
+    list
+  }
+
+}
 
 /**
  * Displays [[Message]]s in ListView.
@@ -18,8 +28,9 @@ import com.nutomic.ensichat.util.Database
  * We just use the instant adapter for compatibility with [[SimpleSectionAdapter]], but don't use
  * the annotations (as it breaks separation of presentation and content).
  */
-class MessagesAdapter(context: Context, cursor: Cursor, remoteAddress: Address) extends
-  InstantCursorAdapter[Message](context, R.layout.item_message, classOf[Message], cursor) {
+class MessagesAdapter(context: Context, items: Seq[Message], remoteAddress: Address) extends
+  InstantAdapter[Message](context, R.layout.item_message, classOf[Message],
+                          itemsAsMutableList(items)) {
 
   private val MessagePaddingLarge = 50
   private val MessagePaddingSmall = 10
@@ -51,7 +62,5 @@ class MessagesAdapter(context: Context, cursor: Cursor, remoteAddress: Address) 
       }
     }
   })
-
-  override def getInstance (cursor: Cursor) = Database.messageFromCursor(cursor)
 
 }

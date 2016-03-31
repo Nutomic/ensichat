@@ -6,7 +6,7 @@ import com.nutomic.ensichat.core.body.{ConnectionInfo, MessageBody, UserInfo}
 import com.nutomic.ensichat.core.header.ContentHeader
 import com.nutomic.ensichat.core.interfaces._
 import com.nutomic.ensichat.core.internet.InternetInterface
-import com.nutomic.ensichat.core.util.FutureHelper
+import com.nutomic.ensichat.core.util.{Database, FutureHelper}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
  * @param maxInternetConnections Maximum number of concurrent connections that should be opened by
  *                               [[InternetInterface]].
  */
-final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInterface,
+final class ConnectionHandler(settings: SettingsInterface, database: Database,
                               callbacks: CallbackInterface, crypto: Crypto,
                               maxInternetConnections: Int) {
 
@@ -51,6 +51,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: DatabaseInt
 
   def stop(): Unit = {
     transmissionInterfaces.foreach(_.destroy())
+    database.close()
   }
 
   /**

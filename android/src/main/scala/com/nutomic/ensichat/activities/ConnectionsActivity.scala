@@ -14,15 +14,12 @@ import com.google.zxing.integration.android.IntentIntegrator
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.core.Address
 import com.nutomic.ensichat.service.CallbackHandler
-import com.nutomic.ensichat.util.Database
 import com.nutomic.ensichat.views.UsersAdapter
 
 /**
  * Lists all nearby, connected devices and allows adding them to be added as contacts.
  */
 class ConnectionsActivity extends EnsichatActivity with OnItemClickListener {
-
-  private lazy val database = new Database(this)
 
   private lazy val adapter = new UsersAdapter(this)
 
@@ -41,7 +38,7 @@ class ConnectionsActivity extends EnsichatActivity with OnItemClickListener {
 
     val filter = new IntentFilter()
     filter.addAction(CallbackHandler.ActionConnectionsChanged)
-    filter.addAction(Database.ActionContactsUpdated)
+    filter.addAction(CallbackHandler.ActionContactsUpdated)
     LocalBroadcastManager.getInstance(this)
       .registerReceiver(onContactsUpdatedReceiver, filter)
   }
@@ -120,7 +117,7 @@ class ConnectionsActivity extends EnsichatActivity with OnItemClickListener {
 
     val user = service.get.getUser(parsedAddress)
 
-    if (database.getContacts.map(_.address).contains(user.address)) {
+    if (database.get.getContacts.map(_.address).contains(user.address)) {
       val text = getString(R.string.contact_already_added, user.name)
       Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
       return
@@ -130,7 +127,7 @@ class ConnectionsActivity extends EnsichatActivity with OnItemClickListener {
       .setMessage(getString(R.string.dialog_add_contact, user.name))
       .setPositiveButton(android.R.string.yes, new OnClickListener {
         override def onClick(dialog: DialogInterface, which: Int): Unit = {
-          database.addContact(user)
+          database.get.addContact(user)
           Toast.makeText(ConnectionsActivity.this, R.string.toast_contact_added, Toast.LENGTH_SHORT)
             .show()
         }

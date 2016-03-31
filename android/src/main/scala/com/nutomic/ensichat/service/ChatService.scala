@@ -8,8 +8,9 @@ import android.content.{Context, Intent, IntentFilter}
 import android.net.ConnectivityManager
 import android.os.Handler
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
+import com.nutomic.ensichat.core.util.Database
 import com.nutomic.ensichat.core.{ConnectionHandler, Crypto}
-import com.nutomic.ensichat.util.{Database, NetworkChangedReceiver, SettingsWrapper}
+import com.nutomic.ensichat.util.{NetworkChangedReceiver, SettingsWrapper}
 
 object ChatService {
 
@@ -30,8 +31,10 @@ class ChatService extends Service {
 
   private val callbackHandler = new CallbackHandler(this, notificationHandler)
 
+  lazy val database = new Database(getDatabasePath("database"), callbackHandler)
+
   private lazy val connectionHandler =
-    new ConnectionHandler(new SettingsWrapper(this), new Database(this), callbackHandler,
+    new ConnectionHandler(new SettingsWrapper(this), database, callbackHandler,
                           ChatService.newCrypto(this), 1)
 
   private val networkReceiver = new NetworkChangedReceiver()

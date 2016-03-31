@@ -8,4 +8,6 @@ trait CallbackInterface {
 
   def onConnectionsChanged(): Unit
 
+  def onContactsUpdated(): Unit
+
 }

@@ -10,6 +10,7 @@ object CallbackHandler {
 
   val ActionMessageReceived    = "message_received"
   val ActionConnectionsChanged = "connections_changed"
+  val ActionContactsUpdated    = "contacts_updated"
 
   val ExtraMessage             = "extra_message"
 
@@ -36,6 +37,12 @@ class CallbackHandler(chatService: ChatService, notificationHandler: Notificatio
       .sendBroadcast(i)
     notificationHandler
       .updatePersistentNotification(chatService.getConnectionHandler.connections().size)
+  }
+
+  def onContactsUpdated(): Unit = {
+    val i = new Intent(ActionContactsUpdated)
+    LocalBroadcastManager.getInstance(chatService)
+      .sendBroadcast(i)
   }
 
 }

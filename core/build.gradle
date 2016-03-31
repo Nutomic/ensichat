@@ -2,6 +2,8 @@ apply plugin: 'scala'
 
 dependencies {
     compile 'org.scala-lang:scala-library:2.11.7'
+    compile 'com.h2database:h2:1.4.191'
+    compile 'com.typesafe.slick:slick_2.11:3.1.1'
     testCompile 'junit:junit:4.12'
 }
 

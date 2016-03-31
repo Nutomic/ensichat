@@ -62,4 +62,6 @@ class EnsichatActivity extends AppCompatActivity with ServiceConnection {
    */
   def service = chatService.map(_.getConnectionHandler)
 
+  def database = chatService.map(_.database)
+
 }
