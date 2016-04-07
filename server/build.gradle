@@ -23,6 +23,6 @@ run {
     // ./gradlew server:run -Pargs="--name,MyName,--status,My Status"
     // ```
     if (project.hasProperty('args')) {
-        args project.args.split(',')
+        args project.args.split("\\s+")
     }
 }
