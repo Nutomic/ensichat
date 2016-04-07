@@ -40,7 +40,6 @@ object Main extends App with CallbackInterface {
     KeyFolder.mkdirs()
     Log.setLogInstance(logInstance)
     sys.addShutdownHook(connectionHandler.stop())
-    settings.put(KeyServers, DefaultServers)
 
     val parser = new OptionParser[Config]("ensichat") {
       head("ensichat")

@@ -19,14 +19,14 @@ object SettingsInterface {
   /**
    * NOTE: Stored as comma separated string.
    */
-  val KeyServers              = "servers"
+  val KeyAddresses            = "servers"
 
   val DefaultUserStatus           = "Let's chat!"
   val DefaultScanInterval         = 15
   val DefaultNotificationSoundsOn = true
   val DefaultMaxConnections       = 1000000
   // When updating this, be sure to adjust the code in [[InternetInterface.create]].
-  val DefaultServers              = Set("ensichat.nutomic.com:26344").mkString(", ")
+  val DefaultAddresses            = Set("ensichat.nutomic.com:26344").mkString(", ")
 
 }
 

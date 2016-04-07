@@ -53,7 +53,7 @@ class SettingsFragment extends PreferenceFragment with OnSharedPreferenceChangeL
       case KeyUserName | KeyUserStatus =>
         val ui = new UserInfo(prefs.getString(KeyUserName, ""), prefs.getString(KeyUserStatus, ""))
         activity.database.get.getContacts.foreach(c =>  activity.service.get.sendTo(c.address, ui))
-      case KeyServers =>
+      case KeyAddresses =>
         val intent = new Intent(getActivity, classOf[ChatService])
         intent.setAction(ChatService.ActionNetworkChanged)
         getActivity.startService(intent)

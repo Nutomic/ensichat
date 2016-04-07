@@ -74,7 +74,7 @@ class FirstStartActivity extends AppCompatActivity with OnEditorActionListener w
       .putBoolean(KeyNotificationSoundsOn,  DefaultNotificationSoundsOn)
       .putString(KeyScanInterval,           DefaultScanInterval.toString)
       .putString(KeyMaxConnections,         DefaultMaxConnections.toString)
-      .putString(KeyServers,                DefaultServers)
+      .putString(KeyAddresses,              DefaultAddresses)
       .apply()
 
     startMainActivity()
