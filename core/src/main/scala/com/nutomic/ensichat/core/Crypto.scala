@@ -119,7 +119,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
    * @throws RuntimeException If the key does not exist.
    */
   @throws[RuntimeException]
-  private[core] def getPublicKey(address: Address): PublicKey = {
+  def getPublicKey(address: Address): PublicKey = {
     loadKey(address.toString, classOf[PublicKey])
   }
 
@@ -129,7 +129,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
    * @throws RuntimeException If a key already exists for this address.
    */
   @throws[RuntimeException]
-  private[core] def addPublicKey(address: Address, key: PublicKey): Unit = {
+  def addPublicKey(address: Address, key: PublicKey): Unit = {
     if (havePublicKey(address))
       throw new RuntimeException("Already have key for " + address + ", not overwriting")
 
@@ -232,20 +232,6 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     sign(encrypt(msg, key))
   }
 
-  private[core] def verifyAndDecrypt(msg: Message, key: Option[PublicKey] = None): Option[Message] = {
-    // Catch exception to avoid crash if we receive invalid message.
-    try {
-      if (verify(msg, key))
-        Option(decrypt(msg))
-      else
-        None
-    } catch {
-      case e: InvalidKeyException =>
-        logger.warn("Failed to verify or decrypt message", e)
-        None
-    }
-  }
-
   private def encrypt(msg: Message, key: Option[PublicKey] = None): Message = {
     // Symmetric encryption of data
     val secretKey = makeSecretKey()
@@ -263,7 +249,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
   }
 
   @throws[InvalidKeyException]
-  private def decrypt(msg: Message): Message = {
+  def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
     val asymmetricCipher = Cipher.getInstance(CipherAlgorithm)
     asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))

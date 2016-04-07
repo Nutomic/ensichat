@@ -58,9 +58,10 @@ class MessageTest extends TestCase {
 
       val read = Message.read(new ByteArrayInputStream(bytes))
       assertEquals(encrypted.crypto, read.crypto)
-      val decrypted = crypto.verifyAndDecrypt(read, Option(crypto.getLocalPublicKey))
-      assertEquals(m.header, decrypted.get.header)
-      assertEquals(m.body, decrypted.get.body)
+      assertTrue(crypto.verify(read, Option(crypto.getLocalPublicKey)))
+      val decrypted = crypto.decrypt(read)
+      assertEquals(m.header, decrypted.header)
+      assertEquals(m.body, decrypted.body)
     }
   }
 

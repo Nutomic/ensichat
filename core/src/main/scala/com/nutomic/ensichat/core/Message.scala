@@ -3,7 +3,7 @@ package com.nutomic.ensichat.core
 import java.io.InputStream
 import java.security.spec.InvalidKeySpecException
 
-import com.nutomic.ensichat.core.body.{ConnectionInfo, CryptoData, EncryptedBody, MessageBody}
+import com.nutomic.ensichat.core.body._
 import com.nutomic.ensichat.core.header.{AbstractHeader, ContentHeader, MessageHeader}
 
 object Message {
@@ -50,6 +50,9 @@ object Message {
       val body =
         header.protocolType match {
           case ConnectionInfo.Type => ConnectionInfo.read(remaining)
+          case RouteRequest.Type   => RouteRequest.read(remaining)
+          case RouteReply.Type     => RouteReply.read(remaining)
+          case RouteError.Type     => RouteError.read(remaining)
           case _                   => new EncryptedBody(remaining)
         }
 
@@ -80,6 +83,11 @@ case class Message(header: AbstractHeader, crypto: CryptoData, body: MessageBody
   def this(header: AbstractHeader, body: MessageBody) =
     this(header, new CryptoData(None, None), body)
 
-  def write = header.write(body.length + crypto.length) ++ crypto.write ++ body.write
+  def write = {
+    header.write(body.length + crypto.length) ++ crypto.write ++ body.write
+  }
+
+  override def toString =
+    s"Message(${header.origin.short}(${header.seqNum}) -> ${header.target.short}: $body)"
 
 }

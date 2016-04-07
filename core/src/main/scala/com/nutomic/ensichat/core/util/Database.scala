@@ -75,8 +75,9 @@ class Database(path: File, callbackInterface: CallbackInterface) {
   /**
    * Inserts the given new message into the database.
    */
-  def onMessageReceived(msg: Message): Unit = {
-    Await.result(db.run(messages += msg), Duration.Inf)
+  def onMessageReceived(msg: Message): Unit = msg.body match {
+    case _: Text => Await.result(db.run(messages += msg), Duration.Inf)
+    case _ =>
   }
 
   def getMessages(address: Address): Seq[Message] = {

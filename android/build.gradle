@@ -11,7 +11,7 @@ buildscript {
 }
 
 dependencies {
-    compile 'com.android.support:design:23.1.1'
+    compile 'com.android.support:design:23.4.0'
     compile 'com.android.support:multidex:1.0.1'
     compile 'org.scala-lang:scala-library:2.11.7'
     compile 'com.mobsandgeeks:adapter-kit:0.5.3'
@@ -46,9 +46,18 @@ android {
         testInstrumentationRunner "com.android.test.runner.MultiDexTestRunner"
     }
 
-    buildTypes.debug {
-        applicationIdSuffix ".debug"
-        testCoverageEnabled true
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            testCoverageEnabled true
+        }
+        release {
+            // HACK: This shouldn't be needed, but multidex isn't working correctly.
+            // https://code.google.com/p/android/issues/detail?id=206131
+            // https://code.google.com/p/android/issues/detail?id=209084
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), file('proguard-rules.txt')
+        }
     }
 
     // Increasing minSdkVersion reduces compilation time for MultiDex.

@@ -12,8 +12,10 @@ import com.typesafe.scalalogging.Logger
 /**
  * Encapsulates an active connection to another node.
  */
-class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (InternetConnectionThread) => Unit,
-                       onReceive: (Message, InternetConnectionThread) => Unit) extends Thread {
+private[core] class InternetConnectionThread(socket: Socket, crypto: Crypto,
+                                             onDisconnected: (InternetConnectionThread) => Unit,
+                                             onReceive: (Message, InternetConnectionThread) => Unit)
+                                             extends Thread {
 
   private val logger = Logger(this.getClass)
 
@@ -78,7 +80,6 @@ class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (
     } catch {
       case e: IOException => logger.warn("Failed to close socket", e)
     }
-    logger.debug("Connection to " + socket.getInetAddress + " closed")
     onDisconnected(this)
   }
 

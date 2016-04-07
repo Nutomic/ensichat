@@ -41,8 +41,9 @@ class CryptoTest extends TestCase {
   def testEncryptDecrypt(): Unit = {
     MessageTest.messages.foreach{ m =>
       val encrypted = crypto.encryptAndSign(m, Option(crypto.getLocalPublicKey))
-      val decrypted = crypto.verifyAndDecrypt(encrypted, Option(crypto.getLocalPublicKey))
-      assertEquals(m.body, decrypted.get.body)
+      assertTrue(crypto.verify(encrypted, Option(crypto.getLocalPublicKey)))
+      val decrypted = crypto.decrypt(encrypted)
+      assertEquals(m.body, decrypted.body)
       assertEquals(m.header, encrypted.header)
     }
   }
