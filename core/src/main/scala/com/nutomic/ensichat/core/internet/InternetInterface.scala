@@ -61,6 +61,7 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
     val addresses = settings.get(SettingsInterface.KeyAddresses, SettingsInterface.DefaultAddresses)
       .split(",")
       .map(_.trim())
+      .filterNot(_.isEmpty)
 
     Random.shuffle(addresses.toList)
       .take(maxConnections)
@@ -68,25 +69,29 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
   }
 
   private def openConnection(addressPort: String): Unit = {
-    val split = addressPort.split(":")
-    if (split.length >= 2) {
-      Log.d(Tag, "Attempting connection to " + addressPort)
-      openConnection(split(0), split(1).toInt)
-    }
+    val (address, port) =
+      if (addressPort.contains(":")) {
+        val split = addressPort.split(":")
+        (split(0), split(1).toInt)
+      } else
+        (addressPort, InternetInterface.ServerPort)
+
+    openConnection(address, port)
   }
 
   /**
    * Opens connection to the specified IP address in client mode.
    */
-  private def openConnection(nodeAddress: String, port: Int): Unit = {
+  private def openConnection(address: String, port: Int): Unit = {
+    Log.i(Tag, s"Attempting connection to $address:$port")
     try {
-      val socket = new Socket(InetAddress.getByName(nodeAddress), port)
+      val socket = new Socket(InetAddress.getByName(address), port)
       val ct = new InternetConnectionThread(socket, crypto, onDisconnected, onReceiveMessage)
       connections += ct
       ct.start()
     } catch {
       case e: IOException =>
-        Log.w(Tag, "Failed to open connection to " + nodeAddress + ":" + port, e)
+        Log.w(Tag, "Failed to open connection to " + address + ":" + port, e)
     }
   }
 
