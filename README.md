@@ -1,11 +1,9 @@
 Ensichat
 ========
 
-[![BitCoin donate button](https://img.shields.io/badge/bitcoin-donate-yellow.svg)](https://blockchain.info/address/1DmU6QVGSKXGXJU1bqmmStPDNsNnYoMJB4)
-
-Instant messenger for Android that is fully decentralized. Messages are encrypted and sent directly between
-devices via Bluetooth, without any central server. A simple flood-based routing is used for
-message propagation.
+Instant messenger for Android that is fully decentralized. Messages are encrypted and sent directly
+between devices via Bluetooth or Internet, without any central server. A simple flood-based routing
+is used for message propagation.
 
 <img src="graphics/screenshot_phone_1.png" alt="screenshot 1" width="200" />
 <img src="graphics/screenshot_phone_2.png" alt="screenshot 2" width="200" />
@@ -16,9 +14,13 @@ message propagation.
 Building
 --------
 
-To create a debug apk, run `./gradlew assembleDevDebug`. This requires at least Android Lollipop on your development device. If you don't have Lollipop, you can alternatively use `./gradlew assembleRelDebug`. However, this results in considerably slower incremental builds
+To setup a development environment, just install [Android Studio](https://developer.android.com/sdk/)
+and import the project.
 
-To create a release apk, run `./gradlew assembleRelRelease`.
+Alternatively, you can use the command line. To create a debug apk, run `./gradlew assembleDevDebug`.
+This requires at least Android Lollipop on your development device. If you don't have Lollipop, you
+can alternatively use `./gradlew assembleRelDebug`. However, this results in considerably slower
+incremental builds. To create a release apk, run `./gradlew assembleRelRelease`.
 
 License
 -------
