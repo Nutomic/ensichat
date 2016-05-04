@@ -17,6 +17,7 @@ dependencies {
     compile 'com.mobsandgeeks:adapter-kit:0.5.3'
     compile 'com.google.zxing:android-integration:3.2.1'
     compile 'com.google.zxing:core:3.2.1'
+    compile 'org.slf4j:slf4j-android:1.7.21'
     compile project(path: ':core')
     androidTestCompile 'com.android.support:multidex-instrumentation:1.0.1',
             { exclude module: 'multidex' }

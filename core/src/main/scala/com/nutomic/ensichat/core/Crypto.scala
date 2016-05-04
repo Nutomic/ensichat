@@ -9,7 +9,8 @@ import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 import com.nutomic.ensichat.core.Crypto._
 import com.nutomic.ensichat.core.body._
 import com.nutomic.ensichat.core.header.ContentHeader
-import com.nutomic.ensichat.core.interfaces.{Log, SettingsInterface}
+import com.nutomic.ensichat.core.interfaces.SettingsInterface
+import com.typesafe.scalalogging.Logger
 
 object Crypto {
 
@@ -76,7 +77,7 @@ object Crypto {
  */
 class Crypto(settings: SettingsInterface, keyFolder: File) {
 
-  private val Tag = "Crypto"
+  private val logger = Logger(this.getClass)
 
   /**
    * Generates a new key pair using [[keyFolder]] with [[PublicKeySize]] bits and stores the
@@ -104,7 +105,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
 
     saveKey(PrivateKeyAlias, keyPair.getPrivate)
     saveKey(PublicKeyAlias, keyPair.getPublic)
-    Log.i(Tag, "Generated cryptographic keys, address is " + address)
+    logger.info("Generated cryptographic keys, address is " + address)
   }
 
   /**
@@ -184,7 +185,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
       fos = Option(new FileOutputStream(path))
       fos.foreach(_.write(key.getEncoded))
     } catch {
-      case e: IOException => Log.w(Tag, "Failed to save key for alias " + alias, e)
+      case e: IOException => logger.warn("Failed to save key for alias " + alias, e)
     } finally {
       fos.foreach(_.close())
     }
@@ -212,7 +213,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
       data = new Array[Byte](path.length().asInstanceOf[Int])
       fis.foreach(_.read(data))
     } catch {
-      case e: IOException => Log.e(Tag, "Failed to load key for alias " + alias, e)
+      case e: IOException => logger.error("Failed to load key for alias " + alias, e)
     } finally {
       fis.foreach(_.close())
     }
@@ -240,7 +241,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
         None
     } catch {
       case e: InvalidKeyException =>
-        Log.w(Tag, "Failed to verify or decrypt message", e)
+        logger.warn("Failed to verify or decrypt message", e)
         None
     }
   }

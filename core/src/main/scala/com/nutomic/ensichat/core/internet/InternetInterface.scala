@@ -1,14 +1,15 @@
 package com.nutomic.ensichat.core.internet
 
-import java.io.IOException
 import java.net.{InetAddress, Socket}
 
 import com.nutomic.ensichat.core.body.ConnectionInfo
-import com.nutomic.ensichat.core.interfaces.{Log, SettingsInterface, TransmissionInterface}
+import com.nutomic.ensichat.core.interfaces.{SettingsInterface, TransmissionInterface}
 import com.nutomic.ensichat.core.util.FutureHelper
 import com.nutomic.ensichat.core.{Address, ConnectionHandler, Crypto, Message}
+import com.typesafe.scalalogging.Logger
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.Random
 
 object InternetInterface {
@@ -26,7 +27,7 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
                         settings: SettingsInterface, maxConnections: Int)
   extends TransmissionInterface {
 
-  private val Tag = "InternetInterface"
+  private val logger = Logger(this.getClass)
 
   private lazy val serverThread =
     new InternetServerThread(crypto, onConnected, onDisconnected, onReceiveMessage)
@@ -83,15 +84,14 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
    * Opens connection to the specified IP address in client mode.
    */
   private def openConnection(address: String, port: Int): Unit = {
-    Log.i(Tag, s"Attempting connection to $address:$port")
-    try {
+    logger.info(s"Attempting connection to $address:$port")
+    Future {
       val socket = new Socket(InetAddress.getByName(address), port)
       val ct = new InternetConnectionThread(socket, crypto, onDisconnected, onReceiveMessage)
       connections += ct
       ct.start()
-    } catch {
-      case e: IOException =>
-        Log.w(Tag, "Failed to open connection to " + address + ":" + port, e)
+    }.onFailure { case e =>
+      logger.warn("Failed to open connection to " + address + ":" + port, e)
     }
   }
 
@@ -101,7 +101,7 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
 
   private def onDisconnected(connectionThread: InternetConnectionThread): Unit = {
     addressDeviceMap.find(_._2 == connectionThread).foreach { ad =>
-      Log.d(Tag, "Connection closed to " + ad._1)
+      logger.trace("Connection closed to " + ad._1)
       connections -= connectionThread
       addressDeviceMap -= ad._1
       connectionHandler.onConnectionClosed()
@@ -112,7 +112,7 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
     case info: ConnectionInfo =>
       val address = crypto.calculateAddress(info.key)
       if (address == crypto.localAddress) {
-        Log.i(Tag, "Address " + address + " is me, not connecting to myself")
+        logger.info("Address " + address + " is me, not connecting to myself")
         thread.close()
         return
       }
@@ -141,7 +141,7 @@ class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
 
   def connectionChanged(): Unit = {
     FutureHelper {
-      Log.i(Tag, "Network has changed. Closing all connections and connecting to bootstrap nodes again")
+      logger.info("Network has changed. Closing all connections and connecting to bootstrap nodes again")
       connections.foreach(_.close())
       openAllConnections(maxConnections)
     }

@@ -7,6 +7,7 @@ import com.nutomic.ensichat.core.header.ContentHeader
 import com.nutomic.ensichat.core.interfaces._
 import com.nutomic.ensichat.core.internet.InternetInterface
 import com.nutomic.ensichat.core.util.{Database, FutureHelper}
+import com.typesafe.scalalogging.Logger
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -20,7 +21,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
                               callbacks: CallbackInterface, crypto: Crypto,
                               maxInternetConnections: Int) {
 
-  private val Tag = "ConnectionHandler"
+  private val logger = Logger(this.getClass)
 
   private var transmissionInterfaces = Set[TransmissionInterface]()
 
@@ -45,8 +46,8 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     additionalInterfaces.foreach(transmissionInterfaces += _)
     FutureHelper {
       crypto.generateLocalKeys()
-      Log.i(Tag, "Service started, address is " + crypto.localAddress)
-      Log.i(Tag, "Local user is " + settings.get(SettingsInterface.KeyUserName, "none") +
+      logger.info("Service started, address is " + crypto.localAddress)
+      logger.info("Local user is " + settings.get(SettingsInterface.KeyUserName, "none") +
         " with status '" + settings.get(SettingsInterface.KeyUserStatus, "") + "'")
       transmissionInterfaces += new InternetInterface(this, crypto, settings, maxInternetConnections)
       transmissionInterfaces.foreach(_.create())
@@ -83,11 +84,11 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
    */
   def onMessageReceived(msg: Message): Unit = {
     if (router.isMessageSeen(msg)) {
-      Log.v(Tag, "Ignoring message from " + msg.header.origin + " that we already received")
+      logger.trace("Ignoring message from " + msg.header.origin + " that we already received")
     } else if (msg.header.target == crypto.localAddress) {
       crypto.verifyAndDecrypt(msg) match {
         case Some(m) => onNewMessage(m)
-        case None => Log.i(Tag, "Ignoring message with invalid signature from " + msg.header.origin)
+        case None => logger.info("Ignoring message with invalid signature from " + msg.header.origin)
       }
     } else {
       router.forwardMessage(msg)
@@ -127,34 +128,34 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     val maxConnections = settings.get(SettingsInterface.KeyMaxConnections,
       SettingsInterface.DefaultMaxConnections.toString).toInt
     if (connections().size == maxConnections) {
-      Log.i(Tag, "Maximum number of connections reached")
+      logger.info("Maximum number of connections reached")
       return false
     }
 
     val info = msg.body.asInstanceOf[ConnectionInfo]
     val sender = crypto.calculateAddress(info.key)
     if (sender == Address.Broadcast || sender == Address.Null) {
-      Log.i(Tag, "Ignoring ConnectionInfo message with invalid sender " + sender)
+      logger.info("Ignoring ConnectionInfo message with invalid sender " + sender)
       return false
     }
 
     if (crypto.havePublicKey(sender) && !crypto.verify(msg, Option(crypto.getPublicKey(sender)))) {
-      Log.i(Tag, "Ignoring ConnectionInfo message with invalid signature")
+      logger.info("Ignoring ConnectionInfo message with invalid signature")
       return false
     }
 
     synchronized {
       if (!crypto.havePublicKey(sender)) {
         crypto.addPublicKey(sender, info.key)
-        Log.i(Tag, "Added public key for new device " + sender.toString)
+        logger.info("Added public key for new device " + sender.toString)
       }
     }
 
     // Log with username if we know it.
     if (allKnownUsers().map(_.address).contains(sender))
-      Log.i(Tag, "Node " + getUser(sender).name + " (" + sender + ") connected")
+      logger.info("Node " + getUser(sender).name + " (" + sender + ") connected")
     else
-      Log.i(Tag, "Node " + sender + " connected")
+      logger.info("Node " + sender + " connected")
 
     sendTo(sender, new UserInfo(settings.get(SettingsInterface.KeyUserName, ""),
                                 settings.get(SettingsInterface.KeyUserStatus, "")))

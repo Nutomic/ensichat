@@ -6,8 +6,8 @@ import java.net.{InetAddress, Socket}
 import com.nutomic.ensichat.core.Message.ReadMessageException
 import com.nutomic.ensichat.core.body.ConnectionInfo
 import com.nutomic.ensichat.core.header.MessageHeader
-import com.nutomic.ensichat.core.interfaces.Log
 import com.nutomic.ensichat.core.{Address, Crypto, Message}
+import com.typesafe.scalalogging.Logger
 
 /**
  * Encapsulates an active connection to another node.
@@ -15,14 +15,14 @@ import com.nutomic.ensichat.core.{Address, Crypto, Message}
 class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (InternetConnectionThread) => Unit,
                        onReceive: (Message, InternetConnectionThread) => Unit) extends Thread {
 
-  private val Tag = "InternetConnectionThread"
+  private val logger = Logger(this.getClass)
 
   private val inStream: InputStream =
     try {
       socket.getInputStream
     } catch {
       case e: IOException =>
-        Log.e(Tag, "Failed to open stream", e)
+        logger.error("Failed to open stream", e)
         close()
         null
     }
@@ -32,7 +32,7 @@ class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (
       socket.getOutputStream
     } catch {
       case e: IOException =>
-        Log.e(Tag, "Failed to open stream", e)
+        logger.error("Failed to open stream", e)
         close()
         null
     }
@@ -42,7 +42,7 @@ class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (
   }
   
   override def run(): Unit = {
-    Log.i(Tag, "Connection opened to " + socket.getInetAddress)
+    logger.info("Connection opened to " + socket.getInetAddress)
 
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
       Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
@@ -51,13 +51,13 @@ class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (
       socket.setKeepAlive(true)
       while (socket.isConnected) {
         val msg = Message.read(inStream)
-        Log.v(Tag, "Received " + msg)
+        logger.trace("Received " + msg)
 
         onReceive(msg, this)
       }
     } catch {
       case e @ (_: ReadMessageException | _: IOException) =>
-        Log.w(Tag, "Failed to read incoming message", e)
+        logger.warn("Failed to read incoming message", e)
         close()
         return
     }
@@ -68,7 +68,7 @@ class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (
     try {
       outStream.write(msg.write)
     } catch {
-      case e: IOException => Log.e(Tag, "Failed to write message", e)
+      case e: IOException => logger.error("Failed to write message", e)
     }
   }
 
@@ -76,9 +76,9 @@ class InternetConnectionThread(socket: Socket, crypto: Crypto, onDisconnected: (
     try {
       socket.close()
     } catch {
-      case e: IOException => Log.w(Tag, "Failed to close socket", e)
+      case e: IOException => logger.warn("Failed to close socket", e)
     }
-    Log.d(Tag, "Connection to " + socket.getInetAddress + " closed")
+    logger.debug("Connection to " + socket.getInetAddress + " closed")
     onDisconnected(this)
   }
 

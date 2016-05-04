@@ -5,10 +5,10 @@ import java.util.Date
 
 import com.nutomic.ensichat.core.body.Text
 import com.nutomic.ensichat.core.header.ContentHeader
-import com.nutomic.ensichat.core.interfaces.{Log, CallbackInterface}
+import com.nutomic.ensichat.core.interfaces.CallbackInterface
 import com.nutomic.ensichat.core.{Address, Message, User}
+import com.typesafe.scalalogging.Logger
 import slick.driver.H2Driver.api._
-import slick.jdbc.meta.MTable
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -21,7 +21,7 @@ import scala.concurrent.duration.Duration
  */
 class Database(path: File, callbackInterface: CallbackInterface) {
 
-  private val Tag = "Database"
+  private val logger = Logger(this.getClass)
 
   private class Messages(tag: Tag) extends Table[Message](tag, "MESSAGES") {
     def id        = primaryKey("id", (origin, messageId))
@@ -63,7 +63,7 @@ class Database(path: File, callbackInterface: CallbackInterface) {
     // H2 appends a .mv.db suffix to the path which we can't change, so we have to check that file.
     val dbFile = new File(path.getAbsolutePath + ".mv.db")
     if (!dbFile.exists()) {
-      Log.i(Tag, "Database does not exist, creating tables")
+      logger.info("Database does not exist, creating tables")
       Await.result(db.run((messages.schema ++ contacts.schema).create), Duration.Inf)
     }
   }

@@ -5,24 +5,21 @@ import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 import com.nutomic.ensichat.core.body.Text
-import com.nutomic.ensichat.core.interfaces.SettingsInterface._
-import com.nutomic.ensichat.core.interfaces.{CallbackInterface, Log, SettingsInterface}
+import com.nutomic.ensichat.core.interfaces.{CallbackInterface, SettingsInterface}
 import com.nutomic.ensichat.core.util.Database
 import com.nutomic.ensichat.core.{ConnectionHandler, Crypto, Message}
+import com.typesafe.scalalogging.Logger
 import scopt.OptionParser
 
 object Main extends App with CallbackInterface {
 
-  private val Tag = "Main"
+  private val logger = Logger(this.getClass)
 
   private val ConfigFolder = Paths.get("").toFile.getAbsoluteFile
   private val ConfigFile   = new File(ConfigFolder, "config.properties")
   private val DatabaseFile = new File(ConfigFolder, "database")
   private val KeyFolder    = new File(ConfigFolder, "keys")
 
-  private val LogInterval = TimeUnit.SECONDS.toMillis(1)
-
-  private lazy val logInstance       = new Logging()
   private lazy val settings          = new Settings(ConfigFile)
   private lazy val crypto            = new Crypto(settings, KeyFolder)
   private lazy val database          = new Database(DatabaseFile, this)
@@ -38,7 +35,6 @@ object Main extends App with CallbackInterface {
   private def init(): Unit = {
     ConfigFolder.mkdirs()
     KeyFolder.mkdirs()
-    Log.setLogInstance(logInstance)
     sys.addShutdownHook(connectionHandler.stop())
 
     val parser = new OptionParser[Config]("ensichat") {
@@ -64,8 +60,7 @@ object Main extends App with CallbackInterface {
 
     // Keep alive and print logs
     while (true) {
-      Thread.sleep(LogInterval)
-      logInstance.dequeue().foreach(System.out.println)
+      Thread.sleep(TimeUnit.SECONDS.toMillis(1))
     }
   }
 
@@ -78,9 +73,9 @@ object Main extends App with CallbackInterface {
         val address = msg.header.origin
         val name = connectionHandler.getUser(address).name
         connectionHandler.sendTo(address, new Text("Hello " + name))
-        Log.i(Tag, "Received text: " + text.text)
+        logger.info("Received text: " + text.text)
       case _ =>
-        Log.i(Tag, "Received msg: " + msg.body)
+        logger.info("Received msg: " + msg.body)
     }
   }
 
