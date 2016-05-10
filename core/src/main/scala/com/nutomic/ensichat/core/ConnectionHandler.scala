@@ -37,8 +37,12 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
   /**
    * Generates keys and starts Bluetooth interface.
+   *
+   * @param additionalInterfaces Instances of [[TransmissionInterface]] to transfer data over
+   *                             platform specific interfaces (eg Bluetooth).
    */
-  def start(): Unit = {
+  def start(additionalInterfaces: Set[TransmissionInterface] = Set()): Unit = {
+    additionalInterfaces.foreach(transmissionInterfaces += _)
     FutureHelper {
       crypto.generateLocalKeys()
       Log.i(Tag, "Service started, address is " + crypto.localAddress)
@@ -52,13 +56,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   def stop(): Unit = {
     transmissionInterfaces.foreach(_.destroy())
     database.close()
-  }
-
-  /**
-   * NOTE: This *must* be called before [[start()]], or it will have no effect.
-   */
-  def addTransmissionInterface(interface: TransmissionInterface) = {
-    transmissionInterfaces += interface
   }
 
   /**

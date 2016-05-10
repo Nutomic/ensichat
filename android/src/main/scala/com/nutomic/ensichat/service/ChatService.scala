@@ -8,6 +8,7 @@ import android.content.{Context, Intent, IntentFilter}
 import android.net.ConnectivityManager
 import android.os.Handler
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
+import com.nutomic.ensichat.core.interfaces.TransmissionInterface
 import com.nutomic.ensichat.core.util.Database
 import com.nutomic.ensichat.core.{ConnectionHandler, Crypto}
 import com.nutomic.ensichat.util.{NetworkChangedReceiver, SettingsWrapper}
@@ -56,11 +57,11 @@ class ChatService extends Service {
   override def onCreate(): Unit = {
     super.onCreate()
     notificationHandler.updatePersistentNotification(getConnectionHandler.connections().size)
-    if (Option(BluetoothAdapter.getDefaultAdapter).isDefined) {
-      connectionHandler.addTransmissionInterface(new BluetoothInterface(this, new Handler(),
-        connectionHandler))
-    }
-    connectionHandler.start()
+    var additionalInterfaces = Set[TransmissionInterface]()
+    if (Option(BluetoothAdapter.getDefaultAdapter).isDefined)
+      additionalInterfaces += new BluetoothInterface(this, new Handler(), connectionHandler)
+
+    connectionHandler.start(additionalInterfaces)
     registerReceiver(networkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
   }
 
