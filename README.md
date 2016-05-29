@@ -18,9 +18,19 @@ To setup a development environment, just install [Android Studio](https://develo
 and import the project.
 
 Alternatively, you can use the command line. To create a debug apk, run `./gradlew assembleDevDebug`.
-This requires at least Android Lollipop on your development device. If you don't have Lollipop, you
-can alternatively use `./gradlew assembleRelDebug`. However, this results in considerably slower
+This requires at least Android Lollipop on your development device. If you don't have 5.0 or higher,
+you have to use `./gradlew assembleRelDebug`. However, this results in considerably slower
 incremental builds. To create a release apk, run `./gradlew assembleRelRelease`.
+
+Testing
+-------
+
+You can run the unit tests with `./gradlew test`. After connecting an Android device, you can run
+the Android tests with `./gradlew connectedDevDebugAndroidTest` (or
+`./gradlew connectedRelDebugAndroidTest` if your Android version is  lower than 5.0).
+
+To run integration tests for the core module, use `./gradlew integration:run`. If this fails (or
+is very slow), try changing the value of Crypto#PublicKeySize to 512 (in the core module).
 
 License
 -------

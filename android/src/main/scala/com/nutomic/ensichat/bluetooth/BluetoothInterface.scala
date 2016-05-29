@@ -170,10 +170,11 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Removes device from active connections.
    */
   def onConnectionClosed(device: Device, socket: BluetoothSocket): Unit = {
+    val address = getAddressForDevice(device.id)
     devices -= device.id
     connections -= device.id
-    connectionHandler.onConnectionClosed()
     addressDeviceMap = addressDeviceMap.filterNot(_._2 == device.id)
+    connectionHandler.onConnectionClosed(address)
   }
 
   /**
@@ -192,15 +193,18 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
       if (!connectionHandler.onConnectionOpened(msg))
         addressDeviceMap -= address
     case _ =>
-      connectionHandler.onMessageReceived(msg)
+      connectionHandler.onMessageReceived(msg, getAddressForDevice(device))
   }
+
+  private def getAddressForDevice(device: Device.ID) =
+    addressDeviceMap.find(_._2 == device).get._1
 
   /**
    * Sends the message to nextHop.
    */
   override def send(nextHop: Address, msg: Message): Unit = {
     addressDeviceMap
-      .find(_._1 == nextHop)
+      .find(_._1 == nextHop || Address.Broadcast == nextHop)
       .map(i => connections.get(i._2))
       .getOrElse(None)
       .foreach(_.send(msg))
@@ -210,11 +214,6 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
    * Returns all active Bluetooth connections.
    */
   override def getConnections: Set[Address] =
-    connections.flatMap { x =>
-        addressDeviceMap
-          .find(_._2 == x._1)
-          .map(_._1)
-      }
-      .toSet
+    connections.map( c => getAddressForDevice(c._1)).toSet
 
 }

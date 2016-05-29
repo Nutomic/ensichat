@@ -12,4 +12,6 @@ final case class EncryptedBody(data: Array[Byte]) extends MessageBody {
   def write = data
 
   override def length = data.length
+
+  override def toString = "EncryptedBody"
 }

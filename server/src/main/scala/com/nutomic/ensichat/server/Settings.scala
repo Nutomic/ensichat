@@ -3,13 +3,14 @@ package com.nutomic.ensichat.server
 import java.io._
 import java.util.Properties
 
-import com.nutomic.ensichat.core.interfaces.{Log, SettingsInterface}
+import com.nutomic.ensichat.core.interfaces.SettingsInterface
+import com.typesafe.scalalogging.Logger
 
 import scala.collection.JavaConverters._
 
 class Settings(file: File) extends SettingsInterface {
 
-  private val Tag = "Settings"
+  private val logger = Logger(this.getClass)
 
   if (!file.exists()) {
     file.createNewFile()
@@ -23,7 +24,7 @@ class Settings(file: File) extends SettingsInterface {
       p.load(fis)
       fis.close()
     } catch {
-      case e: IOException => Log.w(Tag, "Failed to load settings from " + file, e)
+      case e: IOException => logger.warn("Failed to load settings from " + file, e)
     }
     p
   }
@@ -35,7 +36,7 @@ class Settings(file: File) extends SettingsInterface {
       props.store(fos, "")
       fos.close()
     } catch {
-      case e: IOException => Log.w(Tag, "Failed to write preference for key " + key, e)
+      case e: IOException => logger.warn("Failed to write preference for key " + key, e)
     }
   }
 

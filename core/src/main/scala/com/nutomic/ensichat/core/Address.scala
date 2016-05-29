@@ -56,4 +56,9 @@ final case class Address(bytes: Array[Byte]) {
       .grouped(Address.GroupLength)
       .reduce(_ + "-" + _)
 
+  /**
+    * Returns shortened address, useful for debugging.
+    */
+  def short = toString.split("-").head
+
 }

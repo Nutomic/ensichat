@@ -1,18 +1,44 @@
 package com.nutomic.ensichat.core
 
+import java.util.Comparator
+
 import com.nutomic.ensichat.core.header.{ContentHeader, MessageHeader}
+import com.nutomic.ensichat.core.util.LocalRoutesInfo
+
+object Router extends Comparator[Int] {
+
+  /**
+   * Compares which sequence number is newer.
+   *
+   * @return 1 if lhs is newer, -1 if rhs is newer, 0 if they are equal.
+   */
+  override def compare(lhs: Int, rhs: Int): Int = {
+    if (lhs == rhs)
+      0
+    // True if [[rhs]] is between {{{MessageHeader.SeqNumRange.size / 2}}} and
+    // [[MessageHeader.SeqNumRange.size]].
+    else if (lhs > ContentHeader.SeqNumRange.size / 2) {
+      // True if [[rhs]] is between {{{lhs - MessageHeader.SeqNumRange.size / 2}}} and [[lhs]].
+      if (lhs - ContentHeader.SeqNumRange.size / 2 < rhs && rhs < lhs) 1 else -1
+    } else {
+      // True if [[rhs]] is *not* between [[lhs]] and {{{lhs + MessageHeader.SeqNumRange.size / 2}}}.
+      if (rhs < lhs || rhs > lhs + ContentHeader.SeqNumRange.size / 2) 1 else -1
+    }
+  }
+}
 
 /**
  * Forwards messages to all connected devices.
  */
-final private[core] class Router(activeConnections: () => Set[Address], send: (Address, Message) => Unit) {
+private[core] class Router(routesInfo: LocalRoutesInfo, send: (Address, Message) => Unit,
+                                 noRouteFound: (Message) => Unit) {
 
   private var messageSeen = Set[(Address, Int)]()
 
   /**
    * Returns true if we have received the same message before.
    */
-  def isMessageSeen(msg: Message): Boolean = {
+  private[core] def isMessageSeen(msg: Message): Boolean = {
     val info = (msg.header.origin, msg.header.seqNum)
     val seen = messageSeen.contains(info)
     markMessageSeen(info)
@@ -23,15 +49,24 @@ final private[core] class Router(activeConnections: () => Set[Address], send: (A
    * Sends message to all connected devices. Should only be called if [[isMessageSeen()]] returns
    * true.
    */
-  def forwardMessage(msg: Message): Unit = {
-    val info = (msg.header.origin, msg.header.seqNum)
-    val updated = incHopCount(msg)
-    if (updated.header.hopCount >= updated.header.hopLimit)
+  def forwardMessage(msg: Message, nextHopOption: Option[Address] = None): Unit = {
+    if (msg.header.hopCount + 1 >= msg.header.hopLimit)
       return
 
-    activeConnections().foreach(a => send(a, updated))
+    val nextHop = nextHopOption.getOrElse(msg.header.target)
 
-    markMessageSeen(info)
+    if (nextHop == Address.Broadcast) {
+      send(nextHop, msg)
+      return
+    }
+
+    routesInfo.getRoute(nextHop).map(_.nextHop) match {
+      case Some(a) =>
+        send(a, incHopCount(msg))
+        markMessageSeen((msg.header.origin, msg.header.seqNum))
+      case None =>
+        noRouteFound(msg)
+    }
   }
 
   private def markMessageSeen(info: (Address, Int)): Unit = {
@@ -64,15 +99,8 @@ final private[core] class Router(activeConnections: () => Set[Address], send: (A
       if (a1 != a2)
         true
 
-      // True if [[s2]] is between {{{MessageHeader.SeqNumRange.size / 2}}} and
-      // [[MessageHeader.SeqNumRange.size]].
-      if (s1 > ContentHeader.SeqNumRange.size / 2) {
-        // True if [[s2]] is between {{{s1 - MessageHeader.SeqNumRange.size / 2}}} and [[s1]].
-        s1 - ContentHeader.SeqNumRange.size / 2 < s2 && s2 < s1
-      } else {
-        // True if [[s2]] is *not* between [[s1]] and {{{s1 + MessageHeader.SeqNumRange.size / 2}}}.
-        s2 < s1 || s2 > s1 + ContentHeader.SeqNumRange.size / 2
-      }
+      else
+        Router.compare(s1, s2) > 0
     }
   }
 

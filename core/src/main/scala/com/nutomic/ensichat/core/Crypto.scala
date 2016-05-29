@@ -9,7 +9,8 @@ import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 import com.nutomic.ensichat.core.Crypto._
 import com.nutomic.ensichat.core.body._
 import com.nutomic.ensichat.core.header.ContentHeader
-import com.nutomic.ensichat.core.interfaces.{Log, SettingsInterface}
+import com.nutomic.ensichat.core.interfaces.SettingsInterface
+import com.typesafe.scalalogging.Logger
 
 object Crypto {
 
@@ -76,7 +77,7 @@ object Crypto {
  */
 class Crypto(settings: SettingsInterface, keyFolder: File) {
 
-  private val Tag = "Crypto"
+  private val logger = Logger(this.getClass)
 
   /**
    * Generates a new key pair using [[keyFolder]] with [[PublicKeySize]] bits and stores the
@@ -104,7 +105,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
 
     saveKey(PrivateKeyAlias, keyPair.getPrivate)
     saveKey(PublicKeyAlias, keyPair.getPublic)
-    Log.i(Tag, "Generated cryptographic keys, address is " + address)
+    logger.info("Generated cryptographic keys, address is " + address)
   }
 
   /**
@@ -118,7 +119,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
    * @throws RuntimeException If the key does not exist.
    */
   @throws[RuntimeException]
-  private[core] def getPublicKey(address: Address): PublicKey = {
+  def getPublicKey(address: Address): PublicKey = {
     loadKey(address.toString, classOf[PublicKey])
   }
 
@@ -128,7 +129,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
    * @throws RuntimeException If a key already exists for this address.
    */
   @throws[RuntimeException]
-  private[core] def addPublicKey(address: Address, key: PublicKey): Unit = {
+  def addPublicKey(address: Address, key: PublicKey): Unit = {
     if (havePublicKey(address))
       throw new RuntimeException("Already have key for " + address + ", not overwriting")
 
@@ -184,7 +185,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
       fos = Option(new FileOutputStream(path))
       fos.foreach(_.write(key.getEncoded))
     } catch {
-      case e: IOException => Log.w(Tag, "Failed to save key for alias " + alias, e)
+      case e: IOException => logger.warn("Failed to save key for alias " + alias, e)
     } finally {
       fos.foreach(_.close())
     }
@@ -212,7 +213,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
       data = new Array[Byte](path.length().asInstanceOf[Int])
       fis.foreach(_.read(data))
     } catch {
-      case e: IOException => Log.e(Tag, "Failed to load key for alias " + alias, e)
+      case e: IOException => logger.error("Failed to load key for alias " + alias, e)
     } finally {
       fis.foreach(_.close())
     }
@@ -229,20 +230,6 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
 
   private[core] def encryptAndSign(msg: Message, key: Option[PublicKey] = None): Message = {
     sign(encrypt(msg, key))
-  }
-
-  private[core] def verifyAndDecrypt(msg: Message, key: Option[PublicKey] = None): Option[Message] = {
-    // Catch exception to avoid crash if we receive invalid message.
-    try {
-      if (verify(msg, key))
-        Option(decrypt(msg))
-      else
-        None
-    } catch {
-      case e: InvalidKeyException =>
-        Log.w(Tag, "Failed to verify or decrypt message", e)
-        None
-    }
   }
 
   private def encrypt(msg: Message, key: Option[PublicKey] = None): Message = {
@@ -262,7 +249,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
   }
 
   @throws[InvalidKeyException]
-  private def decrypt(msg: Message): Message = {
+  def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
     val asymmetricCipher = Cipher.getInstance(CipherAlgorithm)
     asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))

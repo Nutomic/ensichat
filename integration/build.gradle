@@ -1,0 +1,12 @@
+apply plugin: 'scala'
+apply plugin: 'application'
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.11.7'
+    compile 'com.github.scala-incubator.io:scala-io-file_2.11:0.4.3'
+    compile project(path: ':core')
+}
+
+mainClassName = 'com.nutomic.ensichat.integration.Main'
+version = "0.2.3"
+applicationName = 'ensichat-server'

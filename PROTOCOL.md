@@ -26,6 +26,9 @@ Nodes MUST NOT have a public key with the broadcast address or null
 address as hash. Additionally, nodes MUST NOT connect to a node with
 either address.
 
+All integer fields are in network byte order, and unsigned (unless 
+specified otherwise).
+
 
 Crypto
 ------
@@ -40,21 +43,14 @@ private key, and the result written to the 'Encryption Data' part.
 
 Routing
 -------
-A simple flood routing protocol is currently used. Every node forwards
-all messages, unless a message with the same Origin and Sequence Number
-has already been received.
+The routing protocol is based on 
+[AODVv2](https://datatracker.ietf.org/doc/draft-ietf-manet-aodvv2/),
+with various features left out.
 
-Nodes MUST store pairs of (Origin, Sequence Number) for all received
-messages. After receiving a new message, entries with the same Origin
-and Sequence Number between _received_ + 1 and _received_ + 32767 MUST
-be removed (with a wrap around at the maximum value). The entries MUST
-NOT be cleared while the program is running. They MAY be cleared when
-the program is exited.
+TODO: Add Documentation for routing protocol.
 
 There is currently no support for offline messages. If sender and
 receiver are not in the same mesh, the message will not arrive.
-
-Nodes are free implement different routing algorithms.
 
 
 Messages
@@ -84,9 +80,7 @@ AES key is wrapped with the recipient's public RSA key.
 ### Header
 
 Every message starts with one 74 byte header indicating the message
-version, type and ID, followed by the length of the message. The
-header is in network byte order, i.e. big endian. The header may have
-6 bytes of additional data.
+version, type and ID, followed by the length of the message.
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -219,6 +213,74 @@ Key is the public key of the sending node.
 After this message has been received, communication with normal messages
 may start.
 
+
+### Route Request (Protocol-Type = 2)
+
+Sent to request a route to a specific Target Address.
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    |                      Address (32 bytes)                       |
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |           OrigSeqNum          |         OriginMetric          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                          TargMetric                           |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Equivalent to the Sequence Number in the message header.
+
+Set OrigMetric = RouterClient.Cost for the Router Client entry
+which includes OrigAddr.
+
+If an Invalid route exists in the Local Route Set matching
+TargAddr using longest prefix matching and has a valid
+sequence number, set TargSeqNum = LocalRoute.SeqNum.
+Otherwise, set TargSeqNum = -1. This field is signed.
+
+### Route Reply (Protocol-Type = 3)
+
+Sent as a reply when a Route Request arrives, to inform other nodes
+about a route.
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |           TargSeqNum          |          TargMetric           |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Set TargMetric = RouterClient.Cost for the Router Client entry
+which includes TargAddr.
+
+### Route Error (Protocol-Type = 4)
+
+Notifies other nodes of routes that are no longer available. The target
+address MUST be set to the broadcast address.
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    |                   Packet Source (32 bytes)                    |
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
+    |                      Address (32 bytes)                       |
+    |                                                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                           SeqNum                              |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Packet Source is the source address of the message triggering this
+Route Error. If the route error is not triggered by a message,
+this MUST be set to the null address.
+
+Address is the address that is no longer reachable.
+
+SeqNum is the sequence number of the route that is no longer available
+(if known). Otherwise, set TargSeqNum = -1. This field is signed.
 
 Content Messages
 ----------------
