@@ -8,5 +8,4 @@ dependencies {
 }
 
 mainClassName = 'com.nutomic.ensichat.integration.Main'
-version = "0.2.3"
 applicationName = 'ensichat-server'
