@@ -106,6 +106,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     val header = new MessageHeader(body.protocolType, crypto.localAddress, Address.Broadcast, seqNum)
 
     val signed = crypto.sign(new Message(header, body))
+    logger.trace(s"sending new $signed")
     router.forwardMessage(signed)
   }
 
@@ -115,6 +116,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     val header = new MessageHeader(body.protocolType, crypto.localAddress, replyTo, seqNum)
 
     val signed = crypto.sign(new Message(header, body))
+    logger.trace(s"sending new $signed")
     router.forwardMessage(signed)
   }
 
@@ -126,6 +128,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     val body = new RouteError(address, seqNum)
 
     val signed = crypto.sign(new Message(header, body))
+    logger.trace(s"sending new $signed")
     router.forwardMessage(signed)
   }
 
@@ -152,6 +155,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
     msg.body match {
       case rreq: RouteRequest =>
+        logger.trace(s"Received $msg")
         localRoutesInfo.addRoute(msg.header.origin, rreq.originSeqNum, previousHop, rreq.originMetric)
         // TODO: Respecting this causes the RERR test to fail. We have to fix the implementation
         //       of isMessageRedundant() without breaking the test.
@@ -173,6 +177,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
         }
         return
       case rrep: RouteReply =>
+        logger.trace(s"Received $msg")
         localRoutesInfo.addRoute(msg.header.origin, rrep.originSeqNum, previousHop, 0)
         // TODO: See above (in RREQ handler).
         if (routeMessageInfo.isMessageRedundant(msg)) {
@@ -198,6 +203,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
         router.forwardMessage(forwardMsg)
         return
       case rerr: RouteError =>
+        logger.trace(s"Received $msg")
         localRoutesInfo.getRoute(rerr.address).foreach { route =>
           if (route.nextHop == msg.header.origin && (rerr.seqNum == 0 || rerr.seqNum > route.seqNum)) {
             localRoutesInfo.connectionClosed(rerr.address)
