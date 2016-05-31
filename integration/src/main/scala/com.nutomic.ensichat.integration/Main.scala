@@ -10,6 +10,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.Try
+import scalax.file.Path
 
 /**
  * Creates some local nodes, connects them and sends messages between them.
@@ -63,7 +64,7 @@ object Main extends App {
 
   private def createNode(index: Int): Future[LocalNode] = {
     val configFolder = new File(s"build/node$index/")
-    assert(!configFolder.exists(), s"stale config exists in $configFolder")
+    Path(configFolder).deleteRecursively()
     Future(new LocalNode(index, configFolder))
   }
 
