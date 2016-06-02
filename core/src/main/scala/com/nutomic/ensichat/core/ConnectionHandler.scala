@@ -1,18 +1,18 @@
 package com.nutomic.ensichat.core
 
 import java.security.InvalidKeyException
-import java.util.Date
+import java.util.{TimerTask, Timer, Date}
 
 import com.nutomic.ensichat.core.body._
 import com.nutomic.ensichat.core.header.{ContentHeader, MessageHeader}
 import com.nutomic.ensichat.core.interfaces._
 import com.nutomic.ensichat.core.internet.InternetInterface
-import com.nutomic.ensichat.core.util.{Database, FutureHelper, LocalRoutesInfo, RouteMessageInfo}
+import com.nutomic.ensichat.core.util._
 import com.typesafe.scalalogging.Logger
+import org.joda.time.{DateTime, Duration}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 /**
  * High-level handling of all message transfers and callbacks.
@@ -27,7 +27,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
   private val logger = Logger(this.getClass)
 
-  private val MissingRouteMessageTimeout = 5.minutes
+  private val CheckMessageRetryInterval = Duration.standardMinutes(1)
 
   private var transmissionInterfaces = Set[TransmissionInterface]()
 
@@ -41,13 +41,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
                                        (a, m) => transmissionInterfaces.foreach(_.send(a, m)),
                                        noRouteFound)
 
-  /**
-    * Contains messages that couldn't be forwarded because we don't know a route.
-    *
-    * These will be buffered until we receive a [[RouteReply]] for the target, or when until the
-    * message has couldn't be forwarded after [[MissingRouteMessageTimeout]].
-    */
-  private var missingRouteMessages = Set[(Message, Date)]()
+  private val messageBuffer = new MessageBuffer(requestRoute)
 
   /**
    * Holds all known users.
@@ -76,6 +70,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   }
 
   def stop(): Unit = {
+    messageBuffer.stop()
     transmissionInterfaces.foreach(_.destroy())
     database.close()
   }
@@ -157,6 +152,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
       case rreq: RouteRequest =>
         logger.trace(s"Received $msg")
         localRoutesInfo.addRoute(msg.header.origin, rreq.originSeqNum, previousHop, rreq.originMetric)
+        resendMissingRouteMessages()
         // TODO: Respecting this causes the RERR test to fail. We have to fix the implementation
         //       of isMessageRedundant() without breaking the test.
         if (routeMessageInfo.isMessageRedundant(msg)) {
@@ -239,27 +235,17 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   }
 
   /**
-    * Tries to send messages in [[missingRouteMessages]] again, after we acquired a new route.
-    *
-    * Before checking [[missingRouteMessages]], those older than [[MissingRouteMessageTimeout]]
-    * are removed.
+    * Tries to send messages in [[MessageBuffer]] again, after we acquired a new route.
     */
   private def resendMissingRouteMessages(): Unit = {
-    // resend messages if possible
-    val date = new Date()
-    missingRouteMessages = missingRouteMessages.filter { e =>
-      val removeTime = new Date(e._2.getTime + MissingRouteMessageTimeout.toMillis)
-      removeTime.after(date)
-    }
-
-    val m = missingRouteMessages.filter(m => localRoutesInfo.getRoute(m._1.header.target).isDefined)
-    m.foreach( m => router.forwardMessage(m._1))
-    missingRouteMessages --= m
+    localRoutesInfo.getAllAvailableRoutes
+      .flatMap( r => messageBuffer.getMessages(r.destination))
+      .foreach(router.forwardMessage(_))
   }
 
   private def noRouteFound(message: Message): Unit = {
     if (message.header.origin == crypto.localAddress) {
-      missingRouteMessages += ((message, new Date()))
+      messageBuffer.addMessage(message)
       requestRoute(message.header.target)
     } else
       routeError(message.header.target, Option(message.header.origin))
@@ -330,6 +316,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     sendTo(sender, new UserInfo(settings.get(SettingsInterface.KeyUserName, ""),
                                 settings.get(SettingsInterface.KeyUserStatus, "")))
     callbacks.onConnectionsChanged()
+    resendMissingRouteMessages()
     true
   }
 

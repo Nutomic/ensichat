@@ -42,4 +42,20 @@ class LocalRoutesInfoTest extends TestCase {
     assertEquals(None, routesInfo.getRoute(AddressTest.a3))
   }
 
+  def testNeighbor(): Unit = {
+    val routesInfo = new LocalRoutesInfo(connections)
+    val r1 = routesInfo.getRoute(AddressTest.a1)
+    assertTrue(r1.isDefined)
+    assertEquals(AddressTest.a1, r1.get.destination)
+    assertEquals(1, r1.get.metric)
+  }
+
+  def testGetAllAvailableRoutes(): Unit = {
+    val routesInfo = new LocalRoutesInfo(connections)
+    routesInfo.addRoute(AddressTest.a3, 0, AddressTest.a1, 1)
+    val destinations = routesInfo.getAllAvailableRoutes.map(_.destination).toSet
+    assertEquals(connections() + AddressTest.a3, destinations)
+
+  }
+
 }

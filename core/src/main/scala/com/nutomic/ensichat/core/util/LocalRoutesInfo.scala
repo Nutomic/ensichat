@@ -61,16 +61,23 @@ private[core] class LocalRoutesInfo(activeConnections: () => Set[Address]) {
     routes += entry
   }
 
-  def getRoute(destination: Address): Option[RouteEntry] = {
-    if (activeConnections().contains(destination))
-      return Option(new RouteEntry(destination, 0, destination, DateTime.now, DateTime.now, 1, Idle))
-
+  /**
+    * Returns a list of all known routes (excluding invalid), ordered by best metric.
+    */
+  def getAllAvailableRoutes: List[RouteEntry] = {
     handleTimeouts()
-    val r = routes.toList
+    val neighbors = activeConnections()
+      .map(c => new RouteEntry(c, 0, c, DateTime.now, DateTime.now, 1, Idle))
+    (neighbors ++ routes).toList
+      .filter(r => r.state != Invalid)
       .sortWith(_.metric < _.metric)
-      .find( r => r.destination == destination && r.state != Invalid)
+  }
 
-    if (r.isDefined)
+  def getRoute(destination: Address): Option[RouteEntry] = {
+    val r = getAllAvailableRoutes
+      .find( r => r.destination == destination)
+
+    if (r.isDefined && routes.contains(r.get))
       routes = routes -- r + r.get.copy(state = Active, lastUsed = DateTime.now)
     r
   }

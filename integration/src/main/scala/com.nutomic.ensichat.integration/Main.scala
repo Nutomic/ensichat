@@ -1,13 +1,14 @@
 package com.nutomic.ensichat.integration
 
 import java.io.File
+import java.util.{TimerTask, Timer}
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import com.nutomic.ensichat.core.Crypto
 import com.nutomic.ensichat.core.body.Text
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{DurationLong, Duration}
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 import scalax.file.Path
@@ -23,12 +24,36 @@ object Main extends App {
   System.out.println("\n\nAll nodes connected!\n\n")
 
   sendMessages(nodes)
-  System.out.println("\n\nAll messages sent!\n\n")
+  System.out.println("\n\nMessages sent!\n\n")
 
   // Stop node 1, forcing route errors and messages to use the (longer) path via nodes 7 and 8.
   nodes(1).connectionHandler.stop()
-  System.out.println("node 1 stopped")
+  System.out.println("Node 1 stopped")
   sendMessages(nodes)
+  System.out.println("\n\nMessages after route change sent!\n\n")
+
+  // Create new node 9, send message from node 0 to its address, before actually connecting it.
+  // The message is automatically delivered when node 9 connects as neighbor.
+  val node9 = Await.result(createNode(9), Duration.Inf)
+  val timer = new Timer()
+  timer.schedule(new TimerTask {
+    override def run(): Unit = {
+      connectNodes(nodes(0), node9)
+    }
+  }, Duration(10, TimeUnit.SECONDS).toMillis)
+  sendMessage(nodes(0), node9, 30)
+
+  // Create new node 10, send message from node 7 to its address, before connecting it to the mesh.
+  // The message is delivered after node 7 starts a route discovery triggered by the message buffer.
+  val node10 = Await.result(createNode(10), Duration.Inf)
+  timer.schedule(new TimerTask {
+    override def run(): Unit = {
+      connectNodes(nodes(0), node10)
+      timer.cancel()
+    }
+  }, Duration(5, TimeUnit.SECONDS).toMillis)
+  sendMessage(nodes(7), node10, 30)
+  System.out.println("\n\nMessages after delay sent!\n\n")
 
   /**
     * Creates a new mesh with a predefined layout.
@@ -40,7 +65,7 @@ object Main extends App {
     *    \ /    |   |
     *     2     5———6
     *
-    * @return List of [[LocalNode]]s, ordered from 0 to 7.
+    * @return List of [[LocalNode]]s, ordered from 0 to 8.
     */
   private def createMesh(): Seq[LocalNode] = {
     val nodes = Await.result(Future.sequence(0.to(8).map(createNode)), Duration.Inf)
@@ -100,7 +125,7 @@ object Main extends App {
   }
 
 
-  private def sendMessage(from: LocalNode, to: LocalNode): Unit = {
+  private def sendMessage(from: LocalNode, to: LocalNode, waitSeconds: Int = 1): Unit = {
     addKey(to.crypto, from.crypto)
     addKey(from.crypto, to.crypto)
 
@@ -124,13 +149,12 @@ object Main extends App {
       assert(exists, s"message from ${from.index} did not arrive at ${to.index}")
       latch.countDown()
     }
-    assert(latch.await(1000, TimeUnit.MILLISECONDS))
+    assert(latch.await(waitSeconds, TimeUnit.SECONDS))
   }
 
   private def addKey(addTo: Crypto, addFrom: Crypto): Unit = {
     if (Try(addTo.getPublicKey(addFrom.localAddress)).isFailure)
       addTo.addPublicKey(addFrom.localAddress, addFrom.getLocalPublicKey)
-
   }
 
 }
