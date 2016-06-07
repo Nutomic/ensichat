@@ -8,6 +8,7 @@ import com.nutomic.ensichat.core.header.ContentHeader
 import com.nutomic.ensichat.core.interfaces.CallbackInterface
 import com.nutomic.ensichat.core.{Address, Message, User}
 import com.typesafe.scalalogging.Logger
+import org.joda.time
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.Await
@@ -30,20 +31,21 @@ class Database(path: File, callbackInterface: CallbackInterface) {
     def messageId = column[Long]("message_id")
     def text      = column[String]("text")
     def date      = column[Long]("date")
-    def * = (origin, target, messageId, text, date).<> [Message, (String, String, Long, String, Long)]( { tuple =>
-      val header = new ContentHeader(new Address(tuple._1),
-        new Address(tuple._2),
-        -1,
-        Text.Type,
-        Some(tuple._3),
-        Some(new Date(tuple._5)))
-      val body = new Text(tuple._4)
-      new Message(header, body)
-    }, { message =>
+    def * = (origin, target, messageId, text, date) <> [Message, (String, String, Long, String, Long)]( {
+      tuple =>
+        val header = new ContentHeader(new Address(tuple._1),
+          new Address(tuple._2),
+          -1,
+          Text.Type,
+          Some(tuple._3),
+          Some(new Date(tuple._5)))
+        val body = new Text(tuple._4)
+        new Message(header, body)
+    }, message =>
       Option((message.header.origin.toString(), message.header.target.toString(),
         message.header.messageId.get, message.body.asInstanceOf[Text].text,
         message.header.time.get.getTime))
-    })
+    )
   }
   private val messages = TableQuery[Messages]
 
@@ -51,10 +53,19 @@ class Database(path: File, callbackInterface: CallbackInterface) {
     def address = column[String]("address", O.PrimaryKey)
     def name    = column[String]("name")
     def status  = column[String]("status")
-    def wrappedAddress = address.<> [Address, String](new Address(_), a => Option(a.toString()))
+    def wrappedAddress = address <> [Address, String](new Address(_), a => Option(a.toString))
     def * = (wrappedAddress, name, status) <> (User.tupled, User.unapply)
   }
   private val contacts = TableQuery[Contacts]
+
+  private class KnownDevices(tag: Tag) extends Table[(Address, time.Duration)](tag, "KNOWN_DEVICES") {
+    def address                 = column[String]("address", O.PrimaryKey)
+    def totalConnectionSeconds  = column[Long]("total_connection_seconds")
+    def * = (address, totalConnectionSeconds) <> [(Address, time.Duration), (String, Long)](
+      tuple => (new Address(tuple._1), time.Duration.standardSeconds(tuple._2)),
+      tuple => Option((tuple._1.toString, tuple._2.getStandardSeconds)))
+  }
+  private val knownDevices = TableQuery[KnownDevices]
 
   private val db = Database.forURL("jdbc:h2:" + path.getAbsolutePath, driver = "org.h2.Driver")
 
@@ -120,6 +131,15 @@ class Database(path: File, callbackInterface: CallbackInterface) {
     assert(getContact(contact.address).nonEmpty)
     Await.result(db.run(contacts.insertOrUpdate(contact)), Duration.Inf)
     callbackInterface.onContactsUpdated()
+  }
+
+  def insertOrUpdateKnownDevice(address: Address, connectionTime: time.Duration): Unit = {
+    val query = knownDevices.insertOrUpdate((address, connectionTime))
+    Await.result(db.run(query), Duration.Inf)
+  }
+
+  def getKnownDevices: Seq[(Address, time.Duration)] = {
+    Await.result(db.run(knownDevices.result), Duration.Inf)
   }
 
 }

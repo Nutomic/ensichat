@@ -7,6 +7,7 @@ import com.nutomic.ensichat.core.interfaces.{SettingsInterface, TransmissionInte
 import com.nutomic.ensichat.core.util.FutureHelper
 import com.nutomic.ensichat.core.{Address, ConnectionHandler, Crypto, Message}
 import com.typesafe.scalalogging.Logger
+import org.joda.time.{DateTime, Duration}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -102,7 +103,8 @@ private[core] class InternetInterface(connectionHandler: ConnectionHandler, cryp
       logger.trace("Connection closed to " + ad)
       connections -= connectionThread
       addressDeviceMap -= ad
-      connectionHandler.onConnectionClosed(ad)
+      val connectionDuration = new Duration(connectionThread.connectionOpened, DateTime.now)
+      connectionHandler.onConnectionClosed(ad, connectionDuration)
     }
   }
 

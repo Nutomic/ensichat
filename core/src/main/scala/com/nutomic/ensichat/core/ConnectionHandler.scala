@@ -320,10 +320,17 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     true
   }
 
-  def onConnectionClosed(address: Address): Unit = {
+  /**
+    * Called by [[TransmissionInterface]] when a connection is closed.
+    *
+    * @param address The address of the connected device.
+    * @param duration The time that we were connected to the device.
+    */
+  def onConnectionClosed(address: Address, duration: Duration): Unit = {
     localRoutesInfo.connectionClosed(address)
       .foreach(routeError(_, None))
     callbacks.onConnectionsChanged()
+    database.insertOrUpdateKnownDevice(address, duration)
   }
 
   def connections(): Set[Address] = transmissionInterfaces.flatMap(_.getConnections)
