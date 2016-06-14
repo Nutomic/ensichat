@@ -65,7 +65,7 @@ class BluetoothTransferThread(context: Context, device: Device, socket: Bluetoot
                              new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED))
 
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
-      Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
+      Address.Null, Address.Null, 0, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 
     while (socket.isConnected) {
       try {

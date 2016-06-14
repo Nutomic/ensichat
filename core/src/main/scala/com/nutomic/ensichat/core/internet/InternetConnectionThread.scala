@@ -50,7 +50,7 @@ private[core] class InternetConnectionThread(socket: Socket, crypto: Crypto,
     logger.info("Connection opened to " + socket.getInetAddress)
 
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
-      Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
+      Address.Null, Address.Null, 0, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 
     try {
       socket.setKeepAlive(true)

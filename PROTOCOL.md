@@ -85,7 +85,7 @@ version, type and ID, followed by the length of the message.
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |    Version    | Protocol-Type |   Hop Limit   |   Hop Count   |
+    |    Version    | Protocol-Type |    Tokens     |   Hop Limit   |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                            Length                             |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -111,8 +111,8 @@ where such a packet came from MAY be closed.
 Protocol-Type is one of those specified in section Protocol Messages,
 or 255 for Content Messages.
 
-Hop Limit SHOULD be set to `20` on message creation, and
-MUST NOT be changed by a forwarding node.
+Tokens is the number of times this message should be copied to
+different relays.
 
 Hop Count specifies the number of nodes a message may pass. When
 creating a package, it is initialized to 0. Whenever a node forwards

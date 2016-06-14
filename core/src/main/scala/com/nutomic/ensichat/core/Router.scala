@@ -7,6 +7,8 @@ import com.nutomic.ensichat.core.util.LocalRoutesInfo
 
 object Router extends Comparator[Int] {
 
+  private val HopLimit = 20
+
   /**
    * Compares which sequence number is newer.
    *
@@ -50,7 +52,7 @@ private[core] class Router(routesInfo: LocalRoutesInfo, send: (Address, Message)
    * true.
    */
   def forwardMessage(msg: Message, nextHopOption: Option[Address] = None): Unit = {
-    if (msg.header.hopCount + 1 >= msg.header.hopLimit)
+    if (msg.header.hopCount + 1 >= Router.HopLimit)
       return
 
     val nextHop = nextHopOption.getOrElse(msg.header.target)
@@ -79,10 +81,8 @@ private[core] class Router(routesInfo: LocalRoutesInfo, send: (Address, Message)
    */
   private def incHopCount(msg: Message): Message = {
     val updatedHeader = msg.header match {
-      case ch: ContentHeader => new ContentHeader(ch.origin, ch.target, ch.seqNum, ch.contentType,
-                                    ch.messageId, ch.time, ch.hopCount + 1, ch.hopLimit)
-      case mh: MessageHeader => new MessageHeader(mh.protocolType, mh.origin, mh.target, mh.seqNum,
-                                    mh.hopCount + 1, mh.hopLimit)
+      case ch: ContentHeader => ch.copy(hopCount = ch.hopCount + 1)
+      case mh: MessageHeader => mh.copy(hopCount = mh.hopCount + 1)
     }
     new Message(updatedHeader, msg.crypto, msg.body)
   }

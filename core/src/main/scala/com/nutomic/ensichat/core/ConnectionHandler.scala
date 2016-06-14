@@ -1,15 +1,15 @@
 package com.nutomic.ensichat.core
 
 import java.security.InvalidKeyException
-import java.util.{TimerTask, Timer, Date}
+import java.util.Date
 
 import com.nutomic.ensichat.core.body._
-import com.nutomic.ensichat.core.header.{ContentHeader, MessageHeader}
+import com.nutomic.ensichat.core.header.{AbstractHeader, ContentHeader, MessageHeader}
 import com.nutomic.ensichat.core.interfaces._
 import com.nutomic.ensichat.core.internet.InternetInterface
 import com.nutomic.ensichat.core.util._
 import com.typesafe.scalalogging.Logger
-import org.joda.time.{DateTime, Duration}
+import org.joda.time.Duration
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -26,8 +26,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
                               port: Int = InternetInterface.DefaultPort) {
 
   private val logger = Logger(this.getClass)
-
-  private val CheckMessageRetryInterval = Duration.standardMinutes(1)
 
   private var transmissionInterfaces = Set[TransmissionInterface]()
 
@@ -83,12 +81,13 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     FutureHelper {
       val messageId = settings.get("message_id", 0L)
       val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
-        body.contentType, Some(messageId), Some(new Date()))
+        body.contentType, Some(messageId), Some(new Date()), AbstractHeader.InitialForwardingTokens)
       settings.put("message_id", messageId + 1)
 
       val msg = new Message(header, body)
       val encrypted = crypto.encryptAndSign(msg)
       router.forwardMessage(encrypted)
+      forwardMessageToRelays(encrypted)
       onNewMessage(msg)
     }
   }
@@ -98,7 +97,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     val seqNum = seqNumGenerator.next()
     val targetSeqNum = localRoutesInfo.getRoute(target).map(_.seqNum).getOrElse(-1)
     val body = new RouteRequest(target, seqNum, targetSeqNum, 0)
-    val header = new MessageHeader(body.protocolType, crypto.localAddress, Address.Broadcast, seqNum)
+    val header = new MessageHeader(body.protocolType, crypto.localAddress, Address.Broadcast, seqNum, 0)
 
     val signed = crypto.sign(new Message(header, body))
     logger.trace(s"sending new $signed")
@@ -108,7 +107,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   private def replyRoute(target: Address, replyTo: Address): Unit = {
     val seqNum = seqNumGenerator.next()
     val body = new RouteReply(seqNum, 0)
-    val header = new MessageHeader(body.protocolType, crypto.localAddress, replyTo, seqNum)
+    val header = new MessageHeader(body.protocolType, crypto.localAddress, replyTo, seqNum, 0)
 
     val signed = crypto.sign(new Message(header, body))
     logger.trace(s"sending new $signed")
@@ -118,7 +117,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   private def routeError(address: Address, packetSource: Option[Address]): Unit =  {
     val destination = packetSource.getOrElse(Address.Broadcast)
     val header = new MessageHeader(RouteError.Type, crypto.localAddress, destination,
-                                   seqNumGenerator.next())
+                                   seqNumGenerator.next(), 0)
     val seqNum = localRoutesInfo.getRoute(address).map(_.seqNum).getOrElse(-1)
     val body = new RouteError(address, seqNum)
 
@@ -211,6 +210,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
     if (msg.header.target != crypto.localAddress) {
       router.forwardMessage(msg)
+      forwardMessageToRelays(msg)
       return
     }
 
@@ -234,6 +234,20 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     onNewMessage(plainMsg)
   }
 
+  private def forwardMessageToRelays(message: Message): Unit = {
+    var tokens = message.header.tokens
+    val relays = database.pickLongestConnectionDevice(connections())
+    var index = 0
+    while (tokens > 1) {
+      val forwardTokens = tokens / 2
+      val headerCopy = message.header.asInstanceOf[ContentHeader].copy(tokens = forwardTokens)
+      router.forwardMessage(message.copy(header = headerCopy), relays.lift(index))
+      tokens -= forwardTokens
+      database.updateMessageForwardingTokens(message, tokens)
+      index += 1
+    }
+  }
+
   /**
     * Tries to send messages in [[MessageBuffer]] again, after we acquired a new route.
     */
@@ -244,11 +258,8 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   }
 
   private def noRouteFound(message: Message): Unit = {
-    if (message.header.origin == crypto.localAddress) {
-      messageBuffer.addMessage(message)
-      requestRoute(message.header.target)
-    } else
-      routeError(message.header.target, Option(message.header.origin))
+    messageBuffer.addMessage(message)
+    requestRoute(message.header.target)
   }
 
   /**
@@ -317,6 +328,9 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
                                 settings.get(SettingsInterface.KeyUserStatus, "")))
     callbacks.onConnectionsChanged()
     resendMissingRouteMessages()
+    messageBuffer.getAllMessages
+      .filter(_.header.tokens > 1)
+      .foreach(forwardMessageToRelays)
     true
   }
 

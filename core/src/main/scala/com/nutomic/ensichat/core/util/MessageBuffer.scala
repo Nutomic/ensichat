@@ -82,6 +82,8 @@ class MessageBuffer(retryMessageSending: (Address) => Unit) {
     ret.map(_.message)
   }
 
+  def getAllMessages: Set[Message] = values.map(_.message)
+
   private def handleTimeouts(): Unit = {
     values = values.filter { e =>
       e.retryCount < MaxRetryCount

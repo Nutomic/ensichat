@@ -40,7 +40,7 @@ class MessageTest extends TestCase {
   }
 
   def testSerializeSigned(): Unit = {
-    val header = new MessageHeader(ConnectionInfo.Type, AddressTest.a4, AddressTest.a2, 0)
+    val header = new MessageHeader(ConnectionInfo.Type, AddressTest.a4, AddressTest.a2, 0, 3)
     val m = new Message(header, ConnectionInfoTest.generateCi())
 
     val signed = crypto.sign(m)

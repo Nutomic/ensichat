@@ -8,7 +8,7 @@ import com.nutomic.ensichat.core.util.BufferUtils
 
 object AbstractHeader {
 
-  val DefaultHopLimit = 20
+  val InitialForwardingTokens = 3
 
   val Version = 0
 
@@ -25,7 +25,7 @@ object AbstractHeader {
 trait AbstractHeader {
 
   def protocolType: Int
-  def hopLimit: Int
+  def tokens: Int
   def hopCount: Int
   def origin: Address
   def target: Address
@@ -41,7 +41,7 @@ trait AbstractHeader {
 
     BufferUtils.putUnsignedByte(b, AbstractHeader.Version)
     BufferUtils.putUnsignedByte(b, protocolType)
-    BufferUtils.putUnsignedByte(b, hopLimit)
+    BufferUtils.putUnsignedByte(b, tokens)
     BufferUtils.putUnsignedByte(b, hopCount)
 
     BufferUtils.putUnsignedInt(b, length + contentLength)
@@ -63,7 +63,7 @@ trait AbstractHeader {
   override def equals(a: Any): Boolean = a match {
     case o: AbstractHeader =>
       protocolType  == o.protocolType &&
-        hopLimit    == o.hopLimit &&
+        tokens      == o.tokens &&
         hopCount    == o.hopCount &&
         origin      == o.origin &&
         target      == o.target &&

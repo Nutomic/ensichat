@@ -1,11 +1,12 @@
 package com.nutomic.ensichat.core.util
 
 import java.io.File
+import java.sql.DriverManager
 import java.util.Date
 
 import com.nutomic.ensichat.core.body.Text
 import com.nutomic.ensichat.core.header.ContentHeader
-import com.nutomic.ensichat.core.interfaces.CallbackInterface
+import com.nutomic.ensichat.core.interfaces.{CallbackInterface, SettingsInterface}
 import com.nutomic.ensichat.core.{Address, Message, User}
 import com.typesafe.scalalogging.Logger
 import org.joda.time
@@ -20,9 +21,14 @@ import scala.concurrent.duration.Duration
  *
  * @param path The database file.
  */
-class Database(path: File, callbackInterface: CallbackInterface) {
+class Database(path: File, settings: SettingsInterface, callbackInterface: CallbackInterface) {
 
   private val logger = Logger(this.getClass)
+
+  private val DatabaseVersionKey = "database_version"
+  private val DatabaseVersion = 2
+
+  private val DatabasePath = "jdbc:h2:" + path.getAbsolutePath + ";DATABASE_TO_UPPER=false"
 
   private class Messages(tag: Tag) extends Table[Message](tag, "MESSAGES") {
     def id        = primaryKey("id", (origin, messageId))
@@ -31,20 +37,22 @@ class Database(path: File, callbackInterface: CallbackInterface) {
     def messageId = column[Long]("message_id")
     def text      = column[String]("text")
     def date      = column[Long]("date")
-    def * = (origin, target, messageId, text, date) <> [Message, (String, String, Long, String, Long)]( {
+    def tokens    = column[Int]("tokens")
+    def * = (origin, target, messageId, text, date, tokens) <> [Message, (String, String, Long, String, Long, Int)]( {
       tuple =>
         val header = new ContentHeader(new Address(tuple._1),
           new Address(tuple._2),
           -1,
           Text.Type,
           Some(tuple._3),
-          Some(new Date(tuple._5)))
+          Some(new Date(tuple._5)),
+          tuple._6)
         val body = new Text(tuple._4)
         new Message(header, body)
     }, message =>
       Option((message.header.origin.toString(), message.header.target.toString(),
         message.header.messageId.get, message.body.asInstanceOf[Text].text,
-        message.header.time.get.getTime))
+        message.header.time.get.getTime, message.header.tokens))
     )
   }
   private val messages = TableQuery[Messages]
@@ -67,7 +75,7 @@ class Database(path: File, callbackInterface: CallbackInterface) {
   }
   private val knownDevices = TableQuery[KnownDevices]
 
-  private val db = Database.forURL("jdbc:h2:" + path.getAbsolutePath, driver = "org.h2.Driver")
+  private val db = Database.forURL(DatabasePath, driver = "org.h2.Driver")
 
   // Create tables if database doesn't exist.
   {
@@ -75,7 +83,25 @@ class Database(path: File, callbackInterface: CallbackInterface) {
     val dbFile = new File(path.getAbsolutePath + ".mv.db")
     if (!dbFile.exists()) {
       logger.info("Database does not exist, creating tables")
-      Await.result(db.run((messages.schema ++ contacts.schema).create), Duration.Inf)
+      val query = (messages.schema ++ contacts.schema ++ knownDevices.schema).create
+      Await.result(db.run(query), Duration.Inf)
+      settings.put(DatabaseVersionKey, DatabaseVersion)
+    }
+  }
+
+  // Apparently, slick doesn't support ALTER TABLE, so we have to write raw SQL for this...
+  {
+    val oldVersion = settings.get(DatabaseVersionKey, 0)
+    if (oldVersion != DatabaseVersion) {
+      logger.info(s"Upgrading database from version $oldVersion to $DatabaseVersion")
+      val connection = DriverManager.getConnection(DatabasePath)
+      if (oldVersion <= 2) {
+        connection.createStatement().executeUpdate("ALTER TABLE MESSAGES ADD COLUMN (tokens INT);")
+        connection.commit()
+        Await.result(db.run(knownDevices.schema.create), Duration.Inf)
+      }
+      connection.close()
+      settings.put(DatabaseVersionKey, DatabaseVersion)
     }
   }
 
@@ -138,8 +164,25 @@ class Database(path: File, callbackInterface: CallbackInterface) {
     Await.result(db.run(query), Duration.Inf)
   }
 
-  def getKnownDevices: Seq[(Address, time.Duration)] = {
-    Await.result(db.run(knownDevices.result), Duration.Inf)
+  /**
+    * Returns neighbors sorted by connection time, according to [[KnownDevices]].
+    */
+  def pickLongestConnectionDevice(connections: Set[Address]): List[Address] = {
+    val map = Await.result(db.run(knownDevices.result), Duration.Inf).toMap
+    connections
+      .toList
+      .sortBy(map(_).getMillis)
+      .reverse
+  }
+
+  def updateMessageForwardingTokens(message: Message, tokens: Int): Unit = {
+    val query = messages.filter { c =>
+        c.origin === message.header.origin.toString &&
+        c.messageId === message.header.messageId
+      }
+      .map(_.tokens)
+      .update(tokens)
+    Await.result(db.run(query), Duration.Inf)
   }
 
 }

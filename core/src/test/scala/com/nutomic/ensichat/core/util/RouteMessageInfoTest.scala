@@ -13,7 +13,7 @@ class RouteMessageInfoTest extends TestCase {
     * Test case in which we have an entry with the same type, origin and target.
     */
   def testSameMessage(): Unit = {
-    val header = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1)
+    val header = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1, 0)
     val msg = new Message(header, new RouteRequest(AddressTest.a3, 2, 3, 1))
     val rmi = new RouteMessageInfo()
     assertFalse(rmi.isMessageRedundant(msg))
@@ -24,12 +24,12 @@ class RouteMessageInfoTest extends TestCase {
     * Forward a message with a seqnum that is older than the latest.
     */
   def testSeqNumOlder(): Unit = {
-    val header1 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1)
+    val header1 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1, 0)
     val msg1 = new Message(header1, new RouteRequest(AddressTest.a3, 0, 0, 0))
     val rmi = new RouteMessageInfo()
     assertFalse(rmi.isMessageRedundant(msg1))
 
-    val header2 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 3)
+    val header2 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 3, 0)
     val msg2 = new Message(header2, new RouteRequest(AddressTest.a3, 2, 0, 0))
     assertTrue(rmi.isMessageRedundant(msg2))
   }
@@ -38,12 +38,12 @@ class RouteMessageInfoTest extends TestCase {
     * Announce a route with a metric that is worse than the existing one.
     */
   def testMetricWorse(): Unit = {
-    val header1 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1)
+    val header1 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1, 0)
     val msg1 = new Message(header1, new RouteRequest(AddressTest.a3, 1, 0, 2))
     val rmi = new RouteMessageInfo()
     assertFalse(rmi.isMessageRedundant(msg1))
 
-    val header2 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 2)
+    val header2 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 2, 0)
     val msg2 = new Message(header2, new RouteRequest(AddressTest.a3, 1, 0, 4))
     assertTrue(rmi.isMessageRedundant(msg2))
   }
@@ -52,12 +52,12 @@ class RouteMessageInfoTest extends TestCase {
     * Announce route with a better metric.
     */
   def testMetricBetter(): Unit = {
-    val header1 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1)
+    val header1 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1, 0)
     val msg1 = new Message(header1, new RouteReply(0, 4))
     val rmi = new RouteMessageInfo()
     assertFalse(rmi.isMessageRedundant(msg1))
 
-    val header2 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 2)
+    val header2 = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 2, 0)
     val msg2 = new Message(header2, new RouteReply(0, 2))
     assertFalse(rmi.isMessageRedundant(msg2))
   }
@@ -68,7 +68,7 @@ class RouteMessageInfoTest extends TestCase {
   def testTimeout(): Unit = {
     val rmi = new RouteMessageInfo()
     DateTimeUtils.setCurrentMillisFixed(DateTime.now.getMillis)
-    val header = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1)
+    val header = new MessageHeader(RouteRequest.Type, AddressTest.a1, AddressTest.a2, 1, 0)
     val msg = new Message(header, new RouteRequest(AddressTest.a3, 0, 0, 0))
     assertFalse(rmi.isMessageRedundant(msg))
 

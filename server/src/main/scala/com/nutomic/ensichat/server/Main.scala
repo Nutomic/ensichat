@@ -22,7 +22,7 @@ object Main extends App with CallbackInterface {
 
   private lazy val settings          = new Settings(ConfigFile)
   private lazy val crypto            = new Crypto(settings, KeyFolder)
-  private lazy val database          = new Database(DatabaseFile, this)
+  private lazy val database          = new Database(DatabaseFile, settings, this)
   private lazy val connectionHandler = new ConnectionHandler(settings, database, this, crypto, 7)
 
   init()
