@@ -46,7 +46,7 @@ class RouterTest extends TestCase {
         assertEquals(msg.header.seqNum,       m.header.seqNum)
         assertEquals(msg.header.protocolType, m.header.protocolType)
         assertEquals(msg.header.hopCount + 1, m.header.hopCount)
-        assertEquals(msg.header.hopLimit,     m.header.hopLimit)
+        assertEquals(msg.header.tokens,       m.header.tokens)
         assertEquals(msg.body, m.body)
         assertEquals(msg.crypto, m.crypto)
       }, _ => ())
@@ -93,14 +93,14 @@ class RouterTest extends TestCase {
 
   def testHopLimit(): Unit = Range(19, 22).foreach { i =>
     val msg = new Message(
-      new ContentHeader(AddressTest.a1, AddressTest.a2, 1, 1, Some(1), Some(new Date()), i), new Text(""))
+      new ContentHeader(AddressTest.a1, AddressTest.a2, 1, 1, Some(1), Some(new Date()), 3, i), new Text(""))
     val router = new Router(new LocalRoutesInfo(neighbors), (a, m) => fail(), _ => ())
     router.forwardMessage(msg)
   }
 
   private def generateMessage(sender: Address, receiver: Address, seqNum: Int): Message = {
     val header = new ContentHeader(sender, receiver, seqNum, UserInfo.Type, Some(5),
-      Some(new GregorianCalendar(2014, 6, 10).getTime))
+      Some(new GregorianCalendar(2014, 6, 10).getTime), 3)
     new Message(header, new UserInfo("", ""))
   }
 

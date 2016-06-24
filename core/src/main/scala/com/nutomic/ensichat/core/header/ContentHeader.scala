@@ -25,7 +25,7 @@ object ContentHeader {
     val time        = BufferUtils.getUnsignedInt(b)
 
     val ch = new ContentHeader(mh.origin, mh.target, mh.seqNum, contentType, Some(messageId),
-      Some(new Date(time * 1000)), mh.hopCount)
+      Some(new Date(time * 1000)), mh.tokens, mh.hopCount)
 
     val remaining = new Array[Byte](b.remaining())
     b.get(remaining, 0, b.remaining())
@@ -45,8 +45,8 @@ final case class ContentHeader(override val origin: Address,
                     contentType: Int,
                     override val messageId: Some[Long],
                     override val time: Some[Date],
-                    override val hopCount: Int = 0,
-                    override val hopLimit: Int = AbstractHeader.DefaultHopLimit)
+                    override val tokens: Int,
+                    override val hopCount: Int = 0)
   extends AbstractHeader {
 
   override val protocolType = ContentHeader.ContentMessageType

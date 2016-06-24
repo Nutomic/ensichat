@@ -9,6 +9,7 @@ import com.nutomic.ensichat.core.Message.ReadMessageException
 import com.nutomic.ensichat.core.body.ConnectionInfo
 import com.nutomic.ensichat.core.header.MessageHeader
 import com.nutomic.ensichat.core.{Address, Crypto, Message}
+import org.joda.time.DateTime
 
 /**
  * Transfers data between connnected devices.
@@ -17,8 +18,11 @@ import com.nutomic.ensichat.core.{Address, Crypto, Message}
  * @param socket An open socket to the given device.
  * @param onReceive Called when a message was received from the other device.
  */
-class BluetoothTransferThread(context: Context, device: Device, socket: BluetoothSocket, handler: BluetoothInterface,
-                     crypto: Crypto, onReceive: (Message, Device.ID) => Unit) extends Thread {
+class BluetoothTransferThread(context: Context, device: Device, socket: BluetoothSocket,
+                              handler: BluetoothInterface, crypto: Crypto,
+                              onReceive: (Message, Device.ID) => Unit) extends Thread {
+
+  private val connectionOpened = DateTime.now
 
   private val Tag = "TransferThread"
 
@@ -61,7 +65,7 @@ class BluetoothTransferThread(context: Context, device: Device, socket: Bluetoot
                              new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED))
 
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
-      Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
+      Address.Null, Address.Null, 0, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 
     while (socket.isConnected) {
       try {
@@ -102,7 +106,7 @@ class BluetoothTransferThread(context: Context, device: Device, socket: Bluetoot
     } catch {
       case e: IOException => Log.e(Tag, "Failed to close socket", e);
     } finally {
-      handler.onConnectionClosed(new Device(device.btDevice.get, false), null)
+      handler.onConnectionClosed(connectionOpened, device.id)
     }
   }
 

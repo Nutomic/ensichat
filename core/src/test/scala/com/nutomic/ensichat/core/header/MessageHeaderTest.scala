@@ -11,9 +11,9 @@ object MessageHeaderTest {
     0)
 
   val h2 = new MessageHeader(ContentHeader.ContentMessageType, Address.Null, Address.Broadcast,
-    ContentHeader.SeqNumRange.last, 0xff)
+    ContentHeader.SeqNumRange.last, 0xff, 3)
 
-  val h3 = new MessageHeader(ContentHeader.ContentMessageType, Address.Broadcast, Address.Null, 0)
+  val h3 = new MessageHeader(ContentHeader.ContentMessageType, Address.Broadcast, Address.Null, 0, 3)
 
   val headers = Set(h1, h2, h3)
 

@@ -45,12 +45,12 @@ class LocalNode(val index: Int, configFolder: File) extends CallbackInterface {
   private val databaseFile = new File(configFolder, "database")
   private val keyFolder    = new File(configFolder, "keys")
 
-  private val database = new Database(databaseFile, this)
   private val settings = new SettingsInterface {
     private var values = Map[String, Any]()
     override def get[T](key: String, default: T): T = values.get(key).map(_.asInstanceOf[T]).getOrElse(default)
     override def put[T](key: String, value: T): Unit = values += (key -> value.asInstanceOf[Any])
   }
+  private val database = new Database(databaseFile, settings, this)
 
   val crypto            = new Crypto(settings, keyFolder)
   val connectionHandler = new ConnectionHandler(settings, database, this, crypto, 0, port)

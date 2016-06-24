@@ -12,6 +12,7 @@ import com.nutomic.ensichat.core.body.ConnectionInfo
 import com.nutomic.ensichat.core.interfaces.{SettingsInterface, TransmissionInterface}
 import com.nutomic.ensichat.core.{Address, ConnectionHandler, Message}
 import com.nutomic.ensichat.service.ChatService
+import org.joda.time.{DateTime, Duration}
 
 import scala.collection.immutable.HashMap
 
@@ -169,12 +170,13 @@ class BluetoothInterface(context: Context, mainHandler: Handler,
   /**
    * Removes device from active connections.
    */
-  def onConnectionClosed(device: Device, socket: BluetoothSocket): Unit = {
-    val address = getAddressForDevice(device.id)
-    devices -= device.id
-    connections -= device.id
-    addressDeviceMap = addressDeviceMap.filterNot(_._2 == device.id)
-    connectionHandler.onConnectionClosed(address)
+  def onConnectionClosed(connectionOpened: DateTime, deviceId: Device.ID): Unit = {
+    val address = getAddressForDevice(deviceId)
+    devices -= deviceId
+    connections -= deviceId
+    addressDeviceMap = addressDeviceMap.filterNot(_._2 == deviceId)
+    val connectionDuration = new Duration(connectionOpened, DateTime.now)
+    connectionHandler.onConnectionClosed(address, connectionDuration)
   }
 
   /**

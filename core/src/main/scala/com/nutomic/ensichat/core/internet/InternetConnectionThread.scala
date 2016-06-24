@@ -8,6 +8,7 @@ import com.nutomic.ensichat.core.body.ConnectionInfo
 import com.nutomic.ensichat.core.header.MessageHeader
 import com.nutomic.ensichat.core.{Address, Crypto, Message}
 import com.typesafe.scalalogging.Logger
+import org.joda.time.DateTime
 
 /**
  * Encapsulates an active connection to another node.
@@ -16,6 +17,8 @@ private[core] class InternetConnectionThread(socket: Socket, crypto: Crypto,
                                              onDisconnected: (InternetConnectionThread) => Unit,
                                              onReceive: (Message, InternetConnectionThread) => Unit)
                                              extends Thread {
+
+  val connectionOpened = DateTime.now
 
   private val logger = Logger(this.getClass)
 
@@ -47,7 +50,7 @@ private[core] class InternetConnectionThread(socket: Socket, crypto: Crypto,
     logger.info("Connection opened to " + socket.getInetAddress)
 
     send(crypto.sign(new Message(new MessageHeader(ConnectionInfo.Type,
-      Address.Null, Address.Null, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
+      Address.Null, Address.Null, 0, 0), new ConnectionInfo(crypto.getLocalPublicKey))))
 
     try {
       socket.setKeepAlive(true)

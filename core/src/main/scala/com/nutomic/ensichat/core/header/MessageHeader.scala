@@ -23,7 +23,7 @@ object MessageHeader {
     if (version != AbstractHeader.Version)
       throw new ReadMessageException("Failed to parse message with unsupported version " + version)
     val protocolType = BufferUtils.getUnsignedByte(b)
-    val hopLimit = BufferUtils.getUnsignedByte(b)
+    val tokens = BufferUtils.getUnsignedByte(b)
     val hopCount = BufferUtils.getUnsignedByte(b)
 
     val length = BufferUtils.getUnsignedInt(b)
@@ -34,7 +34,7 @@ object MessageHeader {
 
     val seqNum = BufferUtils.getUnsignedShort(b)
 
-    (new MessageHeader(protocolType, origin, target, seqNum, hopCount, hopLimit), length.toInt)
+    (new MessageHeader(protocolType, origin, target, seqNum, tokens, hopCount), length.toInt)
   }
 
 }
@@ -48,8 +48,8 @@ final case class MessageHeader(override val protocolType: Int,
                     override val origin: Address,
                     override val target: Address,
                     override val seqNum: Int,
-                    override val hopCount: Int = 0,
-                    override val hopLimit: Int = AbstractHeader.DefaultHopLimit)
+                    override val tokens: Int,
+                    override val hopCount: Int = 0)
   extends AbstractHeader {
 
   def length: Int = MessageHeader.Length
