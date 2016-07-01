@@ -6,7 +6,7 @@ import java.util.concurrent.CountDownLatch
 
 import com.nutomic.ensichat.core.body.Text
 import com.nutomic.ensichat.core.header.ContentHeader
-import com.nutomic.ensichat.core.interfaces.CallbackInterface
+import com.nutomic.ensichat.core.interfaces.{SettingsInterface, CallbackInterface}
 import com.nutomic.ensichat.core.util.DatabaseTest._
 import com.nutomic.ensichat.core.{Address, Message, User}
 import junit.framework.Assert._
@@ -42,15 +42,16 @@ class DatabaseTest extends TestCase {
 
   private val latch = new CountDownLatch(1)
 
-  private val database = new Database(databaseFile, new CallbackInterface {
-    override def onConnectionsChanged(): Unit = {}
-
-    override def onContactsUpdated(): Unit = {
-      latch.countDown()
-    }
-
-    override def onMessageReceived(msg: Message): Unit = {}
-  })
+  private val database = new Database(databaseFile, new SettingsInterface {
+      override def get[T](key: String, default: T): T = default
+      override def put[T](key: String, value: T): Unit = {}
+    }, new CallbackInterface {
+      override def onConnectionsChanged(): Unit = {}
+      override def onContactsUpdated(): Unit = {
+        latch.countDown()
+      }
+      override def onMessageReceived(msg: Message): Unit = {}
+    })
 
   override def tearDown(): Unit = {
     super.tearDown()
