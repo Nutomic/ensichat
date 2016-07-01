@@ -10,6 +10,8 @@ object AbstractHeader {
 
   val InitialForwardingTokens = 3
 
+  val MaxForwardingTokens = 6
+
   val Version = 0
 
   private[header] val Length = 10 + 2 * Address.Length

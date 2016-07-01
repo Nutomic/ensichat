@@ -24,6 +24,8 @@ object MessageHeader {
       throw new ReadMessageException("Failed to parse message with unsupported version " + version)
     val protocolType = BufferUtils.getUnsignedByte(b)
     val tokens = BufferUtils.getUnsignedByte(b)
+    if (tokens > AbstractHeader.MaxForwardingTokens)
+      throw new ReadMessageException(s"Received message with too many forwarding tokens ($tokens tokens)")
     val hopCount = BufferUtils.getUnsignedByte(b)
 
     val length = BufferUtils.getUnsignedInt(b)
