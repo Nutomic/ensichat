@@ -2,14 +2,14 @@ package com.nutomic.ensichat.core.util
 
 import java.io.File
 import java.sql.DriverManager
-import java.util.Date
 
 import com.nutomic.ensichat.core.body.Text
 import com.nutomic.ensichat.core.header.ContentHeader
 import com.nutomic.ensichat.core.interfaces.{CallbackInterface, SettingsInterface}
-import com.nutomic.ensichat.core.{Address, Message, User}
+import com.nutomic.ensichat.core.{Crypto, Address, Message, User}
 import com.typesafe.scalalogging.Logger
 import org.joda.time
+import org.joda.time.DateTime
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.Await
@@ -30,29 +30,30 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
 
   private val DatabasePath = "jdbc:h2:" + path.getAbsolutePath + ";DATABASE_TO_UPPER=false"
 
-  private class Messages(tag: Tag) extends Table[Message](tag, "MESSAGES") {
-    def id        = primaryKey("id", (origin, messageId))
-    def origin    = column[String]("origin")
-    def target    = column[String]("target")
-    def messageId = column[Long]("message_id")
-    def text      = column[String]("text")
-    def date      = column[Long]("date")
-    def tokens    = column[Int]("tokens")
-    def * = (origin, target, messageId, text, date, tokens) <> [Message, (String, String, Long, String, Long, Int)]( {
+  private class Messages(tag: Tag) extends Table[(Message, Boolean)](tag, "MESSAGES") {
+    def id                  = primaryKey("id", (origin, messageId))
+    def origin              = column[String]("origin")
+    def target              = column[String]("target")
+    def messageId           = column[Long]("message_id")
+    def text                = column[String]("text")
+    def date                = column[Long]("date")
+    def tokens              = column[Int]("tokens")
+    def confirmedDelivered  = column[Boolean]("confirmed_delivered")
+    def * = (origin, target, messageId, text, date, tokens, confirmedDelivered) <> [(Message, Boolean), (String, String, Long, String, Long, Int, Boolean)]( {
       tuple =>
         val header = new ContentHeader(new Address(tuple._1),
           new Address(tuple._2),
           -1,
           Text.Type,
           Some(tuple._3),
-          Some(new Date(tuple._5)),
+          Some(new DateTime(tuple._5)),
           tuple._6)
         val body = new Text(tuple._4)
-        new Message(header, body)
+        (new Message(header, body), tuple._7)
     }, message =>
-      Option((message.header.origin.toString(), message.header.target.toString(),
-        message.header.messageId.get, message.body.asInstanceOf[Text].text,
-        message.header.time.get.getTime, message.header.tokens))
+      Option((message._1.header.origin.toString(), message._1.header.target.toString(),
+        message._1.header.messageId.get, message._1.body.asInstanceOf[Text].text,
+        message._1.header.time.get.getMillis, message._1.header.tokens, message._2))
     )
   }
   private val messages = TableQuery[Messages]
@@ -109,13 +110,11 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
       connection.createStatement().executeUpdate("ALTER TABLE MESSAGES ADD COLUMN (tokens INT);")
       connection.commit()
       Await.result(db.run(knownDevices.schema.create), Duration.Inf)
+      connection.createStatement().executeUpdate("ALTER TABLE MESSAGES ADD COLUMN (confirmed_delivered INT);")
+      connection.commit()
     }
     connection.close()
     settings.put(DatabaseVersionKey, DatabaseVersion)
-  }
-
-  // Apparently, slick doesn't support ALTER TABLE, so we have to write raw SQL for this...
-  {
   }
 
   def close(): Unit = {
@@ -126,7 +125,8 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
    * Inserts the given new message into the database.
    */
   def onMessageReceived(msg: Message): Unit = msg.body match {
-    case _: Text => Await.result(db.run(messages += msg), Duration.Inf)
+    case _: Text =>
+      Await.result(db.run(messages += (msg, false)), Duration.Inf)
     case _ =>
   }
 
@@ -134,7 +134,7 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
     val query = messages.filter { m =>
       m.origin === address.toString || m.target === address.toString
     }
-    Await.result(db.run(query.result), Duration.Inf)
+    Await.result(db.run(query.result), Duration.Inf).map(_._1)
   }
 
   /**
@@ -199,6 +199,26 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
       .map(_.tokens)
       .update(tokens)
     Await.result(db.run(query), Duration.Inf)
+  }
+
+  def setMessageConfirmed(messageId: Long): Unit = {
+    val localAddress = new Address(settings.get(Crypto.LocalAddressKey, ""))
+    val query = messages.filter { c =>
+        c.origin === localAddress.toString &&
+          c.messageId === messageId
+      }
+      .map(_.confirmedDelivered)
+      .update(true)
+    Await.result(db.run(query), Duration.Inf)
+  }
+
+  /**
+    * Returns all addresses sent by us that have confirmedDlivered = false.
+    */
+  def getUnconfirmedMessages: Set[Message] = {
+    val localAddress = new Address(settings.get(Crypto.LocalAddressKey, ""))
+    val query = messages.filter(m => m.origin === localAddress.toString && !m.confirmedDelivered)
+    Await.result(db.run(query.result), Duration.Inf).map(_._1).toSet
   }
 
 }

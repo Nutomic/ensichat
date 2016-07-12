@@ -50,9 +50,9 @@ class LocalNode(val index: Int, configFolder: File) extends CallbackInterface {
     override def get[T](key: String, default: T): T = values.get(key).map(_.asInstanceOf[T]).getOrElse(default)
     override def put[T](key: String, value: T): Unit = values += (key -> value.asInstanceOf[Any])
   }
-  private val database = new Database(databaseFile, settings, this)
 
   val crypto            = new Crypto(settings, keyFolder)
+  val database          = new Database(databaseFile, settings, this)
   val connectionHandler = new ConnectionHandler(settings, database, this, crypto, 0, port)
   val eventQueue        = new FifoStream[(EventType.EventType, Option[Message])]()
 

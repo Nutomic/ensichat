@@ -32,11 +32,12 @@ class ChatService extends Service {
 
   private val callbackHandler = new CallbackHandler(this, notificationHandler)
 
-  lazy val database = new Database(getDatabasePath("database"), callbackHandler)
+  private def settingsWrapper = new SettingsWrapper(this)
+
+  lazy val database = new Database(getDatabasePath("database"), settingsWrapper, callbackHandler)
 
   private lazy val connectionHandler =
-    new ConnectionHandler(new SettingsWrapper(this), database, callbackHandler,
-                          ChatService.newCrypto(this), 1)
+    new ConnectionHandler(settingsWrapper, database, callbackHandler, ChatService.newCrypto(this), 1)
 
   private val networkReceiver = new NetworkChangedReceiver()
 

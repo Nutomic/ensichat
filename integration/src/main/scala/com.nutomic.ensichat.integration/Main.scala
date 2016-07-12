@@ -1,14 +1,14 @@
 package com.nutomic.ensichat.integration
 
 import java.io.File
-import java.util.{TimerTask, Timer}
 import java.util.concurrent.{CountDownLatch, TimeUnit}
+import java.util.{Timer, TimerTask}
 
 import com.nutomic.ensichat.core.Crypto
 import com.nutomic.ensichat.core.body.Text
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{DurationLong, Duration}
+import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 import scalax.file.Path
@@ -17,11 +17,12 @@ import scalax.file.Path
  * Creates some local nodes, connects them and sends messages between them.
  *
  * If the test runs slow or fails, changing [[Crypto.PublicKeySize]] to 512 should help.
+ *
+ * These tests are somewhat fragile, and might fail randomly. It helps to run only one of
+ * the test functions at a time.
  */
 object Main extends App {
 
-  // NOTE: These tests are somewhat fragile, and might fail randomly. It helps to run only
-  //       one of the following functions at a time.
   testNeighborSending()
   testMeshMessageSending()
   testIndirectRelay()
@@ -29,6 +30,7 @@ object Main extends App {
   testMessageDeliveryOnConnect()
   testSendDelayed()
   testRouteChange()
+  testMessageConfirmation()
 
   private def testNeighborSending(): Unit = {
     val node1 = Await.result(createNode(1), Duration.Inf)
@@ -152,6 +154,20 @@ object Main extends App {
     (nodes :+ node10).foreach(_.stop())
 
     System.out.println("Test send delayed successful!")
+  }
+
+  /**
+    * Check that message confirmation is sent back after message was received.
+    */
+  private def testMessageConfirmation(): Unit = {
+    val nodes = createNodes(2)
+
+    connectNodes(nodes(0), nodes(1))
+    sendMessage(nodes(0), nodes(1))
+    assert(nodes(0).database.getMessages(nodes(1).crypto.localAddress).nonEmpty)
+    assert(nodes(0).database.getUnconfirmedMessages.isEmpty)
+
+    nodes.foreach(_.stop())
   }
 
   private def createNodes(count: Int): Seq[LocalNode] = {

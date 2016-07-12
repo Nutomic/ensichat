@@ -1,10 +1,10 @@
 package com.nutomic.ensichat.core.header
 
 import java.nio.ByteBuffer
-import java.util.Date
 
 import com.nutomic.ensichat.core.Address
 import com.nutomic.ensichat.core.util.BufferUtils
+import org.joda.time.DateTime
 
 object ContentHeader {
 
@@ -25,7 +25,7 @@ object ContentHeader {
     val time        = BufferUtils.getUnsignedInt(b)
 
     val ch = new ContentHeader(mh.origin, mh.target, mh.seqNum, contentType, Some(messageId),
-      Some(new Date(time * 1000)), mh.tokens, mh.hopCount)
+      Some(new DateTime(time * 1000)), mh.tokens, mh.hopCount)
 
     val remaining = new Array[Byte](b.remaining())
     b.get(remaining, 0, b.remaining())
@@ -44,7 +44,7 @@ final case class ContentHeader(override val origin: Address,
                     override val seqNum: Int,
                     contentType: Int,
                     override val messageId: Some[Long],
-                    override val time: Some[Date],
+                    override val time: Some[DateTime],
                     override val tokens: Int,
                     override val hopCount: Int = 0)
   extends AbstractHeader {
@@ -61,7 +61,7 @@ final case class ContentHeader(override val origin: Address,
 
     BufferUtils.putUnsignedShort(b, contentType)
     BufferUtils.putUnsignedInt(b, messageId.get)
-    BufferUtils.putUnsignedInt(b, time.get.getTime / 1000)
+    BufferUtils.putUnsignedInt(b, time.get.getMillis / 1000)
 
     b.array()
   }
@@ -73,7 +73,7 @@ final case class ContentHeader(override val origin: Address,
       super.equals(a) &&
         contentType         == o.contentType &&
         messageId           == o.messageId &&
-        time.get.getTime / 1000 == o.time.get.getTime / 1000
+        time.get.getMillis / 1000 == o.time.get.getMillis / 1000
     case _ => false
   }
 

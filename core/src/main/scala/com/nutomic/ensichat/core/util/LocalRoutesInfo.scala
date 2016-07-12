@@ -11,7 +11,7 @@ private[core] object LocalRoutesInfo {
 
   /**
     * [[RouteStates.Idle]]:
-    *     A route that is known, but has not been used in the last [[ActiveInterval.
+    *     A route that is known, but has not been used in the last [[ActiveInterval]].
     * [[RouteStates.Active]]:
     *     A route that is known, and has been used in the last [[ActiveInterval]].
     * [[RouteStates.Invalid]]:
