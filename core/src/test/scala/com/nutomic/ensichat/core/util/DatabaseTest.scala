@@ -43,8 +43,9 @@ class DatabaseTest extends TestCase {
   private val latch = new CountDownLatch(1)
 
   private val database = new Database(databaseFile, new SettingsInterface {
-      override def get[T](key: String, default: T): T = default
-      override def put[T](key: String, value: T): Unit = {}
+      private var values = Map[String, Any]()
+      override def get[T](key: String, default: T): T = values.getOrElse(key, default).asInstanceOf[T]
+      override def put[T](key: String, value: T): Unit = values += (key -> value)
     }, new CallbackInterface {
       override def onConnectionsChanged(): Unit = {}
       override def onContactsUpdated(): Unit = {

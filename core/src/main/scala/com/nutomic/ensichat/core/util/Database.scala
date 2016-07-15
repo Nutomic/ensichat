@@ -77,32 +77,45 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
 
   private val db = Database.forURL(DatabasePath, driver = "org.h2.Driver")
 
-  // Create tables if database doesn't exist.
-  {
+  createDatabase()
+  upgradeDatabase()
+
+  /**
+    * Creates a new database file at [[DatabasePath]] if it doesn't already exist.
+    */
+  private def createDatabase(): Unit = {
     // H2 appends a .mv.db suffix to the path which we can't change, so we have to check that file.
     val dbFile = new File(path.getAbsolutePath + ".mv.db")
-    if (!dbFile.exists()) {
-      logger.info("Database does not exist, creating tables")
-      val query = (messages.schema ++ contacts.schema ++ knownDevices.schema).create
-      Await.result(db.run(query), Duration.Inf)
-      settings.put(DatabaseVersionKey, DatabaseVersion)
+    if (dbFile.exists())
+      return
+
+    logger.info("Database does not exist, creating tables")
+    val query = (messages.schema ++ contacts.schema ++ knownDevices.schema).create
+    Await.result(db.run(query), Duration.Inf)
+    settings.put(DatabaseVersionKey, DatabaseVersion)
+  }
+
+  /**
+    * Upgrades database to new version if needed, based on [[DatabaseVersion]].
+    */
+  private def upgradeDatabase(): Unit = {
+    val oldVersion = settings.get(DatabaseVersionKey, 0)
+    if (oldVersion == DatabaseVersion)
+      return
+
+    logger.info(s"Upgrading database from version $oldVersion to $DatabaseVersion")
+    val connection = DriverManager.getConnection(DatabasePath)
+    if (oldVersion <= 2) {
+      connection.createStatement().executeUpdate("ALTER TABLE MESSAGES ADD COLUMN (tokens INT);")
+      connection.commit()
+      Await.result(db.run(knownDevices.schema.create), Duration.Inf)
     }
+    connection.close()
+    settings.put(DatabaseVersionKey, DatabaseVersion)
   }
 
   // Apparently, slick doesn't support ALTER TABLE, so we have to write raw SQL for this...
   {
-    val oldVersion = settings.get(DatabaseVersionKey, 0)
-    if (oldVersion != DatabaseVersion) {
-      logger.info(s"Upgrading database from version $oldVersion to $DatabaseVersion")
-      val connection = DriverManager.getConnection(DatabasePath)
-      if (oldVersion <= 2) {
-        connection.createStatement().executeUpdate("ALTER TABLE MESSAGES ADD COLUMN (tokens INT);")
-        connection.commit()
-        Await.result(db.run(knownDevices.schema.create), Duration.Inf)
-      }
-      connection.close()
-      settings.put(DatabaseVersionKey, DatabaseVersion)
-    }
   }
 
   def close(): Unit = {
