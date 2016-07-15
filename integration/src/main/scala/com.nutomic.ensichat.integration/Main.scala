@@ -65,7 +65,6 @@ object Main extends App {
   private def testIndirectRelay(): Unit = {
     val nodes = createNodes(5)
 
-
     connectNodes(nodes(0), nodes(1))
     connectNodes(nodes(1), nodes(2))
     connectNodes(nodes(2), nodes(3))
@@ -100,7 +99,12 @@ object Main extends App {
     */
   private def testRouteChange() {
     val nodes = createMesh()
-    nodes(1).connectionHandler.stop()
+
+    sendMessages(nodes)
+
+    nodes(1).stop()
+    Thread.sleep(10 * 1000)
+
     sendMessages(nodes)
 
     nodes.foreach(_.stop())
@@ -212,8 +216,8 @@ object Main extends App {
   }
 
   private def sendMessages(nodes: Seq[LocalNode]): Unit = {
-    sendMessage(nodes(0), nodes(2))
     sendMessage(nodes(2), nodes(0))
+    sendMessage(nodes(0), nodes(2))
     sendMessage(nodes(4), nodes(3))
     sendMessage(nodes(3), nodes(5))
     sendMessage(nodes(4), nodes(6))
