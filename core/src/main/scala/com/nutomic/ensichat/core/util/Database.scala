@@ -171,7 +171,10 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
     val map = Await.result(db.run(knownDevices.result), Duration.Inf).toMap
     connections
       .toList
-      .sortBy(map(_).getMillis)
+      .sortBy { c =>
+        val duration = map.get(c)
+        duration.map(_.getMillis).getOrElse(0L)
+      }
       .reverse
   }
 
