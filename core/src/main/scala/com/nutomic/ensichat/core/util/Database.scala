@@ -105,6 +105,7 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
       return
 
     logger.info(s"Upgrading database from version $oldVersion to $DatabaseVersion")
+    Class.forName("org.h2.Driver")
     val connection = DriverManager.getConnection(DatabasePath)
     if (oldVersion <= 2) {
       connection.createStatement().executeUpdate("ALTER TABLE MESSAGES ADD COLUMN (tokens INT);")
