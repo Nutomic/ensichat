@@ -3,12 +3,15 @@ package com.nutomic.ensichat.core.util
 import java.util.{TimerTask, Timer}
 
 import com.nutomic.ensichat.core.{Address, Message}
+import com.typesafe.scalalogging.Logger
 import org.joda.time.{Seconds, DateTime, Duration}
 
 /**
   * Contains messages that couldn't be forwarded because we don't know a route.
   */
 class MessageBuffer(localAddress: Address, retryMessageSending: (Address) => Unit) {
+
+  private val logger = Logger(this.getClass)
 
   /**
     * The maximum number of times we retry to deliver a message.
@@ -38,6 +41,7 @@ class MessageBuffer(localAddress: Address, retryMessageSending: (Address) => Uni
     val newEntry = new BufferEntry(msg, DateTime.now, retryCount)
     values += newEntry
     retryMessage(newEntry)
+    logger.info(s"Added message to buffer, now ${values.size} messages stored")
   }
 
   /**
@@ -91,9 +95,13 @@ class MessageBuffer(localAddress: Address, retryMessageSending: (Address) => Uni
   def getAllMessages: Set[Message] = values.map(_.message)
 
   private def handleTimeouts(): Unit = {
+    val sizeBefore = values.size
     values = values.filter { e =>
       e.retryCount < MaxRetryCount && e.message.header.origin != localAddress
     }
+    val difference = values.size - sizeBefore
+    if (difference > 0)
+      logger.info(s"Removed $difference message(s), now ${values.size} messages stored")
   }
 
 }
