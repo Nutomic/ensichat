@@ -1,10 +1,10 @@
 package com.nutomic.ensichat.core.header
 
 import java.nio.ByteBuffer
-import java.util.Date
 
 import com.nutomic.ensichat.core.Address
 import com.nutomic.ensichat.core.util.BufferUtils
+import org.joda.time.DateTime
 
 object AbstractHeader {
 
@@ -33,7 +33,7 @@ trait AbstractHeader {
   def target: Address
   def seqNum: Int
   def messageId: Option[Long] = None
-  def time: Option[Date] = None
+  def time: Option[DateTime] = None
 
   /**
    * Writes the header to byte array.

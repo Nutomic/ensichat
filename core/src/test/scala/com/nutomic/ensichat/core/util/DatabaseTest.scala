@@ -6,11 +6,12 @@ import java.util.concurrent.CountDownLatch
 
 import com.nutomic.ensichat.core.body.Text
 import com.nutomic.ensichat.core.header.ContentHeader
-import com.nutomic.ensichat.core.interfaces.{SettingsInterface, CallbackInterface}
+import com.nutomic.ensichat.core.interfaces.{CallbackInterface, SettingsInterface}
 import com.nutomic.ensichat.core.util.DatabaseTest._
 import com.nutomic.ensichat.core.{Address, Message, User}
 import junit.framework.Assert._
 import junit.framework.TestCase
+import org.joda.time.DateTime
 
 object DatabaseTest {
 
@@ -20,11 +21,11 @@ object DatabaseTest {
   private val a4 = new Address("4444459893F8810C4024CFC951374AABA1F4DE6347A3D7D8E44918AD1FF2BA36")
 
   private val h1 = new ContentHeader(a2, a1, -1, Text.Type, Some(123),
-    Some(new GregorianCalendar(1970, 1, 1).getTime), 0)
+    Some(new DateTime(new GregorianCalendar(1970, 1, 1).getTime)), 0)
   private val h2 = new ContentHeader(a1, a3, -1, Text.Type, Some(8765),
-    Some(new GregorianCalendar(2014, 6, 10).getTime), 0)
+    Some(new DateTime(new GregorianCalendar(2014, 6, 10).getTime)), 0)
   private val h3 = new ContentHeader(a4, a2, -1, Text.Type, Some(77),
-    Some(new GregorianCalendar(2020, 11, 11).getTime), 0)
+    Some(new DateTime(new GregorianCalendar(2020, 11, 11).getTime)), 0)
 
   private val m1 = new Message(h1, new Text("first"))
   private val m2 = new Message(h2, new Text("second"))

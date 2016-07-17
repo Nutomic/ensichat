@@ -262,6 +262,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     val body = msg.header.asInstanceOf[ContentHeader].contentType match {
       case Text.Type              => Text.read(decrypted)
       case UserInfo.Type          => UserInfo.read(decrypted)
+      case MessageReceived.Type   => MessageReceived.read(decrypted)
     }
     new Message(msg.header, msg.crypto, body)
   }

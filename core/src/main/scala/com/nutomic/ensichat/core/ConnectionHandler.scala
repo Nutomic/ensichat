@@ -1,7 +1,6 @@
 package com.nutomic.ensichat.core
 
 import java.security.InvalidKeyException
-import java.util.Date
 
 import com.nutomic.ensichat.core.body._
 import com.nutomic.ensichat.core.header.{AbstractHeader, ContentHeader, MessageHeader}
@@ -9,7 +8,7 @@ import com.nutomic.ensichat.core.interfaces._
 import com.nutomic.ensichat.core.internet.InternetInterface
 import com.nutomic.ensichat.core.util._
 import com.typesafe.scalalogging.Logger
-import org.joda.time.Duration
+import org.joda.time.{DateTime, Duration}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -39,7 +38,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
                                        (a, m) => transmissionInterfaces.foreach(_.send(a, m)),
                                        noRouteFound)
 
-  private val messageBuffer = new MessageBuffer(requestRoute)
+  private lazy val messageBuffer = new MessageBuffer(crypto.localAddress, requestRoute)
 
   /**
    * Holds all known users.
@@ -64,6 +63,11 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
       transmissionInterfaces +=
         new InternetInterface(this, crypto, settings, maxInternetConnections, port)
       transmissionInterfaces.foreach(_.create())
+      database.getUnconfirmedMessages.foreach { m =>
+        val encrypted = crypto.encryptAndSign(m)
+        messageBuffer.addMessage(encrypted)
+        requestRoute(encrypted.header.target)
+      }
     }
   }
 
@@ -81,7 +85,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     FutureHelper {
       val messageId = settings.get("message_id", 0L)
       val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
-        body.contentType, Some(messageId), Some(new Date()), AbstractHeader.InitialForwardingTokens)
+        body.contentType, Some(messageId), Some(DateTime.now), AbstractHeader.InitialForwardingTokens)
       settings.put("message_id", messageId + 1)
 
       val msg = new Message(header, body)
@@ -100,7 +104,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     val header = new MessageHeader(body.protocolType, crypto.localAddress, Address.Broadcast, seqNum, 0)
 
     val signed = crypto.sign(new Message(header, body))
-    logger.trace(s"sending new $signed")
     router.forwardMessage(signed)
   }
 
@@ -110,7 +113,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     val header = new MessageHeader(body.protocolType, crypto.localAddress, replyTo, seqNum, 0)
 
     val signed = crypto.sign(new Message(header, body))
-    logger.trace(s"sending new $signed")
     router.forwardMessage(signed)
   }
 
@@ -122,7 +124,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     val body = new RouteError(address, seqNum)
 
     val signed = crypto.sign(new Message(header, body))
-    logger.trace(s"sending new $signed")
     router.forwardMessage(signed)
   }
 
@@ -149,7 +150,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
     msg.body match {
       case rreq: RouteRequest =>
-        logger.trace(s"Received $msg")
         localRoutesInfo.addRoute(msg.header.origin, rreq.originSeqNum, previousHop, rreq.originMetric)
         resendMissingRouteMessages()
         // TODO: Respecting this causes the RERR test to fail. We have to fix the implementation
@@ -172,7 +172,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
         }
         return
       case rrep: RouteReply =>
-        logger.trace(s"Received $msg")
         localRoutesInfo.addRoute(msg.header.origin, rrep.originSeqNum, previousHop, 0)
         // TODO: See above (in RREQ handler).
         if (routeMessageInfo.isMessageRedundant(msg)) {
@@ -198,7 +197,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
         router.forwardMessage(forwardMsg)
         return
       case rerr: RouteError =>
-        logger.trace(s"Received $msg")
         localRoutesInfo.getRoute(rerr.address).foreach { route =>
           if (route.nextHop == msg.header.origin && (rerr.seqNum == 0 || rerr.seqNum > route.seqNum)) {
             localRoutesInfo.connectionClosed(rerr.address)
@@ -230,6 +228,19 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
           logger.warn(s"Failed to verify or decrypt message $msg", e)
           return
       }
+
+    // This is necessary because a message is sent to the destination and relays seperately,
+    // with different sequence numbers. Because of this, we also have to check the message ID
+    // to avoid duplicate messages.
+    if (database.getMessages(msg.header.origin).exists(m => m.header.origin == plainMsg.header.origin && m.header.messageId == plainMsg.header.messageId)) {
+      logger.trace(s"Received message $msg again, ignoring")
+      return
+    }
+
+    if (plainMsg.body.contentType == Text.Type) {
+      logger.trace(s"Sending confirmation for $plainMsg")
+      sendTo(plainMsg.header.origin, new MessageReceived(plainMsg.header.messageId.get))
+    }
 
     onNewMessage(plainMsg)
   }
@@ -273,6 +284,8 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
         database.updateContact(contact)
 
       callbacks.onConnectionsChanged()
+    case mr: MessageReceived =>
+      database.setMessageConfirmed(mr.messageId)
     case _ =>
       val origin = msg.header.origin
       if (origin != crypto.localAddress && database.getContact(origin).isEmpty)

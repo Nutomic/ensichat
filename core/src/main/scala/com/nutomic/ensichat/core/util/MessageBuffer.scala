@@ -3,12 +3,12 @@ package com.nutomic.ensichat.core.util
 import java.util.{TimerTask, Timer}
 
 import com.nutomic.ensichat.core.{Address, Message}
-import org.joda.time.{DateTime, Duration}
+import org.joda.time.{Seconds, DateTime, Duration}
 
 /**
   * Contains messages that couldn't be forwarded because we don't know a route.
   */
-class MessageBuffer(retryMessageSending: (Address) => Unit) {
+class MessageBuffer(localAddress: Address, retryMessageSending: (Address) => Unit) {
 
   /**
     * The maximum number of times we retry to deliver a message.
@@ -29,7 +29,13 @@ class MessageBuffer(retryMessageSending: (Address) => Unit) {
   }
 
   def addMessage(msg: Message): Unit = {
-    val newEntry = new BufferEntry(msg, DateTime.now, 0)
+    // For old messages added back from database, find their retry count from send time and offset.
+    val retryCount =
+      (0 to 6).find { i =>
+        msg.header.time.get.plus(calculateNextRetryOffset(i)).isAfter(DateTime.now)
+      }
+      .getOrElse(6)
+    val newEntry = new BufferEntry(msg, DateTime.now, retryCount)
     values += newEntry
     retryMessage(newEntry)
   }
@@ -86,7 +92,7 @@ class MessageBuffer(retryMessageSending: (Address) => Unit) {
 
   private def handleTimeouts(): Unit = {
     values = values.filter { e =>
-      e.retryCount < MaxRetryCount
+      e.retryCount < MaxRetryCount && e.message.header.origin != localAddress
     }
   }
 
