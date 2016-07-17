@@ -15,7 +15,7 @@ object DatesAdapter {
     override def getSectionTitleForItem(item: Message): String = {
       DateFormat
         .getDateInstance(DateFormat.MEDIUM)
-        .format(item.header.time.get)
+        .format(item.header.time.get.toDate)
     }
   }
 

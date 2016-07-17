@@ -46,7 +46,7 @@ class MessagesAdapter(context: Context, items: Seq[Message], remoteAddress: Addr
       text.setText(msg.body.asInstanceOf[Text].text)
       val formattedDate = DateFormat
         .getTimeInstance(DateFormat.SHORT)
-        .format(msg.header.time.get)
+        .format(msg.header.time.get.toDate)
       time.setText(formattedDate)
 
       val paddingLarge = (MessagePaddingLarge * context.getResources.getDisplayMetrics.density).toInt
