@@ -8,7 +8,7 @@ import android.preference.PreferenceManager
 import android.view.MenuItem
 import android.widget.Toast
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.core.Address
+import com.nutomic.ensichat.core.routing.Address
 import com.nutomic.ensichat.fragments.{ChatFragment, ContactsFragment}
 
 object MainActivity {

@@ -3,7 +3,8 @@ package com.nutomic.ensichat.core.internet
 import java.io.IOException
 import java.net.ServerSocket
 
-import com.nutomic.ensichat.core.{Crypto, Message}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.util.Crypto
 import com.typesafe.scalalogging.Logger
 
 class InternetServerThread(crypto: Crypto, port: Int,

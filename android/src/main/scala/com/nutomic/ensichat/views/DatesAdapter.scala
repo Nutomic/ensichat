@@ -5,7 +5,7 @@ import java.text.DateFormat
 import android.content.Context
 import com.mobsandgeeks.adapters.{Sectionizer, SimpleSectionAdapter}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.core.Message
+import com.nutomic.ensichat.core.messages.Message
 
 import scala.collection.JavaConverters._
 

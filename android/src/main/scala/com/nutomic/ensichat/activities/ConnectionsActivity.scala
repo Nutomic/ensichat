@@ -12,7 +12,7 @@ import android.widget.AdapterView.OnItemClickListener
 import android.widget._
 import com.google.zxing.integration.android.IntentIntegrator
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.core.Address
+import com.nutomic.ensichat.core.routing.Address
 import com.nutomic.ensichat.service.CallbackHandler
 import com.nutomic.ensichat.views.UsersAdapter
 

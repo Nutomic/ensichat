@@ -8,9 +8,11 @@ import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.core.body.ConnectionInfo
 import com.nutomic.ensichat.core.interfaces.{SettingsInterface, TransmissionInterface}
-import com.nutomic.ensichat.core.{Address, ConnectionHandler, Message}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.messages.body.ConnectionInfo
+import com.nutomic.ensichat.core.routing.Address
+import com.nutomic.ensichat.core.ConnectionHandler
 import com.nutomic.ensichat.service.ChatService
 import org.joda.time.{DateTime, Duration}
 

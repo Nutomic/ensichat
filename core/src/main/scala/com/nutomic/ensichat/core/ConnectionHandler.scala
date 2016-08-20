@@ -2,10 +2,11 @@ package com.nutomic.ensichat.core
 
 import java.security.InvalidKeyException
 
-import com.nutomic.ensichat.core.body._
-import com.nutomic.ensichat.core.header.{AbstractHeader, ContentHeader, MessageHeader}
 import com.nutomic.ensichat.core.interfaces._
 import com.nutomic.ensichat.core.internet.InternetInterface
+import com.nutomic.ensichat.core.messages.body._
+import com.nutomic.ensichat.core.messages.header.{AbstractHeader, ContentHeader}
+import com.nutomic.ensichat.core.routing.{MessageBuffer, Router}
 import com.nutomic.ensichat.core.util._
 import com.typesafe.scalalogging.Logger
 import org.joda.time.{DateTime, Duration}
@@ -30,22 +31,22 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
   private lazy val seqNumGenerator = new SeqNumGenerator(settings)
 
-  private val localRoutesInfo = new LocalRoutesInfo(connections)
+  private val localRoutesInfo = new routing.LocalRoutesInfo(connections)
 
-  private val routeMessageInfo = new RouteMessageInfo()
+  private val routeMessageInfo = new routing.RouteMessageInfo()
 
   private lazy val router = new Router(localRoutesInfo,
                                        (a, m) => transmissionInterfaces.foreach(_.send(a, m)),
                                        noRouteFound)
 
-  private lazy val messageBuffer = new MessageBuffer(crypto.localAddress, requestRoute)
+  private lazy val messageBuffer = new routing.MessageBuffer(crypto.localAddress, requestRoute)
 
   /**
    * Holds all known users.
    *
    * This is for user names that were received during runtime, and is not persistent.
    */
-  private var knownUsers = Set[User]()
+  private var knownUsers = Set[util.User]()
 
   /**
    * Generates keys and starts Bluetooth interface.
@@ -80,7 +81,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   /**
    * Sends a new message to the given target address.
    */
-  def sendTo(target: Address, body: MessageBody): Unit = {
+  def sendTo(target: routing.Address, body: MessageBody): Unit = {
     assert(body.contentType != -1)
     FutureHelper {
       val messageId = settings.get("message_id", 0L)
@@ -88,7 +89,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
         body.contentType, Some(messageId), Some(DateTime.now), AbstractHeader.InitialForwardingTokens)
       settings.put("message_id", messageId + 1)
 
-      val msg = new Message(header, body)
+      val msg = new messages.Message(header, body)
       val encrypted = crypto.encryptAndSign(msg)
       router.forwardMessage(encrypted)
       forwardMessageToRelays(encrypted)
@@ -96,34 +97,34 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     }
   }
 
-  private def requestRoute(target: Address): Unit = {
+  private def requestRoute(target: routing.Address): Unit = {
     assert(localRoutesInfo.getRoute(target).isEmpty)
     val seqNum = seqNumGenerator.next()
     val targetSeqNum = localRoutesInfo.getRoute(target).map(_.seqNum).getOrElse(-1)
     val body = new RouteRequest(target, seqNum, targetSeqNum, 0)
-    val header = new MessageHeader(body.protocolType, crypto.localAddress, Address.Broadcast, seqNum, 0)
+    val header = new messages.header.MessageHeader(body.protocolType, crypto.localAddress, routing.Address.Broadcast, seqNum, 0)
 
-    val signed = crypto.sign(new Message(header, body))
+    val signed = crypto.sign(new messages.Message(header, body))
     router.forwardMessage(signed)
   }
 
-  private def replyRoute(target: Address, replyTo: Address): Unit = {
+  private def replyRoute(target: routing.Address, replyTo: routing.Address): Unit = {
     val seqNum = seqNumGenerator.next()
     val body = new RouteReply(seqNum, 0)
-    val header = new MessageHeader(body.protocolType, crypto.localAddress, replyTo, seqNum, 0)
+    val header = new messages.header.MessageHeader(body.protocolType, crypto.localAddress, replyTo, seqNum, 0)
 
-    val signed = crypto.sign(new Message(header, body))
+    val signed = crypto.sign(new messages.Message(header, body))
     router.forwardMessage(signed)
   }
 
-  private def routeError(address: Address, packetSource: Option[Address]): Unit =  {
-    val destination = packetSource.getOrElse(Address.Broadcast)
-    val header = new MessageHeader(RouteError.Type, crypto.localAddress, destination,
+  private def routeError(address: routing.Address, packetSource: Option[routing.Address]): Unit =  {
+    val destination = packetSource.getOrElse(routing.Address.Broadcast)
+    val header = new messages.header.MessageHeader(RouteError.Type, crypto.localAddress, destination,
                                    seqNumGenerator.next(), 0)
     val seqNum = localRoutesInfo.getRoute(address).map(_.seqNum).getOrElse(-1)
     val body = new RouteError(address, seqNum)
 
-    val signed = crypto.sign(new Message(header, body))
+    val signed = crypto.sign(new messages.Message(header, body))
     router.forwardMessage(signed)
   }
 
@@ -142,7 +143,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   /**
    * Decrypts and verifies incoming messages, forwards valid ones to [[onNewMessage()]].
    */
-  def onMessageReceived(msg: Message, previousHop: Address): Unit = {
+  def onMessageReceived(msg: messages.Message, previousHop: routing.Address): Unit = {
     if (router.isMessageSeen(msg)) {
       logger.trace("Ignoring message from " + msg.header.origin + " that we already received")
       return
@@ -164,10 +165,10 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
         else {
           val body = rreq.copy(originMetric = rreq.originMetric + 1)
 
-          val forwardMsg = crypto.sign(new Message(msg.header, body))
+          val forwardMsg = crypto.sign(new messages.Message(msg.header, body))
           localRoutesInfo.getRoute(rreq.requested) match {
             case Some(route) => router.forwardMessage(forwardMsg, Option(route.nextHop))
-            case None => router.forwardMessage(forwardMsg, Option(Address.Broadcast))
+            case None => router.forwardMessage(forwardMsg, Option(routing.Address.Broadcast))
           }
         }
         return
@@ -185,7 +186,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
           return
 
         val existingRoute = localRoutesInfo.getRoute(msg.header.target)
-        val states = Set(LocalRoutesInfo.RouteStates.Active, LocalRoutesInfo.RouteStates.Idle)
+        val states = Set(routing.LocalRoutesInfo.RouteStates.Active, routing.LocalRoutesInfo.RouteStates.Idle)
         if (existingRoute.isEmpty || !states.contains(existingRoute.get.state)) {
           routeError(msg.header.target, Option(msg.header.origin))
           return
@@ -193,7 +194,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
         val body = rrep.copy(originMetric = rrep.originMetric + 1)
 
-        val forwardMsg = crypto.sign(new Message(msg.header, body))
+        val forwardMsg = crypto.sign(new messages.Message(msg.header, body))
         router.forwardMessage(forwardMsg)
         return
       case rerr: RouteError =>
@@ -239,13 +240,13 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
     if (plainMsg.body.contentType == Text.Type) {
       logger.trace(s"Sending confirmation for $plainMsg")
-      sendTo(plainMsg.header.origin, new MessageReceived(plainMsg.header.messageId.get))
+      sendTo(plainMsg.header.origin, new messages.body.MessageReceived(plainMsg.header.messageId.get))
     }
 
     onNewMessage(plainMsg)
   }
 
-  private def forwardMessageToRelays(message: Message): Unit = {
+  private def forwardMessageToRelays(message: messages.Message): Unit = {
     var tokens = message.header.tokens
     val relays = database.pickLongestConnectionDevice(connections())
     var index = 0
@@ -268,7 +269,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
       .foreach(router.forwardMessage(_))
   }
 
-  private def noRouteFound(message: Message): Unit = {
+  private def noRouteFound(message: messages.Message): Unit = {
     messageBuffer.addMessage(message)
     requestRoute(message.header.target)
   }
@@ -276,15 +277,15 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   /**
    * Handles all (locally and remotely sent) new messages.
    */
-  private def onNewMessage(msg: Message): Unit = msg.body match {
+  private def onNewMessage(msg: messages.Message): Unit = msg.body match {
     case ui: UserInfo =>
-      val contact = new User(msg.header.origin, ui.name, ui.status)
+      val contact = new util.User(msg.header.origin, ui.name, ui.status)
       knownUsers += contact
       if (database.getContact(msg.header.origin).nonEmpty)
         database.updateContact(contact)
 
       callbacks.onConnectionsChanged()
-    case mr: MessageReceived =>
+    case mr: messages.body.MessageReceived =>
       database.setMessageConfirmed(mr.messageId)
     case _ =>
       val origin = msg.header.origin
@@ -301,10 +302,10 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
    * This adds the other node's public key if we don't have it. If we do, it validates the signature
    * with the stored key.
    *
-   * @param msg The message containing [[ConnectionInfo]] to open the connection.
+   * @param msg The message containing [[messages.body.ConnectionInfo]] to open the connection.
    * @return True if the connection is valid
    */
-  def onConnectionOpened(msg: Message): Boolean = {
+  def onConnectionOpened(msg: messages.Message): Boolean = {
     val maxConnections = settings.get(SettingsInterface.KeyMaxConnections,
       SettingsInterface.DefaultMaxConnections.toString).toInt
     if (connections().size == maxConnections) {
@@ -312,9 +313,9 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
       return false
     }
 
-    val info = msg.body.asInstanceOf[ConnectionInfo]
+    val info = msg.body.asInstanceOf[messages.body.ConnectionInfo]
     val sender = crypto.calculateAddress(info.key)
-    if (sender == Address.Broadcast || sender == Address.Null) {
+    if (sender == routing.Address.Broadcast || sender == routing.Address.Null) {
       logger.info("Ignoring ConnectionInfo message with invalid sender " + sender)
       return false
     }
@@ -353,24 +354,24 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     * @param address The address of the connected device.
     * @param duration The time that we were connected to the device.
     */
-  def onConnectionClosed(address: Address, duration: Duration): Unit = {
+  def onConnectionClosed(address: routing.Address, duration: Duration): Unit = {
     localRoutesInfo.connectionClosed(address)
       .foreach(routeError(_, None))
     callbacks.onConnectionsChanged()
     database.insertOrUpdateKnownDevice(address, duration)
   }
 
-  def connections(): Set[Address] = transmissionInterfaces.flatMap(_.getConnections)
+  def connections(): Set[routing.Address] = transmissionInterfaces.flatMap(_.getConnections)
 
   private def allKnownUsers() = database.getContacts ++ knownUsers
 
   /**
-   * Returns [[User]] object containing the user's name (if we know it).
+   * Returns [[util.User]] object containing the user's name (if we know it).
    */
-  def getUser(address: Address) =
+  def getUser(address: routing.Address) =
     allKnownUsers()
       .find(_.address == address)
-      .getOrElse(new User(address, address.toString(), ""))
+      .getOrElse(new util.User(address, address.toString(), ""))
 
   /**
     * This method should be called when the local device's internet connection has changed in any way.

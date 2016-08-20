@@ -12,8 +12,10 @@ import android.widget.TextView.OnEditorActionListener
 import android.widget._
 import com.nutomic.ensichat.R
 import com.nutomic.ensichat.activities.EnsichatActivity
-import com.nutomic.ensichat.core.body.Text
-import com.nutomic.ensichat.core.{Address, ConnectionHandler, Message}
+import com.nutomic.ensichat.core.messages.body.Text
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.routing.Address
+import com.nutomic.ensichat.core.ConnectionHandler
 import com.nutomic.ensichat.service.CallbackHandler
 import com.nutomic.ensichat.views.{DatesAdapter, MessagesAdapter}
 

@@ -4,11 +4,12 @@ import java.io.File
 import java.util.GregorianCalendar
 import java.util.concurrent.CountDownLatch
 
-import com.nutomic.ensichat.core.body.Text
-import com.nutomic.ensichat.core.header.ContentHeader
 import com.nutomic.ensichat.core.interfaces.{CallbackInterface, SettingsInterface}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.messages.body.Text
+import com.nutomic.ensichat.core.messages.header.ContentHeader
+import com.nutomic.ensichat.core.routing.Address
 import com.nutomic.ensichat.core.util.DatabaseTest._
-import com.nutomic.ensichat.core.{Address, Message, User}
 import junit.framework.Assert._
 import junit.framework.TestCase
 import org.joda.time.DateTime

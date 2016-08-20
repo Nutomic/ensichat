@@ -5,7 +5,7 @@ import android.content.{Intent, SharedPreferences}
 import android.os.Bundle
 import android.preference.{PreferenceFragment, PreferenceManager}
 import com.nutomic.ensichat.activities.EnsichatActivity
-import com.nutomic.ensichat.core.body.UserInfo
+import com.nutomic.ensichat.core.messages.body.UserInfo
 import com.nutomic.ensichat.core.interfaces.SettingsInterface._
 import com.nutomic.ensichat.fragments.SettingsFragment._
 import com.nutomic.ensichat.service.ChatService

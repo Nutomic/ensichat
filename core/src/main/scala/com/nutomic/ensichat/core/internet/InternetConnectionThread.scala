@@ -3,10 +3,12 @@ package com.nutomic.ensichat.core.internet
 import java.io.{IOException, InputStream, OutputStream}
 import java.net.{InetAddress, Socket}
 
-import com.nutomic.ensichat.core.Message.ReadMessageException
-import com.nutomic.ensichat.core.body.ConnectionInfo
-import com.nutomic.ensichat.core.header.MessageHeader
-import com.nutomic.ensichat.core.{Address, Crypto, Message}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.messages.Message.ReadMessageException
+import com.nutomic.ensichat.core.messages.body.ConnectionInfo
+import com.nutomic.ensichat.core.messages.header.MessageHeader
+import com.nutomic.ensichat.core.routing.Address
+import com.nutomic.ensichat.core.util.Crypto
 import com.typesafe.scalalogging.Logger
 import org.joda.time.DateTime
 

@@ -2,10 +2,12 @@ package com.nutomic.ensichat.core.internet
 
 import java.net.{InetAddress, Socket}
 
-import com.nutomic.ensichat.core.body.ConnectionInfo
+import com.nutomic.ensichat.core.ConnectionHandler
 import com.nutomic.ensichat.core.interfaces.{SettingsInterface, TransmissionInterface}
-import com.nutomic.ensichat.core.util.FutureHelper
-import com.nutomic.ensichat.core.{Address, ConnectionHandler, Crypto, Message}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.messages.body.ConnectionInfo
+import com.nutomic.ensichat.core.routing.Address
+import com.nutomic.ensichat.core.util.{Crypto, FutureHelper}
 import com.typesafe.scalalogging.Logger
 import org.joda.time.{DateTime, Duration}
 

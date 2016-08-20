@@ -4,10 +4,11 @@ import java.io.File
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
-import com.nutomic.ensichat.core.body.Text
+import com.nutomic.ensichat.core.messages.body.Text
 import com.nutomic.ensichat.core.interfaces.{CallbackInterface, SettingsInterface}
-import com.nutomic.ensichat.core.util.Database
-import com.nutomic.ensichat.core.{ConnectionHandler, Crypto, Message}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.util.{Crypto, Database}
+import com.nutomic.ensichat.core.ConnectionHandler
 import com.typesafe.scalalogging.Logger
 import scopt.OptionParser
 

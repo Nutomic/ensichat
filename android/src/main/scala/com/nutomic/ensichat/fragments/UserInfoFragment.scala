@@ -9,7 +9,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.QRCodeWriter
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.core.Address
+import com.nutomic.ensichat.core.routing.Address
 import com.nutomic.ensichat.util.IdenticonGenerator
 
 object UserInfoFragment {

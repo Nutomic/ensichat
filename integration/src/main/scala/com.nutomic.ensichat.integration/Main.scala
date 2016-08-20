@@ -3,9 +3,8 @@ package com.nutomic.ensichat.integration
 import java.io.File
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 import java.util.{Timer, TimerTask}
-
-import com.nutomic.ensichat.core.Crypto
-import com.nutomic.ensichat.core.body.Text
+import com.nutomic.ensichat.core.messages.body.Text
+import com.nutomic.ensichat.core.util.Crypto
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration

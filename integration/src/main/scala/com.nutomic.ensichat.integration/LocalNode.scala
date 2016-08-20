@@ -4,8 +4,9 @@ import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
 
 import com.nutomic.ensichat.core.interfaces.{CallbackInterface, SettingsInterface}
-import com.nutomic.ensichat.core.util.Database
-import com.nutomic.ensichat.core.{ConnectionHandler, Crypto, Message}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.util.{Crypto, Database}
+import com.nutomic.ensichat.core.ConnectionHandler
 import com.nutomic.ensichat.integration.LocalNode._
 
 import scala.concurrent.Await

@@ -9,8 +9,8 @@ import android.net.ConnectivityManager
 import android.os.Handler
 import com.nutomic.ensichat.bluetooth.BluetoothInterface
 import com.nutomic.ensichat.core.interfaces.TransmissionInterface
-import com.nutomic.ensichat.core.util.Database
-import com.nutomic.ensichat.core.{ConnectionHandler, Crypto}
+import com.nutomic.ensichat.core.util.{Crypto, Database}
+import com.nutomic.ensichat.core.ConnectionHandler
 import com.nutomic.ensichat.util.{NetworkChangedReceiver, SettingsWrapper}
 
 object ChatService {

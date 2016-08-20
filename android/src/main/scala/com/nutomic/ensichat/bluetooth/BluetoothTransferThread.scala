@@ -5,10 +5,13 @@ import java.io._
 import android.bluetooth.{BluetoothDevice, BluetoothSocket}
 import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.util.Log
-import com.nutomic.ensichat.core.Message.ReadMessageException
-import com.nutomic.ensichat.core.body.ConnectionInfo
-import com.nutomic.ensichat.core.header.MessageHeader
-import com.nutomic.ensichat.core.{Address, Crypto, Message}
+import com.nutomic.ensichat.core.messages.Message
+import Message.ReadMessageException
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.messages.body.ConnectionInfo
+import com.nutomic.ensichat.core.messages.header.MessageHeader
+import com.nutomic.ensichat.core.routing.Address
+import com.nutomic.ensichat.core.util.Crypto
 import org.joda.time.DateTime
 
 /**

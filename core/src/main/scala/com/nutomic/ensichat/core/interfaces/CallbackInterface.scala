@@ -1,6 +1,6 @@
 package com.nutomic.ensichat.core.interfaces
 
-import com.nutomic.ensichat.core.Message
+import com.nutomic.ensichat.core.messages.Message
 
 trait CallbackInterface {
 

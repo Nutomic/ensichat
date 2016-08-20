@@ -3,10 +3,11 @@ package com.nutomic.ensichat.core.util
 import java.io.File
 import java.sql.DriverManager
 
-import com.nutomic.ensichat.core.body.Text
-import com.nutomic.ensichat.core.header.ContentHeader
 import com.nutomic.ensichat.core.interfaces.{CallbackInterface, SettingsInterface}
-import com.nutomic.ensichat.core.{Crypto, Address, Message, User}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.messages.body.Text
+import com.nutomic.ensichat.core.messages.header.ContentHeader
+import com.nutomic.ensichat.core.routing.Address
 import com.typesafe.scalalogging.Logger
 import org.joda.time
 import org.joda.time.DateTime

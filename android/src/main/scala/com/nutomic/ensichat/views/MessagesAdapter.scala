@@ -8,8 +8,9 @@ import android.view._
 import android.widget._
 import com.mobsandgeeks.adapters.{InstantAdapter, SimpleSectionAdapter, ViewHandler}
 import com.nutomic.ensichat.R
-import com.nutomic.ensichat.core.body.Text
-import com.nutomic.ensichat.core.{Address, Message}
+import com.nutomic.ensichat.core.messages.body.Text
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.routing.Address
 import com.nutomic.ensichat.views.MessagesAdapter._
 
 object MessagesAdapter {
