@@ -46,9 +46,11 @@ class MessageBuffer(localAddress: Address, retryMessageSending: (Address) => Uni
 
   /**
     * Calculates the duration until the next retry, measured from the time the message was added.
+    *
+    * retryCount is limited to a value of 6.
     */
   private def calculateNextRetryOffset(retryCount: Int) =
-    Duration.standardSeconds(10 ^ (retryCount + 1))
+    Duration.standardSeconds(10 ^ Math.min(6, retryCount + 1))
 
   /**
     * Starts a timer to retry the route discovery.
