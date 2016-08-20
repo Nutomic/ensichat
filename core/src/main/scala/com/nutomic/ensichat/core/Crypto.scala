@@ -8,7 +8,7 @@ import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 
 import com.nutomic.ensichat.core.Crypto._
 import com.nutomic.ensichat.core.body._
-import com.nutomic.ensichat.core.header.ContentHeader
+import com.nutomic.ensichat.core.header.{MessageHeader, ContentHeader}
 import com.nutomic.ensichat.core.interfaces.SettingsInterface
 import com.typesafe.scalalogging.Logger
 
@@ -136,11 +136,22 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     saveKey(address.toString, key)
   }
 
+  /**
+    * Prepares message header and body so that they can be signed/verified.
+    */
+  private def messageForSigning(msg: Message): Array[Byte] = {
+    val header = msg.header match {
+      case ch:  ContentHeader => ch.copy(tokens = 0, hopCount = 0)
+      case mh: MessageHeader => mh.copy(tokens = 0, hopCount = 0)
+    }
+    header.write(msg.body.length) ++ msg.body.write
+  }
+
   def sign(msg: Message): Message = {
     val sig = Signature.getInstance(SigningAlgorithm)
     val key = loadKey(PrivateKeyAlias, classOf[PrivateKey])
     sig.initSign(key)
-    sig.update(msg.body.write)
+    sig.update(messageForSigning(msg))
     new Message(msg.header, new CryptoData(Option(sig.sign), msg.crypto.key), msg.body)
   }
 
@@ -149,7 +160,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     val sig = Signature.getInstance(SigningAlgorithm)
     lazy val defaultKey = loadKey(msg.header.origin.toString, classOf[PublicKey])
     sig.initVerify(key.getOrElse(defaultKey))
-    sig.update(msg.body.write)
+    sig.update(messageForSigning(msg))
     sig.verify(msg.crypto.signature.get)
   }
 
