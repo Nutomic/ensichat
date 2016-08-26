@@ -2,8 +2,8 @@ Ensichat
 ========
 
 Instant messenger for Android that is fully decentralized. Messages are encrypted and sent directly
-between devices via Bluetooth or Internet, without any central server. A simple flood-based routing
-is used for message propagation.
+between devices via Bluetooth or Internet, without any central server. Relay nodes are used to ensure
+message delivery, even if the target node is offline.
 
 <img src="graphics/screenshot_phone_1.png" alt="screenshot 1" width="200" />
 <img src="graphics/screenshot_phone_2.png" alt="screenshot 2" width="200" />
