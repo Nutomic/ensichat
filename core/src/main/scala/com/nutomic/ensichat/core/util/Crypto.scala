@@ -6,9 +6,9 @@ import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
 import javax.crypto.spec.SecretKeySpec
 import javax.crypto.{Cipher, CipherOutputStream, KeyGenerator, SecretKey}
 
-import com.nutomic.ensichat.core._
 import com.nutomic.ensichat.core.interfaces.SettingsInterface
-import com.nutomic.ensichat.core.messages.body.{CryptoData, EncryptedBody, Text, UserInfo}
+import com.nutomic.ensichat.core.messages.Message
+import com.nutomic.ensichat.core.messages.body._
 import com.nutomic.ensichat.core.messages.header.{ContentHeader, MessageHeader}
 import com.nutomic.ensichat.core.routing.Address
 import com.nutomic.ensichat.core.util.Crypto._
@@ -91,7 +91,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     if (localKeysExist)
       return
 
-    var address: routing.Address = null
+    var address: Address = null
     var keyPair: KeyPair = null
     do {
       val keyGen = KeyPairGenerator.getInstance(PublicKeyAlgorithm)
@@ -101,7 +101,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
       address = calculateAddress(keyPair.getPublic)
 
       // Never generate an invalid address.
-    } while(address == routing.Address.Broadcast || address == routing.Address.Null)
+    } while(address == Address.Broadcast || address == Address.Null)
 
     settings.put(LocalAddressKey, address.toString)
 
@@ -113,7 +113,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
   /**
    * Returns true if we have a public key stored for the given device.
    */
-  private[core] def havePublicKey(address: routing.Address) = new File(keyFolder, address.toString).exists()
+  private[core] def havePublicKey(address: Address) = new File(keyFolder, address.toString).exists()
 
   /**
    * Returns the public key for the given device.
@@ -121,7 +121,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
    * @throws RuntimeException If the key does not exist.
    */
   @throws[RuntimeException]
-  def getPublicKey(address: routing.Address): PublicKey = {
+  def getPublicKey(address: Address): PublicKey = {
     loadKey(address.toString, classOf[PublicKey])
   }
 
@@ -131,7 +131,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
    * @throws RuntimeException If a key already exists for this address.
    */
   @throws[RuntimeException]
-  def addPublicKey(address: routing.Address, key: PublicKey): Unit = {
+  def addPublicKey(address: Address, key: PublicKey): Unit = {
     if (havePublicKey(address))
       throw new RuntimeException("Already have key for " + address + ", not overwriting")
 
@@ -141,7 +141,7 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
   /**
     * Prepares message header and body so that they can be signed/verified.
     */
-  private def messageForSigning(msg: messages.Message): Array[Byte] = {
+  private def messageForSigning(msg: Message): Array[Byte] = {
     val header = msg.header match {
       case ch: ContentHeader => ch.copy(tokens = 0, hopCount = 0)
       case mh: MessageHeader => mh.copy(tokens = 0, hopCount = 0)
@@ -149,16 +149,16 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     header.write(msg.body.length) ++ msg.body.write
   }
 
-  def sign(msg: messages.Message): messages.Message = {
+  def sign(msg: Message): Message = {
     val sig = Signature.getInstance(SigningAlgorithm)
     val key = loadKey(PrivateKeyAlias, classOf[PrivateKey])
     sig.initSign(key)
     sig.update(messageForSigning(msg))
-    new messages.Message(msg.header, new CryptoData(Option(sig.sign), msg.crypto.key), msg.body)
+    new Message(msg.header, new CryptoData(Option(sig.sign), msg.crypto.key), msg.body)
   }
 
   @throws[InvalidKeyException]
-  private[core] def verify(msg: messages.Message, key: Option[PublicKey] = None): Boolean = {
+  private[core] def verify(msg: Message, key: Option[PublicKey] = None): Boolean = {
     val sig = Signature.getInstance(SigningAlgorithm)
     lazy val defaultKey = loadKey(msg.header.origin.toString, classOf[PublicKey])
     sig.initVerify(key.getOrElse(defaultKey))
@@ -241,11 +241,11 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     }
   }
 
-  private[core] def encryptAndSign(msg: messages.Message, key: Option[PublicKey] = None): messages.Message = {
+  private[core] def encryptAndSign(msg: Message, key: Option[PublicKey] = None): Message = {
     sign(encrypt(msg, key))
   }
 
-  private def encrypt(msg: messages.Message, key: Option[PublicKey] = None): messages.Message = {
+  private def encrypt(msg: Message, key: Option[PublicKey] = None): Message = {
     // Symmetric encryption of data
     val secretKey = makeSecretKey()
     val symmetricCipher = Cipher.getInstance(SymmetricKeyAlgorithm)
@@ -257,12 +257,12 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     lazy val defaultKey = loadKey(msg.header.target.toString, classOf[PublicKey])
     asymmetricCipher.init(Cipher.WRAP_MODE, key.getOrElse(defaultKey))
 
-    new messages.Message(msg.header,
+    new Message(msg.header,
       new CryptoData(None, Option(asymmetricCipher.wrap(secretKey))), encrypted)
   }
 
   @throws[InvalidKeyException]
-  def decrypt(msg: messages.Message): messages.Message = {
+  def decrypt(msg: Message): Message = {
     // Asymmetric decryption of secret key
     val asymmetricCipher = Cipher.getInstance(CipherAlgorithm)
     asymmetricCipher.init(Cipher.UNWRAP_MODE, loadKey(PrivateKeyAlias, classOf[PrivateKey]))
@@ -275,9 +275,9 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
     val body = msg.header.asInstanceOf[ContentHeader].contentType match {
       case Text.Type              => Text.read(decrypted)
       case UserInfo.Type          => UserInfo.read(decrypted)
-      case messages.body.MessageReceived.Type   => messages.body.MessageReceived.read(decrypted)
+      case MessageReceived.Type   => MessageReceived.read(decrypted)
     }
-    new messages.Message(msg.header, msg.crypto, body)
+    new Message(msg.header, msg.crypto, body)
   }
 
   /**
@@ -315,10 +315,10 @@ class Crypto(settings: SettingsInterface, keyFolder: File) {
   /**
    * Generates the address by hashing the given public key with [[KeyHashAlgorithm]].
    */
-  def calculateAddress(key: PublicKey): routing.Address = {
+  def calculateAddress(key: PublicKey): Address = {
     val md = MessageDigest.getInstance(KeyHashAlgorithm)
     val hash = md.digest(key.getEncoded)
-    new routing.Address(hash)
+    new Address(hash)
   }
 
   /**
