@@ -37,7 +37,6 @@ is very slow), try changing the value of Crypto#PublicKeySize to 512 (in the cor
 
 License
 -------
-
-All code is licensed under the [GPL](LICENSE), v3 or later.
+The project is licensed under the [MPLv2](LICENSE).
 
 The launcher icon is based on the [Bubbles Icon](https://www.iconfinder.com/icons/285667/bubbles_icon) created by [Paomedia](https://www.iconfinder.com/paomedia) which is available under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0/).
