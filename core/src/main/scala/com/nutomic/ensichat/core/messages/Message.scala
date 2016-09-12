@@ -50,11 +50,13 @@ object Message {
 
       val body =
         header.protocolType match {
-          case messages.body.ConnectionInfo.Type => messages.body.ConnectionInfo.read(remaining)
-          case RouteRequest.Type   => RouteRequest.read(remaining)
-          case RouteReply.Type     => RouteReply.read(remaining)
-          case RouteError.Type     => RouteError.read(remaining)
-          case _                   => new EncryptedBody(remaining)
+          case ConnectionInfo.Type   => ConnectionInfo.read(remaining)
+          case RouteRequest.Type     => RouteRequest.read(remaining)
+          case RouteReply.Type       => RouteReply.read(remaining)
+          case RouteError.Type       => RouteError.read(remaining)
+          case PublicKeyRequest.Type => PublicKeyRequest.read(remaining)
+          case PublicKeyReply.Type   => PublicKeyReply.read(remaining)
+          case _                     => EncryptedBody(remaining)
         }
 
       new Message(header, crypto, body)

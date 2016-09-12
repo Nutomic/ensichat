@@ -127,7 +127,7 @@ class ConnectionsActivity extends EnsichatActivity with OnItemClickListener {
       .setMessage(getString(R.string.dialog_add_contact, user.name))
       .setPositiveButton(android.R.string.yes, new OnClickListener {
         override def onClick(dialog: DialogInterface, which: Int): Unit = {
-          database.get.addContact(user)
+          service.get.addContact(user)
           Toast.makeText(ConnectionsActivity.this, R.string.toast_contact_added, Toast.LENGTH_SHORT)
             .show()
         }

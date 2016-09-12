@@ -67,7 +67,8 @@ private[core] class Router(routesInfo: LocalRoutesInfo, send: (Address, Message)
         send(a, incHopCount(msg))
         markMessageSeen((msg.header.origin, msg.header.seqNum))
       case None =>
-        noRouteFound(msg)
+        if (msg.header.isInstanceOf[ContentHeader])
+          noRouteFound(msg)
     }
   }
 

@@ -22,6 +22,7 @@ import scalax.file.Path
  */
 object Main extends App {
 
+  /*
   testNeighborSending()
   testMeshMessageSending()
   testIndirectRelay()
@@ -30,6 +31,8 @@ object Main extends App {
   testSendDelayed()
   testRouteChange()
   testMessageConfirmation()
+  */
+  testKeyRequest()
 
   private def testNeighborSending(): Unit = {
     val node1 = Await.result(createNode(1), Duration.Inf)
@@ -167,6 +170,38 @@ object Main extends App {
     assert(nodes(0).database.getUnconfirmedMessages.isEmpty)
 
     nodes.foreach(_.stop())
+  }
+
+  private def testKeyRequest(): Unit = {
+    val nodes = createNodes(4)
+    connectNodes(nodes(0), nodes(1))
+    connectNodes(nodes(1), nodes(2))
+    connectNodes(nodes(2), nodes(3))
+
+    val origin = nodes(0)
+    val target = nodes(3)
+
+    System.out.println(s"sendMessage(${origin.index}, ${target.index})")
+    val text = s"${origin.index} to ${target.index}"
+    origin.connectionHandler.sendTo(target.crypto.localAddress, new Text(text))
+
+    val latch = new CountDownLatch(1)
+    Future {
+      val exists =
+        target.eventQueue.toStream.exists { event =>
+          if (event._1 != LocalNode.EventType.MessageReceived)
+            false
+          else {
+            event._2.get.body match {
+              case t: Text => t.text == text
+              case _ => false
+            }
+          }
+        }
+      assert(exists, s"message from ${origin.index} did not arrive at ${target.index}")
+      latch.countDown()
+    }
+    assert(latch.await(3, TimeUnit.SECONDS))
   }
 
   private def createNodes(count: Int): Seq[LocalNode] = {

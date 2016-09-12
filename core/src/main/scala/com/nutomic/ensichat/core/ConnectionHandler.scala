@@ -43,11 +43,16 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   private lazy val messageBuffer = new MessageBuffer(crypto.localAddress, requestRoute)
 
   /**
+    * Messages which we couldn't verify yet because we don't have the sender's public key.
+    */
+  private var unverifiedMessages = Set[Message]()
+
+  /**
    * Holds all known users.
    *
    * This is for user names that were received during runtime, and is not persistent.
    */
-  private var knownUsers = Set[util.User]()
+  private var knownUsers = Set[User]()
 
   /**
    * Generates keys and starts Bluetooth interface.
@@ -86,16 +91,28 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     assert(body.contentType != -1)
     FutureHelper {
       val messageId = settings.get("message_id", 0L)
-      val header = new ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
+      val header = ContentHeader(crypto.localAddress, target, seqNumGenerator.next(),
         body.contentType, Some(messageId), Some(DateTime.now), AbstractHeader.InitialForwardingTokens)
       settings.put("message_id", messageId + 1)
 
       val msg = new Message(header, body)
-      val encrypted = crypto.encryptAndSign(msg)
-      router.forwardMessage(encrypted)
-      forwardMessageToRelays(encrypted)
       onNewMessage(msg)
+      if (crypto.havePublicKey(target)) {
+        val encrypted = crypto.encryptAndSign(msg)
+        router.forwardMessage(encrypted)
+        forwardMessageToRelays(encrypted)
+      }
+      else {
+        logger.info(s"Public key missing for $target, buffering message and sending key request")
+        requestPublicKey(target)
+      }
     }
+  }
+
+  private def requestPublicKey(address: Address): Unit = {
+    val header = MessageHeader(PublicKeyRequest.Type, crypto.localAddress, Address.Broadcast, seqNumGenerator.next(), 0)
+    val msg = new Message(header, PublicKeyRequest(address))
+    router.forwardMessage(crypto.sign(msg))
   }
 
   private def requestRoute(target: Address): Unit = {
@@ -205,6 +222,38 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
               .foreach(routeError(_, None))
           }
         }
+        return
+      case pkr: PublicKeyRequest =>
+        if (crypto.havePublicKey(pkr.address)) {
+          val header = MessageHeader(PublicKeyReply.Type, crypto.localAddress, msg.header.origin, seqNumGenerator.next(), 0)
+          val msg2 = new Message(header, PublicKeyReply(crypto.getPublicKey(pkr.address)))
+          router.forwardMessage(crypto.sign(msg2), Option(previousHop))
+        }
+        else {
+          router.forwardMessage(msg)
+        }
+        return
+      case pkr: PublicKeyReply =>
+        if (msg.header.target != crypto.localAddress) {
+          router.forwardMessage(msg)
+          return
+        }
+        val address = crypto.calculateAddress(pkr.key)
+        if (crypto.havePublicKey(address))
+          return
+
+        logger.info(s"Received public key for $address, resending and decrypting messages")
+        crypto.addPublicKey(address, pkr.key)
+        database.getMessages(address)
+          .filter(_.header.target == address)
+          .foreach{ m =>
+            sendTo(address, m.body)
+          }
+        val current = unverifiedMessages
+          .filter(_.header.origin == address)
+        current.foreach(decryptMessage)
+        unverifiedMessages --= current
+        return
       case _ =>
     }
 
@@ -214,6 +263,17 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
       return
     }
 
+    if (!crypto.havePublicKey(msg.header.origin)) {
+      logger.info(s"Received message from ${msg.header.origin} but don't have public key, buffering")
+      unverifiedMessages += msg
+      requestPublicKey(msg.header.origin)
+      return
+    }
+
+    decryptMessage(msg)
+  }
+
+  private def decryptMessage(msg: Message): Unit = {
     val plainMsg =
       try {
         if (!crypto.verify(msg)) {
@@ -241,7 +301,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
 
     if (plainMsg.body.contentType == Text.Type) {
       logger.trace(s"Sending confirmation for $plainMsg")
-      sendTo(plainMsg.header.origin, new messages.body.MessageReceived(plainMsg.header.messageId.get))
+      sendTo(plainMsg.header.origin, new MessageReceived(plainMsg.header.messageId.get))
     }
 
     onNewMessage(plainMsg)
@@ -280,13 +340,13 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
    */
   private def onNewMessage(msg: Message): Unit = msg.body match {
     case ui: UserInfo =>
-      val contact = new util.User(msg.header.origin, ui.name, ui.status)
+      val contact = User(msg.header.origin, ui.name, ui.status)
       knownUsers += contact
       if (database.getContact(msg.header.origin).nonEmpty)
         database.updateContact(contact)
 
       callbacks.onConnectionsChanged()
-    case mr: messages.body.MessageReceived =>
+    case mr: MessageReceived =>
       database.setMessageConfirmed(mr.messageId)
     case _ =>
       val origin = msg.header.origin
@@ -339,8 +399,8 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
     else
       logger.info("Node " + sender + " connected")
 
-    sendTo(sender, new UserInfo(settings.get(SettingsInterface.KeyUserName, ""),
-                                settings.get(SettingsInterface.KeyUserStatus, "")))
+    sendTo(sender, UserInfo(settings.get(SettingsInterface.KeyUserName, ""),
+                            settings.get(SettingsInterface.KeyUserStatus, "")))
     callbacks.onConnectionsChanged()
     resendMissingRouteMessages()
     messageBuffer.getAllMessages
@@ -372,7 +432,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
   def getUser(address: Address) =
     allKnownUsers()
       .find(_.address == address)
-      .getOrElse(new util.User(address, address.toString(), ""))
+      .getOrElse(User(address, address.toString(), ""))
 
   /**
     * This method should be called when the local device's internet connection has changed in any way.
@@ -382,4 +442,12 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
       .find(_.isInstanceOf[InternetInterface])
       .foreach(_.asInstanceOf[InternetInterface].connectionChanged())
   }
+
+  def addContact(user: User): Unit = {
+    database.addContact(user)
+    if (!crypto.havePublicKey(user.address)) {
+      requestPublicKey(user.address)
+    }
+  }
+
 }

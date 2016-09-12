@@ -160,7 +160,7 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
   /**
    * Inserts the user as a new contact.
    */
-  def addContact(contact: User): Unit = {
+  private[core] def addContact(contact: User): Unit = {
     Await.result(db.run(contacts += contact), Duration.Inf)
     callbackInterface.onContactsUpdated()
   }
