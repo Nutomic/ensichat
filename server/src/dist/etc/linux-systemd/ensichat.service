@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=ensichat
 Group=ensichat
-ExecStart=/usr/bin/java -jar /usr/lib/ensichat.jar --name "unknown user" --status ""
+ExecStart=/usr/bin/java -jar /usr/lib/ensichat-server.jar --name "unknown user" --status ""
 WorkingDirectory=/var/lib/ensichat
 RootDirectory=/var/lib/ensichat
 
