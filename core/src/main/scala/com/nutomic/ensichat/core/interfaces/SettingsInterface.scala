@@ -26,7 +26,7 @@ object SettingsInterface {
   val DefaultNotificationSoundsOn = true
   val DefaultMaxConnections       = 1000000
   // When updating this, be sure to adjust the code in [[InternetInterface.create]].
-  val DefaultAddresses            = Set("ensichat.nutomic.com:26344").mkString(", ")
+  val DefaultAddresses            = Set("ensichat.nutomic.com:26344", "trinity.nutomic.com:26344").mkString(", ")
 
 }
 
