@@ -12,6 +12,22 @@ mainClassName = 'com.nutomic.ensichat.server.Main'
 version = "0.4.0"
 applicationName = 'ensichat-server'
 
+jar {
+    archiveName "${applicationName}.jar"
+    manifest.attributes 'Main-Class': mainClassName
+    from(configurations.compile.collect { it.isDirectory()  ?  it  :  zipTree(it) })
+}
+
+task release(type: Zip)  {
+    archiveName = "$applicationName-${version}.zip"
+    def baseDir = archiveName - '.zip'
+    into(baseDir) {
+        from(project.file('src/dist'))
+        into ('lib') { from ('build/libs/') }
+    }
+}
+release.dependsOn(jar)
+
 run {
     // Use this to pass command line arguments via `gradle run`.
     //
@@ -24,6 +40,6 @@ run {
     // ./gradlew server:run -Pargs="--name,MyName,--status,My Status"
     // ```
     if (project.hasProperty('args')) {
-        args project.args.split("\\s+")
+        args project.args.split('\\s+')
     }
 }
