@@ -23,11 +23,9 @@ private[core] object InternetInterface {
 
 /**
  * Handles all Internet connectivity.
- *
- * @param maxConnections Maximum number of concurrent connections that should be opened.
  */
 private[core] class InternetInterface(connectionHandler: ConnectionHandler, crypto: Crypto,
-                        settings: SettingsInterface, maxConnections: Int, port: Int)
+                        settings: SettingsInterface, port: Int)
   extends TransmissionInterface {
 
   private val logger = Logger(this.getClass)
@@ -48,7 +46,7 @@ private[core] class InternetInterface(connectionHandler: ConnectionHandler, cryp
     settings.put(SettingsInterface.KeyAddresses, servers)
 
     serverThread.start()
-    openAllConnections(maxConnections)
+    openAllConnections()
   }
 
   /**
@@ -59,14 +57,13 @@ private[core] class InternetInterface(connectionHandler: ConnectionHandler, cryp
     connections.foreach(_.close())
   }
 
-  private def openAllConnections(maxConnections: Int): Unit = {
+  private def openAllConnections(): Unit = {
     val addresses = settings.get(SettingsInterface.KeyAddresses, SettingsInterface.DefaultAddresses)
       .split(",")
       .map(_.trim())
       .filterNot(_.isEmpty)
 
     Random.shuffle(addresses.toList)
-      .take(maxConnections)
       .foreach(openConnection)
   }
 
@@ -148,7 +145,7 @@ private[core] class InternetInterface(connectionHandler: ConnectionHandler, cryp
     FutureHelper {
       logger.info("Network has changed. Closing all connections and connecting to bootstrap nodes again")
       connections.foreach(_.close())
-      openAllConnections(maxConnections)
+      openAllConnections()
     }
   }
 

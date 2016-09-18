@@ -17,13 +17,9 @@ import scala.concurrent.Future
 
 /**
  * High-level handling of all message transfers and callbacks.
- *
- * @param maxInternetConnections Maximum number of concurrent connections that should be opened by
- *                               [[InternetInterface]].
  */
 final class ConnectionHandler(settings: SettingsInterface, database: Database,
                               callbacks: CallbackInterface, crypto: Crypto,
-                              maxInternetConnections: Int,
                               port: Int = InternetInterface.DefaultPort) {
 
   private val logger = Logger(this.getClass)
@@ -68,7 +64,7 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
       logger.info("Local user is " + settings.get(SettingsInterface.KeyUserName, "none") +
         " with status '" + settings.get(SettingsInterface.KeyUserStatus, "") + "'")
       transmissionInterfaces +=
-        new InternetInterface(this, crypto, settings, maxInternetConnections, port)
+        new InternetInterface(this, crypto, settings, port)
       transmissionInterfaces.foreach(_.create())
       database.getUnconfirmedMessages.foreach { m =>
         val encrypted = crypto.encryptAndSign(m)

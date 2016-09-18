@@ -54,7 +54,7 @@ class LocalNode(val index: Int, configFolder: File) extends CallbackInterface {
 
   val crypto            = new Crypto(settings, keyFolder)
   val database          = new Database(databaseFile, settings, this)
-  val connectionHandler = new ConnectionHandler(settings, database, this, crypto, 0, port)
+  val connectionHandler = new ConnectionHandler(settings, database, this, crypto, port)
   val eventQueue        = new FifoStream[(EventType.EventType, Option[Message])]()
 
   configFolder.mkdirs()

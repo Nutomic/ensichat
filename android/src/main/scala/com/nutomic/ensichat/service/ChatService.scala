@@ -37,7 +37,7 @@ class ChatService extends Service {
   lazy val database = new Database(getDatabasePath("database"), settingsWrapper, callbackHandler)
 
   private lazy val connectionHandler =
-    new ConnectionHandler(settingsWrapper, database, callbackHandler, ChatService.newCrypto(this), 1)
+    new ConnectionHandler(settingsWrapper, database, callbackHandler, ChatService.newCrypto(this))
 
   private val networkReceiver = new NetworkChangedReceiver()
 
