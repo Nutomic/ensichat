@@ -18,6 +18,8 @@
     <!-- Label for button to finish activity -->
     <string name="done">Done</string>
 
+    <!-- Toast shown if location permission is not granted -->
+    <string name="toast_location_required">Location permission is required to scan for other Bluetooth devices</string>
 
     <!-- MainActivity -->
 
