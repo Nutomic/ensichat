@@ -11,7 +11,7 @@ import com.nutomic.ensichat.core.routing.Address
 import com.typesafe.scalalogging.Logger
 import org.joda.time
 import org.joda.time.DateTime
-import slick.driver.H2Driver.api._
+import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -40,7 +40,7 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
     def date                = column[Long]("date")
     def tokens              = column[Int]("tokens")
     def confirmedDelivered  = column[Boolean]("confirmed_delivered")
-    def * = (origin, target, messageId, text, date, tokens, confirmedDelivered) <> [(Message, Boolean), (String, String, Long, String, Long, Int, Boolean)]( {
+    def * = (origin, target, messageId, text, date, tokens, confirmedDelivered) <> [(Message, Boolean)]( {
       tuple =>
         val header = new ContentHeader(new Address(tuple._1),
           new Address(tuple._2),
@@ -63,7 +63,7 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
     def address = column[String]("address", O.PrimaryKey)
     def name    = column[String]("name")
     def status  = column[String]("status")
-    def wrappedAddress = address <> [Address, String](new Address(_), a => Option(a.toString))
+    def wrappedAddress = address <> [Address](new Address(_), a => Option(a.toString))
     def * = (wrappedAddress, name, status) <> (User.tupled, User.unapply)
   }
   private val contacts = TableQuery[Contacts]
@@ -71,7 +71,7 @@ class Database(path: File, settings: SettingsInterface, callbackInterface: Callb
   private class KnownDevices(tag: Tag) extends Table[(Address, time.Duration)](tag, "KNOWN_DEVICES") {
     def address                 = column[String]("address", O.PrimaryKey)
     def totalConnectionSeconds  = column[Long]("total_connection_seconds")
-    def * = (address, totalConnectionSeconds) <> [(Address, time.Duration), (String, Long)](
+    def * = (address, totalConnectionSeconds) <> [(Address, time.Duration)](
       tuple => (new Address(tuple._1), time.Duration.standardSeconds(tuple._2)),
       tuple => Option((tuple._1.toString, tuple._2.getStandardSeconds)))
   }

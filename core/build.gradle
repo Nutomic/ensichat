@@ -3,7 +3,7 @@ apply plugin: 'scala'
 dependencies {
     compile 'org.scala-lang:scala-library:2.11.7'
     compile 'com.h2database:h2:1.4.192'
-    compile 'com.typesafe.slick:slick_2.11:3.1.1'
+    compile 'com.typesafe.slick:slick_2.11:3.2.0-M1'
     compile 'com.typesafe.scala-logging:scala-logging_2.11:3.5.0'
     compile 'joda-time:joda-time:2.9.4'
     testCompile 'junit:junit:4.12'
