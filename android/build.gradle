@@ -40,8 +40,8 @@ android {
     defaultConfig {
         applicationId "com.nutomic.ensichat"
         targetSdkVersion 23
-        versionCode 15
-        versionName "0.5.0"
+        versionCode 16
+        versionName "0.5.1"
         multiDexEnabled true
         testInstrumentationRunner "com.android.test.runner.MultiDexTestRunner"
     }
