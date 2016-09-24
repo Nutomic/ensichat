@@ -22,7 +22,6 @@ import scalax.file.Path
  */
 object Main extends App {
 
-  /*
   testNeighborSending()
   testMeshMessageSending()
   testIndirectRelay()
@@ -31,7 +30,6 @@ object Main extends App {
   testSendDelayed()
   testRouteChange()
   testMessageConfirmation()
-  */
   testKeyRequest()
 
   private def testNeighborSending(): Unit = {
