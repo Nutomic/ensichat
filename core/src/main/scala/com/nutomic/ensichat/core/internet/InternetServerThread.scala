@@ -23,6 +23,9 @@ class InternetServerThread(crypto: Crypto, port: Int,
   }
 
   override def run(): Unit = {
+    if (socket.isEmpty)
+      return
+
     try {
       while (socket.get.isBound) {
         val connection = new InternetConnectionThread(socket.get.accept(), crypto, onDisconnected, onReceive)
