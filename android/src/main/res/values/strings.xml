@@ -107,10 +107,15 @@
     <!-- Preference title -->
     <string name="version">Version</string>
 
-    <!-- IdenticonFragment -->
+
+    <!-- UserInfoFragment -->
 
     <!-- Device address label and value -->
     <string name="address_colon">Address: %1$s</string>
+
+    <string name="ensichat_user_address">Ensichat User Address</string>
+
+    <string name="address_copied_to_clipboard">Address copied to clipboard</string>
 
 
     <!-- ChatService -->

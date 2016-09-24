@@ -1,10 +1,12 @@
 package com.nutomic.ensichat.fragments
 
 import android.app.{AlertDialog, Dialog, DialogFragment}
+import android.content.{ClipData, ClipboardManager, Context}
 import android.graphics.{Bitmap, Color}
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.widget.{ImageView, TextView}
+import android.view.View.OnClickListener
+import android.view.{LayoutInflater, View}
+import android.widget.{ImageView, TextView, Toast}
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.QRCodeWriter
@@ -23,7 +25,7 @@ object UserInfoFragment {
  *
  * Use [[UserInfoFragment#getInstance]] to invoke.
  */
-class UserInfoFragment extends DialogFragment {
+class UserInfoFragment extends DialogFragment with OnClickListener {
 
   private lazy val address  = new Address(getArguments.getString(UserInfoFragment.ExtraAddress))
   private lazy val userName = getArguments.getString(UserInfoFragment.ExtraUserName)
@@ -35,9 +37,10 @@ class UserInfoFragment extends DialogFragment {
     view.findViewById(R.id.identicon)
       .asInstanceOf[ImageView]
       .setImageBitmap(IdenticonGenerator.generate(address, (150, 150), getActivity))
-    view.findViewById(R.id.address)
+    val addressTextView = view.findViewById(R.id.address)
       .asInstanceOf[TextView]
-      .setText(getString(R.string.address_colon, address.toString()))
+    addressTextView.setText(getString(R.string.address_colon, address.toString()))
+    addressTextView.setOnClickListener(this)
 
     if (showQr) {
       val matrix = new QRCodeWriter().encode(address.toString(), BarcodeFormat.QR_CODE, 150, 150)
@@ -51,6 +54,13 @@ class UserInfoFragment extends DialogFragment {
       .setView(view)
       .setPositiveButton(android.R.string.ok, null)
       .create()
+  }
+
+  override def onClick (v: View): Unit = {
+    val cm = getContext.getSystemService(Context.CLIPBOARD_SERVICE).asInstanceOf[ClipboardManager]
+    val clip = ClipData.newPlainText(getContext.getString(R.string.ensichat_user_address), address.toString)
+    cm.setPrimaryClip(clip)
+    Toast.makeText(getContext, R.string.address_copied_to_clipboard, Toast.LENGTH_SHORT).show()
   }
 
   /**

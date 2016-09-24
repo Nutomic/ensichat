@@ -38,7 +38,7 @@ class UsersAdapter(activity: Activity) extends ArrayAdapter[User](activity, 0) w
     view
   }
 
-  override def onClick (v: View): Unit = {
+  override def onClick(v: View): Unit = {
     val user = v.getTag.asInstanceOf[User]
     val fragment = new UserInfoFragment()
     val bundle = new Bundle()
