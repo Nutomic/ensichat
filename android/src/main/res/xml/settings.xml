@@ -13,10 +13,6 @@
         android:inputType="textCapSentences" />
 
     <CheckBoxPreference
-        android:title="@string/start_on_boot"
-        android:key="start_on_boot" />
-
-    <CheckBoxPreference
         android:title="@string/notification_sounds"
         android:key="notification_sounds" />
 

@@ -41,9 +41,6 @@
     <!-- Menu item to share this app's apk -->
     <string name="share_app">Share App</string>
 
-    <!-- Menu item to close app and stop service -->
-    <string name="exit">Exit</string>
-
     <!-- ChatFragment -->
 
     <!-- Hint text for the message EditText -->
@@ -92,9 +89,6 @@
 
     <!-- Preference title -->
     <string name="scan_interval_seconds">Scan Interval (seconds)</string>
-
-    <!-- Preference title -->
-    <string name="start_on_boot">Start on Boot</string>
 
     <!-- Preference title -->
     <string name="notification_sounds">Notification Sounds</string>

@@ -110,14 +110,6 @@ class ContactsFragment extends ListFragment with OnClickListener {
     case R.id.settings =>
       startActivity(new Intent(getActivity, classOf[SettingsActivity]))
       true
-    case R.id.exit =>
-      val pm = PreferenceManager.getDefaultSharedPreferences(getActivity)
-      if (!pm.getBoolean(MainActivity.PrefWasBluetoothEnabled, false))
-        BluetoothAdapter.getDefaultAdapter.disable()
-
-      getActivity.stopService(new Intent(getActivity, classOf[ChatService]))
-      getActivity.finish()
-      true
     case _ =>
       super.onOptionsItemSelected(item)
   }

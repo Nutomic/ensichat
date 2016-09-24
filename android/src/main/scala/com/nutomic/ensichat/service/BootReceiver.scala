@@ -10,9 +10,7 @@ class BootReceiver extends BroadcastReceiver {
 
   override def onReceive(context: Context, intent: Intent): Unit = {
     val sp = PreferenceManager.getDefaultSharedPreferences(context)
-    if (sp.getBoolean("start_on_boot", false)) {
-      context.startService(new Intent(context, classOf[ChatService]))
-    }
+    context.startService(new Intent(context, classOf[ChatService]))
   }
 
 }
