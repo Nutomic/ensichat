@@ -363,13 +363,6 @@ final class ConnectionHandler(settings: SettingsInterface, database: Database,
    * @return True if the connection is valid
    */
   def onConnectionOpened(msg: Message): Boolean = {
-    val maxConnections = settings.get(SettingsInterface.KeyMaxConnections,
-      SettingsInterface.DefaultMaxConnections.toString).toInt
-    if (connections().size == maxConnections) {
-      logger.info("Maximum number of connections reached")
-      return false
-    }
-
     val info = msg.body.asInstanceOf[messages.body.ConnectionInfo]
     val sender = crypto.calculateAddress(info.key)
     if (sender == Address.Broadcast || sender == Address.Null) {

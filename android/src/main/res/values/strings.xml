@@ -99,9 +99,6 @@
     <!-- Preference title -->
     <string name="notification_sounds">Notification Sounds</string>
 
-    <!-- Preference title (debug only)-->
-    <string name="max_connections" translatable="false">Maximum Number of Connections</string>
-
     <!-- Preference title -->
     <string name="servers">Servers</string>
 

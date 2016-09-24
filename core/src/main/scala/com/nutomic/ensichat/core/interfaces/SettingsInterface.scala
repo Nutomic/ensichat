@@ -12,11 +12,6 @@ object SettingsInterface {
   val KeyScanInterval         = "scan_interval_seconds"
 
   /**
-   * NOTE: Stored as string.
-   */
-  val KeyMaxConnections       = "max_connections"
-
-  /**
    * NOTE: Stored as comma separated string.
    */
   val KeyAddresses            = "servers"
@@ -24,7 +19,6 @@ object SettingsInterface {
   val DefaultUserStatus           = "Let's chat!"
   val DefaultScanInterval         = 15
   val DefaultNotificationSoundsOn = true
-  val DefaultMaxConnections       = 1000000
   // When updating this, be sure to adjust the code in [[InternetInterface.create]].
   val DefaultAddresses            = Set("ensichat.nutomic.com:26344", "trinity.nutomic.com:26344").mkString(", ")
 
