@@ -63,7 +63,7 @@ private[core] class InternetInterface(connectionHandler: ConnectionHandler, cryp
       .map(_.trim())
       .filterNot(_.isEmpty)
 
-    Random.shuffle(addresses.toList)
+    addresses.toList
       .foreach(openConnection)
   }
 
@@ -104,6 +104,11 @@ private[core] class InternetInterface(connectionHandler: ConnectionHandler, cryp
       addressDeviceMap -= ad
       val connectionDuration = new Duration(connectionThread.connectionOpened, DateTime.now)
       connectionHandler.onConnectionClosed(ad, connectionDuration)
+
+      // If we aren't connected to any nodes, try to connect again.
+      if (connections.isEmpty) {
+        openAllConnections()
+      }
     }
   }
 
