@@ -4,7 +4,7 @@ import android.app.{AlertDialog, Dialog, DialogFragment}
 import android.content.{ClipData, ClipboardManager, Context}
 import android.graphics.{Bitmap, Color}
 import android.os.Bundle
-import android.view.View.OnClickListener
+import android.view.View.{OnClickListener, OnLongClickListener}
 import android.view.{LayoutInflater, View}
 import android.widget.{ImageView, TextView, Toast}
 import com.google.zxing.BarcodeFormat
@@ -24,7 +24,7 @@ object UserInfoFragment {
  *
  * Use [[UserInfoFragment#getInstance]] to invoke.
  */
-class UserInfoFragment extends DialogFragment with OnClickListener {
+class UserInfoFragment extends DialogFragment with OnLongClickListener {
 
   private lazy val address  = new Address(getArguments.getString(UserInfoFragment.ExtraAddress))
   private lazy val userName = getArguments.getString(UserInfoFragment.ExtraUserName)
@@ -38,7 +38,10 @@ class UserInfoFragment extends DialogFragment with OnClickListener {
     val addressTextView = view.findViewById(R.id.address)
       .asInstanceOf[TextView]
     addressTextView.setText(getString(R.string.address_colon, address.toString()))
-    addressTextView.setOnClickListener(this)
+    addressTextView.setOnLongClickListener(this)
+    addressTextView.setOnClickListener(new OnClickListener {
+      override def onClick(v: View): Unit = onLongClick(v)
+    })
 
     val matrix = new QRCodeWriter().encode(address.toString(), BarcodeFormat.QR_CODE, 150, 150)
     view.findViewById(R.id.qr_code)
@@ -52,11 +55,12 @@ class UserInfoFragment extends DialogFragment with OnClickListener {
       .create()
   }
 
-  override def onClick (v: View): Unit = {
+  override def onLongClick(v: View): Boolean = {
     val cm = getContext.getSystemService(Context.CLIPBOARD_SERVICE).asInstanceOf[ClipboardManager]
     val clip = ClipData.newPlainText(getContext.getString(R.string.ensichat_user_address), address.toString)
     cm.setPrimaryClip(clip)
     Toast.makeText(getContext, R.string.address_copied_to_clipboard, Toast.LENGTH_SHORT).show()
+    true
   }
 
   /**
