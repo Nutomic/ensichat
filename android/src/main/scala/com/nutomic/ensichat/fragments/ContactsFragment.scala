@@ -103,7 +103,6 @@ class ContactsFragment extends ListFragment with OnClickListener {
         UserInfoFragment.ExtraAddress, ChatService.newCrypto(getActivity).localAddress.toString)
       bundle.putString(
         UserInfoFragment.ExtraUserName, prefs.getString(SettingsInterface.KeyUserName, ""))
-      bundle.putBoolean(UserInfoFragment.ExtraShowQr, true)
       fragment.setArguments(bundle)
       fragment.show(getFragmentManager, "dialog")
       true

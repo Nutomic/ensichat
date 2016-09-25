@@ -17,7 +17,6 @@ import com.nutomic.ensichat.util.IdenticonGenerator
 object UserInfoFragment {
   val ExtraAddress  = "address"
   val ExtraUserName = "user_name"
-  val ExtraShowQr   = "show_qr"
 }
 
 /**
@@ -29,7 +28,6 @@ class UserInfoFragment extends DialogFragment with OnClickListener {
 
   private lazy val address  = new Address(getArguments.getString(UserInfoFragment.ExtraAddress))
   private lazy val userName = getArguments.getString(UserInfoFragment.ExtraUserName)
-  private lazy val showQr   = getArguments.getBoolean(UserInfoFragment.ExtraShowQr)
 
   override def onCreateDialog(savedInstanceState: Bundle): Dialog = {
     val view = LayoutInflater.from(getActivity).inflate(R.layout.fragment_identicon, null)
@@ -42,12 +40,10 @@ class UserInfoFragment extends DialogFragment with OnClickListener {
     addressTextView.setText(getString(R.string.address_colon, address.toString()))
     addressTextView.setOnClickListener(this)
 
-    if (showQr) {
-      val matrix = new QRCodeWriter().encode(address.toString(), BarcodeFormat.QR_CODE, 150, 150)
-      view.findViewById(R.id.qr_code)
-        .asInstanceOf[ImageView]
-        .setImageBitmap(renderMatrix(matrix))
-    }
+    val matrix = new QRCodeWriter().encode(address.toString(), BarcodeFormat.QR_CODE, 150, 150)
+    view.findViewById(R.id.qr_code)
+      .asInstanceOf[ImageView]
+      .setImageBitmap(renderMatrix(matrix))
 
     new AlertDialog.Builder(getActivity)
       .setTitle(userName)
