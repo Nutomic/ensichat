@@ -9,7 +9,7 @@ dependencies {
 }
 
 mainClassName = 'com.nutomic.ensichat.server.Main'
-version = "0.5.1"
+version = "0.5.2"
 applicationName = 'ensichat-server'
 
 jar {
