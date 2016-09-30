@@ -39,7 +39,8 @@ class FirstStartActivity extends AppCompatActivity with OnEditorActionListener w
     setContentView(R.layout.activity_first_start)
     setTitle(R.string.welcome)
 
-    username.setText(BluetoothAdapter.getDefaultAdapter.getName.trim)
+    val name = Option(BluetoothAdapter.getDefaultAdapter).map(_.getName.trim).getOrElse("")
+    username.setText(name)
     username.setOnEditorActionListener(this)
     done.setOnClickListener(this)
 
