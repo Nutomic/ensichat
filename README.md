@@ -1,9 +1,10 @@
 Ensichat
 ========
 
-Instant messenger for Android that is fully decentralized. Messages are encrypted and sent directly
-between devices via Bluetooth or Internet, without any central server. Relay nodes are used to ensure
-message delivery, even if the target node is offline.
+Instant messenger for Android that is fully decentralized, and uses strong end-to-end
+encryption. Messages are sent directly between devices via Bluetooth or Internet, without any
+central server. Relay nodes are used to ensure message delivery, even if the target node is 
+offline.
 
 For details on how Ensichat works, you can check out my [bachelor thesis](docs/bachelor-thesis.pdf), and
 read the [protocol definition](PROTOCOL.md).
