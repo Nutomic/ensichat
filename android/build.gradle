@@ -1,17 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'jp.leafytree.android-scala'
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "jp.leafytree.gradle:gradle-android-scala-plugin:1.4"
-    }
-}
-
 dependencies {
-    compile 'com.android.support:design:24.2.0'
+    compile 'com.android.support:design:24.2.1'
     compile 'com.android.support:multidex:1.0.1'
     compile 'org.scala-lang:scala-library:2.11.7'
     compile 'com.mobsandgeeks:adapter-kit:0.5.3'
@@ -34,12 +25,12 @@ preBuild.doFirst {
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
 
     defaultConfig {
         applicationId "com.nutomic.ensichat"
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 17
         versionName "0.5.2"
         multiDexEnabled true
@@ -50,13 +41,6 @@ android {
         debug {
             applicationIdSuffix ".debug"
             testCoverageEnabled true
-        }
-        release {
-            // HACK: This shouldn't be needed, but multidex isn't working correctly.
-            // https://code.google.com/p/android/issues/detail?id=206131
-            // https://code.google.com/p/android/issues/detail?id=209084
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), file('proguard-rules.txt')
         }
     }
 
