@@ -1,0 +1,4 @@
+image: docker.vokalinteractive.com/android:latest
+env:
+script:
+  - ./gradlew test assemble
