@@ -1,6 +1,8 @@
 Ensichat
 ========
 
+[![Build Status](https://travis-ci.org/Nutomic/ensichat.svg?branch=master)](https://travis-ci.org/Nutomic/ensichat)
+
 Instant messenger for Android that is fully decentralized, and uses strong end-to-end
 encryption. Messages are sent directly between devices via Bluetooth or Internet, without any
 central server. Relay nodes are used to ensure message delivery, even if the target node is 
