@@ -2,6 +2,7 @@ Ensichat
 ========
 
 [![Build Status](https://travis-ci.org/Nutomic/ensichat.svg?branch=master)](https://travis-ci.org/Nutomic/ensichat)
+[![License: MPLv2](https://img.shields.io/badge/License-MPLv2-blue.svg)](https://opensource.org/licenses/MPL-2.0)
 
 Instant messenger for Android that is fully decentralized, and uses strong end-to-end
 encryption. Messages are sent directly between devices via Bluetooth or Internet, without any
