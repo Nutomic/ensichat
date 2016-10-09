@@ -6,14 +6,18 @@ import android.test.AndroidTestCase
 
 class BluetoothInterfaceTest extends AndroidTestCase {
 
-  private lazy val adapter = new BluetoothInterface(getContext, new Handler(), null)
+  private lazy val btInterface = new BluetoothInterface(getContext, new Handler(), null)
 
   /**
    * Test for issue [[https://github.com/Nutomic/ensichat/issues/3 #3]].
    */
   def testStartBluetoothOff(): Unit = {
-    BluetoothAdapter.getDefaultAdapter.disable()
-    adapter.create()
+    val btAdapter = BluetoothAdapter.getDefaultAdapter
+    if (btAdapter == null)
+      return
+
+    btAdapter.disable()
+    btInterface.create()
   }
 
 }
