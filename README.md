@@ -1,3 +1,11 @@
+PROJECT DISCONTINUED
+====================
+
+Unfortunately, I won't be able to continue development on Ensichat, due to lack of time. I suggest
+you give [Briar](https://briarproject.org/) a try instead.
+
+If you wish to take over maintenance of the project, please contact me.
+
 Ensichat
 ========
 
